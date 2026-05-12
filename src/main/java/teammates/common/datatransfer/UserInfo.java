@@ -1,5 +1,7 @@
 package teammates.common.datatransfer;
 
+import java.util.UUID;
+
 /**
  * Represents a user type.
  * <br> Contains user's Google ID and flags to indicate whether the user
@@ -11,6 +13,11 @@ public class UserInfo {
      * The user's Google ID.
      */
     public String id;
+
+    /**
+     * The user's account ID.
+     */
+    public UUID accountId;
 
     /**
      * Indicates whether the user has admin privilege.
@@ -38,8 +45,12 @@ public class UserInfo {
      */
     public boolean isAutomatedService;
 
-    public UserInfo(String googleId) {
-        this.id = googleId;
+    public UserInfo(UUID accountId) {
+        this.accountId = accountId;
+    }
+
+    public UserInfo(String id) {
+        this.id = id;
     }
 
     public String getId() {
@@ -62,4 +73,7 @@ public class UserInfo {
         return isMaintainer;
     }
 
+    public UUID getAccountId() {
+        return accountId;
+    }
 }
