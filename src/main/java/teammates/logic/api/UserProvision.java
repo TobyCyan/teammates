@@ -1,9 +1,13 @@
 package teammates.logic.api;
 
+import java.util.UUID;
+
 import teammates.common.datatransfer.UserInfo;
 import teammates.common.datatransfer.UserInfoCookie;
 import teammates.common.util.Config;
+import teammates.logic.core.AccountsLogic;
 import teammates.logic.core.UsersLogic;
+import teammates.storage.entity.Account;
 
 /**
  * Handles logic related to username and user role provisioning.
@@ -12,7 +16,7 @@ public class UserProvision {
 
     private static final UserProvision instance = new UserProvision();
 
-    private final UsersLogic usersLogic = UsersLogic.inst();
+    private final AccountsLogic accountsLogic = AccountsLogic.inst();
 
     UserProvision() {
         // prevent initialization
@@ -32,11 +36,13 @@ public class UserProvision {
             return null;
         }
 
-        String userId = user.id;
-        user.isAdmin = Config.getAppAdmins().contains(userId);
-        user.isInstructor = usersLogic.isInstructorInAnyCourse(userId);
-        user.isStudent = usersLogic.isStudentInAnyCourse(userId);
-        user.isMaintainer = Config.getAppMaintainers().contains(userId);
+        UUID accountId = user.accountId;
+        Account account = accountsLogic.getAccount(accountId);
+
+        user.isAdmin = Config.getAppAdmins().contains(accountId.toString());
+        user.isInstructor = !account.getInstructors().isEmpty();
+        user.isStudent = !account.getStudents().isEmpty();
+        user.isMaintainer = Config.getAppMaintainers().contains(accountId.toString());
         return user;
     }
 
@@ -48,26 +54,27 @@ public class UserProvision {
             return null;
         }
 
-        return new UserInfo(uic.getUserId());
+        return new UserInfo(uic.getAccountId());
     }
 
     /**
      * Gets the information of the current masqueraded user.
      */
-    public UserInfo getMasqueradeUser(String googleId) {
-        UserInfo userInfo = new UserInfo(googleId);
+    public UserInfo getMasqueradeUser(UUID accountId) {
+        UserInfo userInfo = new UserInfo(accountId);
+        Account account = accountsLogic.getAccount(accountId);
         userInfo.isAdmin = false;
-        userInfo.isInstructor = usersLogic.isInstructorInAnyCourse(googleId);
-        userInfo.isStudent = usersLogic.isStudentInAnyCourse(googleId);
-        userInfo.isMaintainer = Config.getAppMaintainers().contains(googleId);
+        userInfo.isInstructor = !account.getInstructors().isEmpty();
+        userInfo.isStudent = !account.getStudents().isEmpty();
+        userInfo.isMaintainer = Config.getAppMaintainers().contains(accountId.toString());
         return userInfo;
     }
 
     /**
      * Gets the information of a user who has administrator role only.
      */
-    public UserInfo getAdminOnlyUser(String userId) {
-        UserInfo userInfo = new UserInfo(userId);
+    public UserInfo getAdminOnlyUser(UUID accountId) {
+        UserInfo userInfo = new UserInfo(accountId);
         userInfo.isAdmin = true;
         return userInfo;
     }

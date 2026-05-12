@@ -146,7 +146,7 @@ public abstract class Action {
     private void initAuthInfo() {
         if (Config.BACKDOOR_KEY.equals(req.getHeader(Const.HeaderNames.BACKDOOR_KEY))) {
             authType = AuthType.ALL_ACCESS;
-            userInfo = userProvision.getAdminOnlyUser(getRequestParamValue(Const.ParamsNames.USER_ID));
+            userInfo = userProvision.getAdminOnlyUser(getNullableUuidRequestParamValue(Const.ParamsNames.USER_ID));
             userInfo.isStudent = true;
             userInfo.isInstructor = true;
             return;
@@ -165,12 +165,11 @@ public abstract class Action {
         }
 
         String regKey = getRequestParamValue(Const.ParamsNames.REGKEY);
-        String userParam = getRequestParamValue(Const.ParamsNames.USER_ID);
 
         if (userInfo == null) {
             authType = StringHelper.isEmpty(regKey) ? AuthType.PUBLIC : AuthType.REG_KEY;
-        } else if (userParam != null && userInfo.isAdmin) {
-            userInfo = userProvision.getMasqueradeUser(userParam);
+        } else if (userInfo.isAdmin) {
+            userInfo = userProvision.getMasqueradeUser(userInfo.accountId);
             authType = AuthType.MASQUERADE;
         } else {
             authType = AuthType.LOGGED_IN;
