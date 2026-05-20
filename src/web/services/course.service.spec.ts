@@ -123,15 +123,17 @@ describe('CourseService', () => {
     const regKey = 'ABC';
     const entityType = 'instructor';
     const paramMap: { [key: string]: string } = {
-      key: regKey,
       entitytype: entityType,
     };
+    const body: Record<string, string> = {
+      key: regKey,
+    };
     service.getJoinCourseStatus(regKey, entityType, false);
-    expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.JOIN, paramMap);
+    expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.JOIN, paramMap, body);
 
     paramMap['iscreatingaccount'] = 'true';
     service.getJoinCourseStatus(regKey, entityType, true);
-    expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.JOIN, paramMap);
+    expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.JOIN, paramMap, body);
   });
 
   it('should execute PUT when joining course', () => {
@@ -139,8 +141,11 @@ describe('CourseService', () => {
       key: '123',
       entitytype: 'instructor',
     };
+    const body: Record<string, string> = {
+      key: '123',
+    };
     service.joinCourse(paramMap['key'], paramMap['entitytype']);
-    expect(spyHttpRequestService.put).toHaveBeenCalledWith(ResourceEndpoints.JOIN, paramMap);
+    expect(spyHttpRequestService.put).toHaveBeenCalledWith(ResourceEndpoints.JOIN, paramMap, body);
   });
 
   it('should execute POST to remind unregistered students of a course', () => {

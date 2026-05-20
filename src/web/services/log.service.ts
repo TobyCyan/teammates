@@ -25,12 +25,13 @@ export class LogService {
       fsltype: queryParams.logType.toString(),
       fsid: queryParams.feedbackSessionId,
     };
+    const body: Record<string, string> = {};
 
     if (queryParams.key) {
-      paramMap['key'] = queryParams.key;
+      body['key'] = queryParams.key;
     }
 
-    return this.httpRequestService.post(ResourceEndpoints.SESSION_LOGS, paramMap);
+    return this.httpRequestService.post(ResourceEndpoints.SESSION_LOGS, paramMap, body);
   }
 
   /**

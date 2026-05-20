@@ -188,10 +188,12 @@ export class FeedbackResponsesService {
     const paramMap: Record<string, string> = {
       questionid: queryParams.questionId,
       intent: queryParams.intent,
-      key: queryParams.key,
       moderatedperson: queryParams.moderatedPerson,
     };
-    return this.httpRequestService.get(ResourceEndpoints.RESPONSES, paramMap);
+    const body: Record<string, string> = {
+      key: queryParams.key,
+    };
+    return this.httpRequestService.get(ResourceEndpoints.RESPONSES, paramMap, body);
   }
 
   /**

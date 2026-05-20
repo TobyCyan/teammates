@@ -33,7 +33,8 @@ export class AuthService {
    * Gets the validity of the given registration key for user.
    */
   getAuthRegkeyValidity(key: string, intent: Intent): Observable<RegkeyValidity> {
-    const params: Record<string, string> = { key, intent };
-    return this.httpRequestService.get(ResourceEndpoints.AUTH_REGKEY, params);
+    const params: Record<string, string> = { intent };
+    const body: Record<string, string> = { key };
+    return this.httpRequestService.get(ResourceEndpoints.AUTH_REGKEY, params, body);
   }
 }

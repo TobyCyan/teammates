@@ -630,9 +630,10 @@ export class FeedbackQuestionsService {
       intent: queryParams.intent,
       fsid: queryParams.feedbackSessionId,
     };
+    const body: Record<string, string> = {};
 
     if (queryParams.key) {
-      paramMap['key'] = queryParams.key;
+      body['key'] = queryParams.key;
     }
 
     if (queryParams.moderatedPerson) {
@@ -643,7 +644,7 @@ export class FeedbackQuestionsService {
       paramMap['previewas'] = queryParams.previewAs;
     }
 
-    return this.httpRequestService.get(ResourceEndpoints.QUESTIONS, paramMap);
+    return this.httpRequestService.get(ResourceEndpoints.QUESTIONS, paramMap, body);
   }
 
   /**
@@ -701,11 +702,13 @@ export class FeedbackQuestionsService {
     const paramMap: Record<string, string> = {
       questionid: queryParams.questionId,
       intent: queryParams.intent,
-      key: queryParams.key,
       moderatedperson: queryParams.moderatedPerson,
       previewas: queryParams.previewAs,
     };
-    return this.httpRequestService.get(ResourceEndpoints.QUESTION_RECIPIENTS, paramMap);
+    const body: Record<string, string> = {
+      key: queryParams.key,
+    };
+    return this.httpRequestService.get(ResourceEndpoints.QUESTION_RECIPIENTS, paramMap, body);
   }
 }
 

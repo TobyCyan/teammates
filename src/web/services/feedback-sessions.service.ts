@@ -71,9 +71,10 @@ export class FeedbackSessionsService {
       intent: queryParams.intent,
       fsid: queryParams.feedbackSessionId,
     };
+    const body: Record<string, string> = {};
 
     if (queryParams.key) {
-      paramMap['key'] = queryParams.key;
+      body['key'] = queryParams.key;
     }
 
     if (queryParams.moderatedPerson) {
@@ -84,7 +85,7 @@ export class FeedbackSessionsService {
       paramMap['previewas'] = queryParams.previewAs;
     }
 
-    return this.httpRequestService.get(ResourceEndpoints.SESSION, paramMap);
+    return this.httpRequestService.get(ResourceEndpoints.SESSION, paramMap, body);
   }
 
   /**
@@ -384,8 +385,10 @@ export class FeedbackSessionsService {
       paramMap['frgroupbysection'] = queryParams.groupBySection;
     }
 
+    const body: Record<string, string> = {};
+
     if (queryParams.key) {
-      paramMap['key'] = queryParams.key;
+      body['key'] = queryParams.key;
     }
 
     if (queryParams.sectionByGiverReceiver) {
@@ -396,7 +399,7 @@ export class FeedbackSessionsService {
       paramMap['previewas'] = queryParams.previewAs;
     }
 
-    return this.httpRequestService.get(ResourceEndpoints.RESULT, paramMap);
+    return this.httpRequestService.get(ResourceEndpoints.RESULT, paramMap, body);
   }
 
   /**

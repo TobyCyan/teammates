@@ -32,8 +32,9 @@ describe('AuthService', () => {
   it('should execute getAuthRegkeyValidity', () => {
     const key = 'key';
     const intent: Intent = Intent.FULL_DETAIL;
-    const paramMap: Record<string, string> = { key, intent };
+    const paramMap: Record<string, string> = { intent };
+    const body: Record<string, string> = { key };
     service.getAuthRegkeyValidity(key, intent);
-    expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.AUTH_REGKEY, paramMap);
+    expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.AUTH_REGKEY, paramMap, body);
   });
 });

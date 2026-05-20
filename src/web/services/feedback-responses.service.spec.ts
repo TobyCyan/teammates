@@ -346,16 +346,18 @@ describe('FeedbackResponsesService', () => {
     const paramMap: Record<string, string> = {
       questionid: '[dummy question ID]',
       intent: dummyIntent,
-      key: '[dummy registration key]',
       moderatedperson: '',
+    };
+    const body: Record<string, string> = {
+      key: '[dummy registration key]',
     };
     service.getFeedbackResponse({
       questionId: paramMap['questionid'],
       intent: dummyIntent,
-      key: paramMap['key'],
+      key: body['key'],
       moderatedPerson: paramMap['moderatedperson'],
     });
-    expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.RESPONSES, paramMap);
+    expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.RESPONSES, paramMap, body);
   });
 
   it('should call put when submitting a feedback response', () => {

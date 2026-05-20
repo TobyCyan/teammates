@@ -42,10 +42,11 @@ export class CourseService {
       courseid: courseId,
       entitytype: 'instructor',
     };
+    const body: Record<string, string> = {};
     if (regKey) {
-      paramMap['key'] = regKey;
+      body['key'] = regKey;
     }
-    return this.httpRequestService.get(ResourceEndpoints.COURSE, paramMap);
+    return this.httpRequestService.get(ResourceEndpoints.COURSE, paramMap, body);
   }
 
   /**
@@ -66,10 +67,11 @@ export class CourseService {
       courseid: courseId,
       entitytype: 'student',
     };
+    const body: Record<string, string> = {};
     if (regKey) {
-      paramMap['key'] = regKey;
+      body['key'] = regKey;
     }
-    return this.httpRequestService.get(ResourceEndpoints.COURSE, paramMap);
+    return this.httpRequestService.get(ResourceEndpoints.COURSE, paramMap, body);
   }
 
   /**
@@ -129,15 +131,18 @@ export class CourseService {
    */
   getJoinCourseStatus(regKey: string, entityType: string, isCreatingAccount: boolean): Observable<JoinStatus> {
     const paramMap: Record<string, string> = {
-      key: regKey,
       entitytype: entityType,
+    };
+
+    const body: Record<string, string> = {
+      key: regKey,
     };
 
     if (isCreatingAccount) {
       paramMap['iscreatingaccount'] = 'true';
     }
 
-    return this.httpRequestService.get(ResourceEndpoints.JOIN, paramMap);
+    return this.httpRequestService.get(ResourceEndpoints.JOIN, paramMap, body);
   }
 
   /**
@@ -145,10 +150,12 @@ export class CourseService {
    */
   joinCourse(regKey: string, entityType: string): Observable<any> {
     const paramMap: Record<string, string> = {
-      key: regKey,
       entitytype: entityType,
     };
-    return this.httpRequestService.put(ResourceEndpoints.JOIN, paramMap);
+    const body: Record<string, string> = {
+      key: regKey,
+    };
+    return this.httpRequestService.put(ResourceEndpoints.JOIN, paramMap, body);
   }
 
   /**

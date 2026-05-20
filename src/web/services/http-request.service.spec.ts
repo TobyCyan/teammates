@@ -14,6 +14,7 @@ describe('HttpRequestService', () => {
 
   beforeEach(() => {
     spyHttpClient = createSpyFromClass(HttpRequestService);
+    spyHttpClient.request.mockReturnValue(new Observable<ArrayBuffer>());
     spyHttpClient.get.mockReturnValue(new Observable<ArrayBuffer>());
     TestBed.configureTestingModule({
       providers: [{ provide: HttpClient, useValue: spyHttpClient }],
@@ -46,11 +47,11 @@ describe('HttpRequestService', () => {
 
   it('should execute GET', () => {
     service.get('/url');
-    expect(spyHttpClient.get).toHaveBeenCalledWith(`${backendUrl}/url`, {
+    expect(spyHttpClient.request).toHaveBeenCalledWith('GET', `${backendUrl}/url`, {
       withCredentials,
       headers: expect.any(Object),
       params: expect.any(Object),
-      responseType: 'json' as 'text',
+      body: null,
     });
   });
 
