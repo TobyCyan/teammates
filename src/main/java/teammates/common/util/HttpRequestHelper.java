@@ -12,10 +12,17 @@ import java.util.stream.Collectors;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
+import com.google.gson.reflect.TypeToken;
+
 /**
  * Holds {@link HttpServletRequest}-related helper functions.
  */
 public final class HttpRequestHelper {
+
+    /**
+     * Name of the request attribute used to cache the pre-read request body.
+     */
+    public static final String REQUEST_BODY_ATTRIBUTE = "cachedRequestBody";
 
     private HttpRequestHelper() {
         // utility class
@@ -119,6 +126,23 @@ public final class HttpRequestHelper {
         } catch (IOException e) {
             return "";
         }
+    }
+
+    /**
+     * Extracts the value of the specified field from the cached request body attribute.
+     * Returns null if the body is absent or does not contain the specified field.
+     */
+    public static String getValueFromRequestBody(HttpServletRequest req, String name) {
+        Object bodyAttr = req.getAttribute(REQUEST_BODY_ATTRIBUTE);
+        if (!(bodyAttr instanceof String body) || body.isEmpty()) {
+            return null;
+        }
+        Map<String, String> bodyMap = JsonUtils.fromJson(body,
+                new TypeToken<Map<String, String>>() {}.getType());
+        if (bodyMap == null) {
+            return null;
+        }
+        return bodyMap.get(name);
     }
 
 }

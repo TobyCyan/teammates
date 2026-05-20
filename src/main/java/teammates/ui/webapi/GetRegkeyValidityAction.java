@@ -17,7 +17,7 @@ public class GetRegkeyValidityAction extends PublicAction {
     @Override
     public JsonResult execute() {
         Intent intent = Intent.valueOf(getNonNullRequestParamValue(Const.ParamsNames.INTENT));
-        String regKey = getNonNullRequestParamValue(Const.ParamsNames.REGKEY);
+        String regKey = getNonNullRegkeyFromBody();
 
         boolean isValid = false;
         String googleId = null;

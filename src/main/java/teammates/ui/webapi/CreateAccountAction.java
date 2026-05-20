@@ -46,7 +46,7 @@ public class CreateAccountAction extends Action {
 
     @Override
     public JsonResult execute() throws InvalidHttpRequestBodyException, InvalidOperationException {
-        String registrationKey = getNonNullRequestParamValue(Const.ParamsNames.REGKEY);
+        String registrationKey = getNonNullRegkeyFromBody();
         String timezone = getRequestParamValue(Const.ParamsNames.TIMEZONE);
 
         if (timezone == null || !FieldValidator.getInvalidityInfoForTimeZone(timezone).isEmpty()) {

@@ -114,8 +114,8 @@ public class UserProvision {
      * Checks if the request contains a registration key.
      */
     protected boolean isRegKeyRequest(HttpServletRequest req) {
-        String regKey = req.getParameter(Const.ParamsNames.REGKEY);
-        return regKey != null;
+        return req.getParameter(Const.ParamsNames.REGKEY) != null
+                || HttpRequestHelper.getValueFromRequestBody(req, Const.ParamsNames.REGKEY) != null;
     }
 
     /**
@@ -221,7 +221,8 @@ public class UserProvision {
      */
 
     private AuthContext handleRegkeyUser(HttpServletRequest req) throws UnauthorizedAccessException {
-        String regKey = req.getParameter(Const.ParamsNames.REGKEY);
+        String regKey = HttpRequestHelper.getValueFromRequestBody(req, Const.ParamsNames.REGKEY);
+
         User regKeyUser = usersLogic.getUserByRegistrationKey(regKey);
 
         if (regKeyUser == null) {

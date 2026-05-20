@@ -34,7 +34,7 @@ public class JoinCourseAction extends Action {
 
     @Override
     public JsonResult execute() throws InvalidOperationException {
-        String regKey = getNonNullRequestParamValue(Const.ParamsNames.REGKEY);
+        String regKey = getNonNullRegkeyFromBody();
         String entityType = getNonNullRequestParamValue(Const.ParamsNames.ENTITY_TYPE);
 
         switch (entityType) {

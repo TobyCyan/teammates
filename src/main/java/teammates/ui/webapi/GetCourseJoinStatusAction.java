@@ -25,7 +25,7 @@ public class GetCourseJoinStatusAction extends Action {
 
     @Override
     public JsonResult execute() {
-        String regkey = getNonNullRequestParamValue(Const.ParamsNames.REGKEY);
+        String regkey = getNonNullRegkeyFromBody();
         String entityType = getNonNullRequestParamValue(Const.ParamsNames.ENTITY_TYPE);
         String isCreatingAccount = getRequestParamValue(Const.ParamsNames.IS_CREATING_ACCOUNT);
 

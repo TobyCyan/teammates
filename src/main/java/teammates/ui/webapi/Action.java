@@ -58,6 +58,8 @@ public abstract class Action {
      */
     public void init(HttpServletRequest req) throws UnauthorizedAccessException {
         this.req = req;
+        this.requestBody = HttpRequestHelper.getRequestBody(req);
+        req.setAttribute(HttpRequestHelper.REQUEST_BODY_ATTRIBUTE, this.requestBody);
         this.authContext = userProvision.getAuthContextFromRequest(req);
     }
 
@@ -229,6 +231,26 @@ public abstract class Action {
             requestBody = HttpRequestHelper.getRequestBody(req);
         }
         return requestBody;
+    }
+
+    /**
+     * Returns the registration key from the request body, or null if not present.
+     */
+    String getRegkeyFromBody() {
+        return HttpRequestHelper.getValueFromRequestBody(req, Const.ParamsNames.REGKEY);
+    }
+
+    /**
+     * Returns the registration key from the request body.
+     * Throws {@link InvalidHttpParameterException} if not present.
+     */
+    String getNonNullRegkeyFromBody() {
+        String value = getRegkeyFromBody();
+        if (value == null) {
+            throw new InvalidHttpParameterException(
+                    String.format("The [%s] HTTP body parameter is null.", Const.ParamsNames.REGKEY));
+        }
+        return value;
     }
 
     /**

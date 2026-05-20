@@ -36,7 +36,7 @@ public class GetStudentAction extends Action {
         Student student;
 
         String studentEmail = getRequestParamValue(Const.ParamsNames.STUDENT_EMAIL);
-        String regKey = getRequestParamValue(Const.ParamsNames.REGKEY);
+        String regKey = getRegkeyFromBody();
         if (studentEmail != null) {
             student = logic.getStudentForEmail(courseId, studentEmail);
 
