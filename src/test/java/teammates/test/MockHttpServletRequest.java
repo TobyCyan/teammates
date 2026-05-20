@@ -40,6 +40,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
     private List<Cookie> cookies;
     private Map<String, List<String>> headers;
     private Map<String, List<String>> params;
+    private Map<String, Object> attributes = new HashMap<>();
     private String method;
     private String requestUrl;
     private String requestedSessionId;
@@ -330,12 +331,12 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
     @Override
     public Object getAttribute(String s) {
-        return null;
+        return this.attributes.get(s);
     }
 
     @Override
     public Enumeration<String> getAttributeNames() {
-        return null;
+        return Collections.enumeration(this.attributes.keySet());
     }
 
     @Override
@@ -440,12 +441,12 @@ public class MockHttpServletRequest implements HttpServletRequest {
 
     @Override
     public void setAttribute(String s, Object o) {
-        // not used
+        this.attributes.put(s, o);
     }
 
     @Override
     public void removeAttribute(String s) {
-        // not used
+        this.attributes.remove(s);
     }
 
     @Override

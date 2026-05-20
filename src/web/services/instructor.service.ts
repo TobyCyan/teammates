@@ -43,8 +43,9 @@ export class InstructorService {
       courseid: queryParams.courseId,
       intent: queryParams.intent,
     };
+    const body: Record<string, string> = {};
     if (queryParams.key) {
-      paramMap['key'] = queryParams.key;
+      body['key'] = queryParams.key;
     }
     if (queryParams.moderatedPerson) {
       paramMap['moderatedperson'] = queryParams.moderatedPerson;
@@ -52,7 +53,7 @@ export class InstructorService {
     if (queryParams.previewAs) {
       paramMap['previewas'] = queryParams.previewAs;
     }
-    return this.httpRequestService.get(ResourceEndpoints.INSTRUCTOR, paramMap);
+    return this.httpRequestService.get(ResourceEndpoints.INSTRUCTOR, paramMap, body);
   }
 
   /**

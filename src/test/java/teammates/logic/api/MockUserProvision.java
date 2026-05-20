@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import teammates.common.datatransfer.AuthContext;
 import teammates.common.util.Const;
+import teammates.common.util.HttpRequestHelper;
 import teammates.storage.entity.Account;
 import teammates.storage.entity.User;
 import teammates.ui.exception.UnauthorizedAccessException;
@@ -101,7 +102,7 @@ public class MockUserProvision extends UserProvision {
         }
 
         if (!isLoggedIn) {
-            String regKey = req.getParameter(Const.ParamsNames.REGKEY);
+            String regKey = HttpRequestHelper.getValueFromRequestBody(req, Const.ParamsNames.REGKEY);
             if (regKey != null) {
                 User regKeyUser = logic.getUserByRegistrationKey(regKey);
                 return new AuthContext(AuthType.REG_KEY, null, regKeyUser, false, false);

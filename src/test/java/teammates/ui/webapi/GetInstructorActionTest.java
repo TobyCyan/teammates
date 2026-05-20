@@ -3,6 +3,8 @@ package teammates.ui.webapi;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -92,13 +94,13 @@ public class GetInstructorActionTest extends BaseActionTest<GetInstructorAction>
         logoutUser();
         Instructor instructor = new Instructor(course, "name", "email@tm.tmt", false, "", null, null);
         when(mockLogic.getInstructorByRegistrationKey(instructor.getRegKey())).thenReturn(instructor);
+        String body = JsonUtils.toCompactJson(Map.of(Const.ParamsNames.REGKEY, instructor.getRegKey()));
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.REGKEY, instructor.getRegKey(),
                 Const.ParamsNames.INTENT, Intent.INSTRUCTOR_SUBMISSION.toString(),
         };
 
-        GetInstructorAction getInstructorAction = getAction(params);
+        GetInstructorAction getInstructorAction = getAction(body, null, params);
         InstructorData actionOutput = (InstructorData) getJsonResult(getInstructorAction).getOutput();
         assertEquals(JsonUtils.toJson(new InstructorData(instructor)), JsonUtils.toJson(actionOutput));
     }
@@ -122,13 +124,13 @@ public class GetInstructorActionTest extends BaseActionTest<GetInstructorAction>
         logoutUser();
         Instructor instructor = new Instructor(course, "name", "email@tm.tmt", false, "", null, null);
         when(mockLogic.getInstructorByRegistrationKey(instructor.getRegKey())).thenReturn(instructor);
+        String body = JsonUtils.toCompactJson(Map.of(Const.ParamsNames.REGKEY, instructor.getRegKey()));
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.REGKEY, instructor.getRegKey(),
                 Const.ParamsNames.INTENT, Intent.INSTRUCTOR_RESULT.toString(),
         };
 
-        GetInstructorAction getInstructorAction = getAction(params);
+        GetInstructorAction getInstructorAction = getAction(body, null, params);
         InstructorData actionOutput = (InstructorData) getJsonResult(getInstructorAction).getOutput();
         assertEquals(JsonUtils.toJson(new InstructorData(instructor)), JsonUtils.toJson(actionOutput));
     }

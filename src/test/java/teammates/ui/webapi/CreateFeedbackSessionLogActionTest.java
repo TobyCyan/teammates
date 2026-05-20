@@ -8,12 +8,15 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.logs.FeedbackSessionLogType;
 import teammates.common.util.Const;
+import teammates.common.util.JsonUtils;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Student;
@@ -115,9 +118,9 @@ public class CreateFeedbackSessionLogActionTest extends BaseActionTest<CreateFee
         String[] paramsWithRegKey = {
                 Const.ParamsNames.FEEDBACK_SESSION_ID, fsaCourse1Id,
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_TYPE, FeedbackSessionLogType.ACCESS.name(),
-                Const.ParamsNames.REGKEY, student1RegKey,
         };
-        verifyCanAccess(paramsWithRegKey);
+        String regKeyBody = JsonUtils.toCompactJson(Map.of(Const.ParamsNames.REGKEY, student1RegKey));
+        verifyCanAccessWithBody(regKeyBody, paramsWithRegKey);
     }
 
     @Test

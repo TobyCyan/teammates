@@ -262,6 +262,28 @@ public abstract class BaseActionTest<T extends Action> extends BaseTestCase {
 
     /**
      * Verifies that the {@link Action} matching the {@code params} is
+     * accessible to the user, with raw body.
+     */
+    protected void verifyCanAccessWithBody(String body, String... params) {
+        Action c = getAction(body, null, params);
+        try {
+            c.checkAccessControl();
+        } catch (UnauthorizedAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Verifies that the {@link Action} matching the {@code params} is not
+     * accessible to the user, with raw body.
+     */
+    protected void verifyCannotAccessWithBody(String body, String... params) {
+        Action c = getAction(body, null, params);
+        assertThrows(UnauthorizedAccessException.class, c::checkAccessControl);
+    }
+
+    /**
+     * Verifies that the {@link Action} matching the {@code params} is
      * accessible to the logged in user masquerading as another user with
      * {@code userId}.
      */
@@ -327,6 +349,15 @@ public abstract class BaseActionTest<T extends Action> extends BaseTestCase {
     }
 
     /**
+     * Verifies that the executed action results in
+     * {@link InvalidHttpParameterException} being thrown, with raw body.
+     */
+    protected InvalidHttpParameterException verifyHttpParameterFailureWithBody(String body, String... params) {
+        Action c = getAction(body, null, params);
+        return assertThrows(InvalidHttpParameterException.class, c::execute);
+    }
+
+    /**
      * Verifies that the action results in {@link InvalidHttpParameterException}
      * being thrown
      * when checking for access control.
@@ -360,6 +391,15 @@ public abstract class BaseActionTest<T extends Action> extends BaseTestCase {
      */
     protected EntityNotFoundException verifyEntityNotFound(BasicRequest requestBody, String... params) {
         Action c = getAction(requestBody, params);
+        return assertThrows(EntityNotFoundException.class, c::execute);
+    }
+
+    /**
+     * Verifies that the executed action results in {@link EntityNotFoundException}
+     * being thrown, with raw body.
+     */
+    protected EntityNotFoundException verifyEntityNotFoundWithBody(String body, String... params) {
+        Action c = getAction(body, null, params);
         return assertThrows(EntityNotFoundException.class, c::execute);
     }
 

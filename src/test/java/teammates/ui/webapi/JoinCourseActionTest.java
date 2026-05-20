@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -13,6 +15,7 @@ import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
 import teammates.common.util.Const;
 import teammates.common.util.EmailWrapper;
+import teammates.common.util.JsonUtils;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Student;
@@ -38,6 +41,10 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         return PUT;
     }
 
+    private String regkeyBody(String key) {
+        return JsonUtils.toCompactJson(Map.of(Const.ParamsNames.REGKEY, key));
+    }
+
     @BeforeMethod
     void setUp() {
         stubCourse = getTypicalCourse();
@@ -54,10 +61,8 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         String [] params1 = {};
         verifyHttpParameterFailure(params1);
 
-        String[] params2 = {
-                Const.ParamsNames.REGKEY, "regkey",
-        };
-        verifyHttpParameterFailure(params2);
+        // regkey in body but no entity type
+        verifyHttpParameterFailureWithBody(regkeyBody("regkey"));
 
         String[] params3 = {
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
@@ -76,10 +81,9 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         when(mockEmailGenerator.generateUserCourseRegisteredEmail(stubStudent.getName(), stubStudent.getEmail(),
                 "unreg-student", false, stubCourse)).thenReturn(stubEmailWrapper);
         String[] params = {
-                Const.ParamsNames.REGKEY, "registered-key-student",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
         };
-        JoinCourseAction action = getAction(params);
+        JoinCourseAction action = getAction(regkeyBody("registered-key-student"), null, params);
         JsonResult jsonResult = getJsonResult(action);
         MessageOutput messageOutput = (MessageOutput) jsonResult.getOutput();
         assertEquals("Student successfully joined course", messageOutput.getMessage());
@@ -95,10 +99,9 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         when(mockLogic.joinCourseForStudent("registered-key-student", "unreg-student"))
                 .thenThrow(EntityAlreadyExistsException.class);
         String[] params = {
-                Const.ParamsNames.REGKEY, "registered-key-student",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
         };
-        JoinCourseAction action = getAction(params);
+        JoinCourseAction action = getAction(regkeyBody("registered-key-student"), null, params);
         assertThrows(InvalidOperationException.class, action::execute);
         verifyNoEmailsSent();
     }
@@ -112,10 +115,9 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         when(mockLogic.joinCourseForStudent("invalid-reg-key", "unreg-student"))
                 .thenThrow(EntityDoesNotExistException.class);
         String[] params = {
-                Const.ParamsNames.REGKEY, "invalid-reg-key",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
         };
-        verifyEntityNotFound(params);
+        verifyEntityNotFoundWithBody(regkeyBody("invalid-reg-key"), params);
         verifyNoEmailsSent();
     }
 
@@ -127,10 +129,9 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         when(mockLogic.joinCourseForStudent("invalid-reg-key", "unreg-student"))
                 .thenThrow(InvalidParametersException.class);
         String[] params = {
-                Const.ParamsNames.REGKEY, "invalid-reg-key",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
         };
-        JoinCourseAction action = getAction(params);
+        JoinCourseAction action = getAction(regkeyBody("invalid-reg-key"), null, params);
         JsonResult jsonResult = getJsonResult(action, 500);
         assertEquals(500, jsonResult.getStatusCode());
         verifyNoEmailsSent();
@@ -148,10 +149,9 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         when(mockEmailGenerator.generateUserCourseRegisteredEmail(stubInstructor.getName(), stubInstructor.getEmail(),
                 "unreg-instructor", true, stubCourse)).thenReturn(stubEmailWrapper);
         String[] params = {
-                Const.ParamsNames.REGKEY, "registered-key-instructor",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
         };
-        JoinCourseAction action = getAction(params);
+        JoinCourseAction action = getAction(regkeyBody("registered-key-instructor"), null, params);
         JsonResult jsonResult = getJsonResult(action);
         MessageOutput messageOutput = (MessageOutput) jsonResult.getOutput();
         assertEquals("Instructor successfully joined course", messageOutput.getMessage());
@@ -167,10 +167,9 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         when(mockLogic.joinCourseForInstructor("registered-key-instructor", "unreg-instructor"))
                 .thenThrow(EntityAlreadyExistsException.class);
         String[] params = {
-                Const.ParamsNames.REGKEY, "registered-key-instructor",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
         };
-        JoinCourseAction action = getAction(params);
+        JoinCourseAction action = getAction(regkeyBody("registered-key-instructor"), null, params);
         assertThrows(InvalidOperationException.class, action::execute);
         verifyNoEmailsSent();
     }
@@ -184,10 +183,9 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         when(mockLogic.joinCourseForInstructor("invalid-reg-key", "unreg-instructor"))
                 .thenThrow(EntityDoesNotExistException.class);
         String[] params = {
-                Const.ParamsNames.REGKEY, "invalid-reg-key",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
         };
-        verifyEntityNotFound(params);
+        verifyEntityNotFoundWithBody(regkeyBody("invalid-reg-key"), params);
         verifyNoEmailsSent();
     }
 
@@ -199,10 +197,9 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         when(mockLogic.joinCourseForInstructor("invalid-reg-key", "unreg-instructor"))
                 .thenThrow(InvalidParametersException.class);
         String[] params = {
-                Const.ParamsNames.REGKEY, "invalid-reg-key",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
         };
-        JoinCourseAction action = getAction(params);
+        JoinCourseAction action = getAction(regkeyBody("invalid-reg-key"), null, params);
         JsonResult jsonResult = getJsonResult(action, 500);
         assertEquals(500, jsonResult.getStatusCode());
         verifyNoEmailsSent();
@@ -213,22 +210,19 @@ public class JoinCourseActionTest extends BaseActionTest<JoinCourseAction> {
         loginAsUnregistered("unreg-user");
 
         String[] params1 = {
-                Const.ParamsNames.REGKEY, "registered-key-student",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.MAINTAINER,
         };
-        verifyHttpParameterFailure(params1);
+        verifyHttpParameterFailureWithBody(regkeyBody("registered-key-student"), params1);
 
         String[] params2 = {
-                Const.ParamsNames.REGKEY, "registered-key-student",
                 Const.ParamsNames.ENTITY_TYPE, "invalid-entity-type",
         };
-        verifyHttpParameterFailure(params2);
+        verifyHttpParameterFailureWithBody(regkeyBody("registered-key-student"), params2);
 
         String[] params3 = {
-                Const.ParamsNames.REGKEY, "registered-key-student",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.ADMIN,
         };
-        verifyHttpParameterFailure(params3);
+        verifyHttpParameterFailureWithBody(regkeyBody("registered-key-student"), params3);
 
         verifyNoEmailsSent();
     }

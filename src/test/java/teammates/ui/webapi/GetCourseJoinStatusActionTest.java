@@ -8,11 +8,13 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.util.Map;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import teammates.common.util.Const;
+import teammates.common.util.JsonUtils;
 import teammates.storage.entity.AccountRequest;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Student;
@@ -38,6 +40,10 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         return GET;
     }
 
+    private String regkeyBody(String key) {
+        return JsonUtils.toCompactJson(Map.of(Const.ParamsNames.REGKEY, key));
+    }
+
     @BeforeMethod
     void setUpMethod() {
         typicalStudent = getTypicalStudent();
@@ -51,11 +57,10 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         when(mockLogic.getStudentByRegistrationKey("key")).thenReturn(null);
 
         String[] params = new String[] {
-                Const.ParamsNames.REGKEY, "key",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
         };
 
-        GetCourseJoinStatusAction action = getAction(params);
+        GetCourseJoinStatusAction action = getAction(regkeyBody("key"), null, params);
         EntityNotFoundException enfe = assertThrows(EntityNotFoundException.class, action::execute);
         assertEquals("No student with given registration key: key", enfe.getMessage());
     }
@@ -68,11 +73,10 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         typicalStudent.setAccount(getTypicalAccount());
 
         String[] params = new String[] {
-                Const.ParamsNames.REGKEY, typicalStudent.getRegKey(),
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
         };
 
-        GetCourseJoinStatusAction action = getAction(params);
+        GetCourseJoinStatusAction action = getAction(regkeyBody(typicalStudent.getRegKey()), null, params);
         JsonResult result = getJsonResult(action);
         JoinStatus output = (JoinStatus) result.getOutput();
         assertTrue(output.getHasJoined());
@@ -83,11 +87,10 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         when(mockLogic.getStudentByRegistrationKey(typicalStudent.getRegKey())).thenReturn(typicalStudent);
 
         String[] params = new String[] {
-                Const.ParamsNames.REGKEY, typicalStudent.getRegKey(),
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
         };
 
-        GetCourseJoinStatusAction action = getAction(params);
+        GetCourseJoinStatusAction action = getAction(regkeyBody(typicalStudent.getRegKey()), null, params);
         JsonResult result = getJsonResult(action);
         JoinStatus output = (JoinStatus) result.getOutput();
         assertFalse(output.getHasJoined());
@@ -98,11 +101,10 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         when(mockLogic.getInstructorByRegistrationKey("key")).thenReturn(null);
 
         String[] params = new String[] {
-                Const.ParamsNames.REGKEY, "key",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
         };
 
-        GetCourseJoinStatusAction action = getAction(params);
+        GetCourseJoinStatusAction action = getAction(regkeyBody("key"), null, params);
         EntityNotFoundException enfe = assertThrows(EntityNotFoundException.class, action::execute);
         assertEquals("No instructor with given registration key: key", enfe.getMessage());
     }
@@ -115,11 +117,10 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         typicalInstructor.setAccount(getTypicalAccount());
 
         String[] params = new String[] {
-                Const.ParamsNames.REGKEY, typicalInstructor.getRegKey(),
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
         };
 
-        GetCourseJoinStatusAction action = getAction(params);
+        GetCourseJoinStatusAction action = getAction(regkeyBody(typicalInstructor.getRegKey()), null, params);
         JsonResult result = getJsonResult(action);
         JoinStatus output = (JoinStatus) result.getOutput();
         assertTrue(output.getHasJoined());
@@ -130,11 +131,10 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         when(mockLogic.getInstructorByRegistrationKey(typicalInstructor.getRegKey())).thenReturn(typicalInstructor);
 
         String[] params = new String[] {
-                Const.ParamsNames.REGKEY, typicalInstructor.getRegKey(),
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
         };
 
-        GetCourseJoinStatusAction action = getAction(params);
+        GetCourseJoinStatusAction action = getAction(regkeyBody(typicalInstructor.getRegKey()), null, params);
         JsonResult result = getJsonResult(action);
         JoinStatus output = (JoinStatus) result.getOutput();
         assertFalse(output.getHasJoined());
@@ -145,12 +145,11 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         when(mockLogic.getAccountRequestByRegistrationKey("key")).thenReturn(null);
 
         String[] params = new String[] {
-                Const.ParamsNames.REGKEY, "key",
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
                 Const.ParamsNames.IS_CREATING_ACCOUNT, "true",
         };
 
-        GetCourseJoinStatusAction action = getAction(params);
+        GetCourseJoinStatusAction action = getAction(regkeyBody("key"), null, params);
         EntityNotFoundException enfe = assertThrows(EntityNotFoundException.class, action::execute);
         assertEquals("No account request with given registration key: key", enfe.getMessage());
     }
@@ -160,12 +159,11 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         when(mockLogic.getAccountRequestByRegistrationKey(typicalInstructor.getRegKey())).thenReturn(typicalAccountRequest);
 
         String[] params = new String[] {
-                Const.ParamsNames.REGKEY, typicalInstructor.getRegKey(),
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
                 Const.ParamsNames.IS_CREATING_ACCOUNT, "true",
         };
 
-        GetCourseJoinStatusAction action = getAction(params);
+        GetCourseJoinStatusAction action = getAction(regkeyBody(typicalInstructor.getRegKey()), null, params);
         JsonResult result = getJsonResult(action);
         JoinStatus output = (JoinStatus) result.getOutput();
         assertFalse(output.getHasJoined());
@@ -177,12 +175,11 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         when(mockLogic.getAccountRequestByRegistrationKey(typicalInstructor.getRegKey())).thenReturn(typicalAccountRequest);
 
         String[] params = new String[] {
-                Const.ParamsNames.REGKEY, typicalInstructor.getRegKey(),
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
                 Const.ParamsNames.IS_CREATING_ACCOUNT, "true",
         };
 
-        GetCourseJoinStatusAction action = getAction(params);
+        GetCourseJoinStatusAction action = getAction(regkeyBody(typicalInstructor.getRegKey()), null, params);
         JsonResult result = getJsonResult(action);
         JoinStatus output = (JoinStatus) result.getOutput();
         assertTrue(output.getHasJoined());
@@ -194,16 +191,16 @@ public class GetCourseJoinStatusActionTest extends BaseActionTest<GetCourseJoinS
         loginAsUnregistered("unregistered user");
         verifyHttpParameterFailure();
 
-        verifyHttpParameterFailure(
-                Const.ParamsNames.REGKEY, "regkey"
-        );
+        // no regkey in body
         verifyHttpParameterFailure(
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT
         );
 
-        verifyHttpParameterFailure(
-                Const.ParamsNames.ENTITY_TYPE, "some-entity",
-                Const.ParamsNames.REGKEY, "regkey"
+        // regkey in body but no entity type
+        verifyHttpParameterFailureWithBody(regkeyBody("regkey"));
+
+        verifyHttpParameterFailureWithBody(regkeyBody("regkey"),
+                Const.ParamsNames.ENTITY_TYPE, "some-entity"
         );
     }
 

@@ -9,10 +9,13 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import teammates.common.util.Const;
+import teammates.common.util.JsonUtils;
 import teammates.storage.entity.Account;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.Instructor;
@@ -60,6 +63,10 @@ public class GetStudentActionTest extends BaseActionTest<GetStudentAction> {
         ADMIN
     }
 
+    private String regkeyBody(String key) {
+        return JsonUtils.toCompactJson(Map.of(Const.ParamsNames.REGKEY, key));
+    }
+
     @Test
     void testExecute_emptyParams_throwsInvalidHttpParameterException() {
         String[] params = {};
@@ -71,35 +78,28 @@ public class GetStudentActionTest extends BaseActionTest<GetStudentAction> {
         logoutUser();
         String[] params = {
                 Const.ParamsNames.COURSE_ID, stubCourse.getId(),
-                Const.ParamsNames.REGKEY, stubStudent.getRegKey(),
         };
 
         when(mockLogic.getStudentByRegistrationKey(stubStudent.getRegKey())).thenReturn(stubStudent);
         stubStudentData.setInstitute(stubStudent.getCourse().getInstitute());
-        GetStudentAction action = getAction(params);
+        GetStudentAction action = getAction(regkeyBody(stubStudent.getRegKey()), null, params);
         StudentData studentData = (StudentData) getJsonResult(action).getOutput();
         verifyStudentData(stubStudentData, studentData, Type.STUDENT);
     }
 
     @Test
     void testExecute_invalidRegKeyParamsUnregisteredStudent_throwsEntityNotFoundException() {
+        // REGKEY in body but invalid
         String[] params = {
                 Const.ParamsNames.COURSE_ID, stubCourse.getId(),
-                Const.ParamsNames.REGKEY, "INVALID_KEY",
         };
-        verifyEntityNotFound(params);
+        verifyEntityNotFoundWithBody(regkeyBody("INVALID_KEY"), params);
 
+        // no regkey in body or params
         String[] params2 = {
                 Const.ParamsNames.COURSE_ID, stubCourse.getId(),
         };
         verifyEntityNotFound(params2);
-
-        String[] params3 = {
-                Const.ParamsNames.COURSE_ID, stubCourse.getId(),
-                Const.ParamsNames.REGKEY, null,
-        };
-
-        verifyEntityNotFound(params3);
     }
 
     @Test
@@ -331,10 +331,9 @@ public class GetStudentActionTest extends BaseActionTest<GetStudentAction> {
         }).when(mockLogic).getStudentByGoogleId(eq(requestedCourse.getId()), anyString());
     }
 
-    private String[] regKeyParams(String key) {
+    private String[] courseParams() {
         return new String[] {
                 Const.ParamsNames.COURSE_ID, stubCourse.getId(),
-                Const.ParamsNames.REGKEY, key,
         };
     }
 
@@ -384,12 +383,12 @@ public class GetStudentActionTest extends BaseActionTest<GetStudentAction> {
     void testGetStudent_unregisteredWithValidKey_canAccess() {
         when(mockLogic.getStudentByRegistrationKey(stubStudent.getRegKey()))
                 .thenReturn(stubStudent);
-        verifyCanAccess(regKeyParams(stubStudent.getRegKey()));
+        verifyCanAccessWithBody(regkeyBody(stubStudent.getRegKey()), courseParams());
     }
 
     @Test
     void testGetStudent_unregisteredWithInvalidKey_cannotAccess() {
         when(mockLogic.getStudentByRegistrationKey("BAD")).thenReturn(null);
-        verifyCannotAccess(regKeyParams("BAD"));
+        verifyCannotAccessWithBody(regkeyBody("BAD"), courseParams());
     }
 }

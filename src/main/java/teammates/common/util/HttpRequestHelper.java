@@ -137,12 +137,16 @@ public final class HttpRequestHelper {
         if (!(bodyAttr instanceof String body) || body.isEmpty()) {
             return null;
         }
-        Map<String, String> bodyMap = JsonUtils.fromJson(body,
-                new TypeToken<Map<String, String>>() {}.getType());
-        if (bodyMap == null) {
+        try {
+            Map<String, String> bodyMap = JsonUtils.fromJson(body,
+                    new TypeToken<Map<String, String>>() {}.getType());
+            if (bodyMap == null) {
+                return null;
+            }
+            return bodyMap.get(name);
+        } catch (Exception e) {
             return null;
         }
-        return bodyMap.get(name);
     }
 
 }
