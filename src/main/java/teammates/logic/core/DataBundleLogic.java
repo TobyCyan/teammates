@@ -344,7 +344,7 @@ public final class DataBundleLogic {
                 notificationsLogic.deleteNotification(notification.getId())
         );
         dataBundle.accounts.values().forEach(account ->
-                accountsLogic.deleteAccount(account.getGoogleId())
+                accountsLogic.deleteAccount(account.getProvider(), account.getSubject(), account.getTenantId())
         );
         dataBundle.accountRequests.values().forEach(accountRequest ->
                 accountRequestsLogic.deleteAccountRequest(accountRequest.getId())

@@ -3,6 +3,7 @@ package teammates.logic.api;
 import jakarta.servlet.http.HttpServletRequest;
 
 import teammates.common.datatransfer.AuthContext;
+import teammates.common.datatransfer.Provider;
 import teammates.common.datatransfer.UserInfo;
 import teammates.common.datatransfer.UserInfoCookie;
 import teammates.common.util.AutomatedRequestAuth;
@@ -156,7 +157,7 @@ public class UserProvision {
         Account account = null;
         if (isMasqueradeRequest(req)) {
             String userId = req.getParameter(Const.ParamsNames.USER);
-            account = accountsLogic.getAccountForGoogleId(userId);
+            account = accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, userId, null);
         }
 
         return new AuthContext(
@@ -193,7 +194,7 @@ public class UserProvision {
             }
 
             String userId = req.getParameter(Const.ParamsNames.USER);
-            effectiveAccount = accountsLogic.getAccountForGoogleId(userId);
+            effectiveAccount = accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, userId, null);
             if (effectiveAccount == null) {
                 throw new UnauthorizedAccessException(
                         String.format("Masquerade failed: no account found for user id %s", userId));

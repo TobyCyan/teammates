@@ -238,12 +238,11 @@ public abstract class BaseActionIT<T extends Action> extends BaseTestCaseWithDat
     }
 
     private void ensureAccountExists(String googleId) {
-        if (logic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, googleId, "tenant-id") == null) {
+        if (logic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, googleId, null) == null) {
             String email = googleId.contains("@") ? googleId : googleId + "@example.com";
             String subject = googleId;
-            String tenantId = "tenant-id";
             try {
-                logic.createAccount(Provider.TEAMMATES_DEV, subject, tenantId, email, googleId);
+                logic.createAccount(Provider.TEAMMATES_DEV, subject, null, email, googleId);
             } catch (InvalidParametersException | EntityAlreadyExistsException e) {
                 throw new RuntimeException(e);
             }

@@ -1,5 +1,6 @@
 package teammates.ui.webapi;
 
+import teammates.common.datatransfer.Provider;
 import teammates.common.util.Const;
 
 /**
@@ -9,9 +10,11 @@ public class DeleteAccountAction extends AdminOnlyAction {
 
     @Override
     public JsonResult execute() {
-        String googleId = getNonNullRequestParamValue(Const.ParamsNames.INSTRUCTOR_ID);
+        String provider = getNonNullRequestParamValue(Const.ParamsNames.PROVIDER);
+        String subject = getNonNullRequestParamValue(Const.ParamsNames.SUBJECT);
+        String tenantId = getRequestParamValue(Const.ParamsNames.TENANT_ID);
 
-        logic.deleteAccountCascade(googleId);
+        logic.deleteAccountCascade(Provider.valueOf(provider), subject, tenantId);
 
         return new JsonResult("Account is successfully deleted.");
     }

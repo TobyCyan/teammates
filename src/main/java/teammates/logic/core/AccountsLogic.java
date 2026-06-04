@@ -55,15 +55,6 @@ public final class AccountsLogic {
     }
 
     /**
-     * Gets an account by googleId.
-     */
-    public Account getAccountForGoogleId(String googleId) {
-        assert googleId != null;
-
-        return accountsDb.getAccountByGoogleId(googleId);
-    }
-
-    /**
      * Gets an account by OIDC claims.
      */
     public Account getAccountByOidcClaims(Provider provider, String subject, @Nullable String tenantId) {
@@ -139,7 +130,7 @@ public final class AccountsLogic {
 
         validateAccount(account);
 
-        if (getAccountForGoogleId(account.getGoogleId()) != null) {
+        if (getAccountByOidcClaims(account.getProvider(), account.getSubject(), account.getTenantId()) != null) {
             throw new EntityAlreadyExistsException(String.format(ERROR_CREATE_ENTITY_ALREADY_EXISTS, account.toString()));
         }
 
@@ -147,12 +138,12 @@ public final class AccountsLogic {
     }
 
     /**
-     * Deletes account associated with the {@code googleId}.
+     * Deletes account associated with the OIDC claims.
      *
      * <p>Fails silently if the account doesn't exist.</p>
      */
-    public void deleteAccount(String googleId) {
-        Account account = getAccountForGoogleId(googleId);
+    public void deleteAccount(Provider provider, String subject, @Nullable String tenantId) {
+        Account account = getAccountByOidcClaims(provider, subject, tenantId);
         if (account == null) {
             return;
         }
@@ -161,17 +152,17 @@ public final class AccountsLogic {
     }
 
     /**
-     * Deletes account and all users associated with the {@code googleId}.
+     * Deletes account and all users associated with the OIDC claims.
      *
      * <p>Fails silently if the account doesn't exist.</p>
      */
-    public void deleteAccountCascade(String googleId) {
-        Account account = getAccountForGoogleId(googleId);
+    public void deleteAccountCascade(Provider provider, String subject, @Nullable String tenantId) {
+        Account account = getAccountByOidcClaims(provider, subject, tenantId);
         if (account == null) {
             return;
         }
 
-        List<User> usersToDelete = usersLogic.getAllUsersByGoogleId(googleId);
+        List<User> usersToDelete = usersLogic.getAllUsersByGoogleId(account.getGoogleId());
 
         for (User user : usersToDelete) {
             usersLogic.deleteUser(user);

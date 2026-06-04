@@ -38,14 +38,14 @@ public class GetUserCookieAction extends Action {
     }
 
     private UUID getOrCreateAccountId(String userId) {
-        Account existingAccount = logic.getAccountForGoogleId(userId);
+        Account existingAccount = logic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, userId, null);
         if (existingAccount != null) {
             return existingAccount.getId();
         }
 
         String email = isValidEmail(userId) ? userId : getUniqueFallbackEmail();
         try {
-            Account newAccount = logic.createAccount(Provider.TEAMMATES_DEV, userId, "test-tenant", email, userId);
+            Account newAccount = logic.createAccount(Provider.TEAMMATES_DEV, userId, null, email, userId);
             return newAccount.getId();
         } catch (EntityAlreadyExistsException e) {
             throw new IllegalStateException("Failed to create existing account for email: " + email, e);

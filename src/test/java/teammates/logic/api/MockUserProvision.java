@@ -22,7 +22,7 @@ public class MockUserProvision extends UserProvision {
             new AuthContext(AuthType.AUTOMATED_SERVICE, null, null, false, false);
 
     private Logic logic = Logic.inst();
-    private String loggedInGoogleId;
+    private String loggedInSubject;
     private boolean createMissingAccounts;
     private boolean isLoggedIn;
     private boolean loggedInUserIsAdmin;
@@ -39,13 +39,13 @@ public class MockUserProvision extends UserProvision {
     }
 
     // TODO: Login by subject instead of googleId. --- IGNORE ---
-    private AuthContext loginUser(String userId, boolean isAdmin, boolean isMaintainer) {
+    private AuthContext loginUser(String subject, boolean isAdmin, boolean isMaintainer) {
         this.isLoggedIn = true;
-        this.loggedInGoogleId = userId;
+        this.loggedInSubject = subject;
         this.loggedInUserIsAdmin = isAdmin;
         this.isAdmin = isAdmin;
         this.isMaintainer = isMaintainer;
-        return createAccountAuthContext(AuthType.LOGGED_IN, userId, isAdmin, isMaintainer);
+        return createAccountAuthContext(AuthType.LOGGED_IN, subject, isAdmin, isMaintainer);
     }
 
     /**
@@ -53,8 +53,8 @@ public class MockUserProvision extends UserProvision {
      *
      * @return The auth context after login process
      */
-    public AuthContext loginUser(String userId) {
-        return loginUser(userId, false, false);
+    public AuthContext loginUser(String subject) {
+        return loginUser(subject, false, false);
     }
 
     /**
@@ -62,8 +62,8 @@ public class MockUserProvision extends UserProvision {
      *
      * @return The auth context after login process
      */
-    public AuthContext loginAsAdmin(String userId) {
-        return loginUser(userId, true, false);
+    public AuthContext loginAsAdmin(String subject) {
+        return loginUser(subject, true, false);
     }
 
     /**
@@ -71,8 +71,8 @@ public class MockUserProvision extends UserProvision {
      *
      * @return The auth context after login process
      */
-    public AuthContext loginAsMaintainer(String userId) {
-        return loginUser(userId, false, true);
+    public AuthContext loginAsMaintainer(String subject) {
+        return loginUser(subject, false, true);
     }
 
     /**
@@ -93,7 +93,7 @@ public class MockUserProvision extends UserProvision {
         isLoggedIn = false;
         loggedInUserIsAdmin = false;
         isAutomatedServiceMode = false;
-        loggedInGoogleId = null;
+        loggedInSubject = null;
     }
 
     @Override
@@ -115,21 +115,21 @@ public class MockUserProvision extends UserProvision {
         if (masqueradeUserId != null) {
             if (!loggedInUserIsAdmin) {
                 throw new UnauthorizedAccessException(
-                        String.format("Masquerade failed: user %s does not have admin privilege", loggedInGoogleId));
+                        String.format("Masquerade failed: user %s does not have admin privilege", loggedInSubject));
             }
             return createAccountAuthContext(AuthType.MASQUERADE, masqueradeUserId, isAdmin, isMaintainer);
         }
 
-        return createAccountAuthContext(AuthType.LOGGED_IN, loggedInGoogleId, isAdmin, isMaintainer);
+        return createAccountAuthContext(AuthType.LOGGED_IN, loggedInSubject, isAdmin, isMaintainer);
     }
 
     private AuthContext createAccountAuthContext(
-            AuthType authType, String googleId, boolean isAdmin, boolean isMaintainer) {
+            AuthType authType, String subject, boolean isAdmin, boolean isMaintainer) {
         Account account = createMissingAccounts
                 ? new Account(
-                        googleId, Provider.TEAMMATES_DEV, "testUserSubject", "tenant-id",
-                        "Test User", googleId + "@example.com")
-                : logic.getAccountForGoogleId(googleId);
+                        subject, Provider.TEAMMATES_DEV, "testUserSubject", null,
+                        "Test User", subject + "@example.com")
+                : logic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, subject, null);
         return new AuthContext(authType, account, null, isAdmin, isMaintainer);
     }
 

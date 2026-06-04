@@ -41,11 +41,13 @@ public class AccountsLogicTest extends BaseTestCase {
     @Test
     public void testDeleteAccount_accountExists_success() {
         Account account = getTypicalAccount();
-        String googleId = account.getGoogleId();
+        Provider provider = account.getProvider();
+        String subject = account.getSubject();
+        String tenantId = account.getTenantId();
 
-        when(accountsLogic.getAccountForGoogleId(googleId)).thenReturn(account);
+        when(accountsLogic.getAccountByOidcClaims(provider, subject, tenantId)).thenReturn(account);
 
-        accountsLogic.deleteAccount(googleId);
+        accountsLogic.deleteAccount(provider, subject, tenantId);
 
         verify(accountsDb, times(1)).deleteAccount(account);
     }
@@ -53,6 +55,9 @@ public class AccountsLogicTest extends BaseTestCase {
     @Test
     public void testDeleteAccountCascade_googleIdExists_success() {
         Account account = getTypicalAccount();
+        Provider provider = account.getProvider();
+        String subject = account.getSubject();
+        String tenantId = account.getTenantId();
         String googleId = account.getGoogleId();
         List<User> users = new ArrayList<>();
 
@@ -62,9 +67,9 @@ public class AccountsLogicTest extends BaseTestCase {
         }
 
         when(usersLogic.getAllUsersByGoogleId(googleId)).thenReturn(users);
-        when(accountsLogic.getAccountForGoogleId(googleId)).thenReturn(account);
+        when(accountsLogic.getAccountByOidcClaims(provider, subject, tenantId)).thenReturn(account);
 
-        accountsLogic.deleteAccountCascade(googleId);
+        accountsLogic.deleteAccountCascade(provider, subject, tenantId);
 
         for (User user : users) {
             verify(usersLogic, times(1)).deleteUser(user);
@@ -80,7 +85,7 @@ public class AccountsLogicTest extends BaseTestCase {
         String subject = account.getSubject();
         String tenantId = account.getTenantId();
 
-        when(accountsDb.getAccountByGoogleId(email)).thenReturn(account);
+        when(accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, subject, tenantId)).thenReturn(account);
 
         Account result = accountsLogic.createOrGetAccount(provider, subject, tenantId, email);
 
@@ -94,7 +99,7 @@ public class AccountsLogicTest extends BaseTestCase {
         String subject = "nonexistentSubject";
         String tenantId = "nonexistentTenantId";
 
-        when(accountsDb.getAccountByGoogleId(email)).thenReturn(null);
+        when(accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, subject, tenantId)).thenReturn(null);
         when(accountsDb.persistAccount(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Account result = accountsLogic.createOrGetAccount(provider, subject, tenantId, email);

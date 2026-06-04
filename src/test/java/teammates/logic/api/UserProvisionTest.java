@@ -70,7 +70,7 @@ public class UserProvisionTest extends BaseTestCase {
 
         when(mockUsersLogic.isInstructorInAnyCourse(anyString())).thenReturn(false);
         when(mockUsersLogic.isStudentInAnyCourse(anyString())).thenReturn(false);
-        when(mockAccountsLogic.getAccountForGoogleId(anyString())).thenReturn(null);
+        when(mockAccountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, anyString(), anyString())).thenReturn(null);
 
         mockConfigStatic = mockStatic(Config.class);
         mockConfigStatic.when(Config::getAppAdmins).thenReturn(List.of());
@@ -170,7 +170,7 @@ public class UserProvisionTest extends BaseTestCase {
         MockHttpServletRequest req = createRequestWithAuthCookie(adminAccount);
         req.addParam(Const.ParamsNames.USER, targetAccount.getGoogleId());
         when(mockAccountsLogic.getAccount(adminAccount.getId())).thenReturn(adminAccount);
-        when(mockAccountsLogic.getAccountForGoogleId(targetAccount.getGoogleId())).thenReturn(targetAccount);
+        when(mockAccountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, targetAccount.getGoogleId(), null)).thenReturn(targetAccount);
         mockConfigStatic.when(Config::getAppAdmins).thenReturn(List.of(adminAccount.getEmail()));
 
         AuthContext authContext = userProvision.getAuthContextFromRequest(req);

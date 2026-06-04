@@ -6,6 +6,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.DataBundle;
+import teammates.common.datatransfer.Provider;
 import teammates.common.exception.EntityAlreadyExistsException;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.util.StringHelper;
@@ -55,8 +56,8 @@ public class AccountsLogicIT extends BaseTestCaseWithDatabaseAccess {
 
         ______TS("failure: googleID belongs to an existing student in the course");
 
-        Account studentInCourseAccount = inTransaction(() -> accountsLogic.getAccountForGoogleId(
-                studentInCourse.getGoogleId()));
+        Account studentInCourseAccount = inTransaction(() ->
+                        accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, studentInCourse.getGoogleId(), null));
         EntityAlreadyExistsException eaee = assertThrowsInTransaction(EntityAlreadyExistsException.class,
                 () -> accountsLogic.joinCourse(student2YetToJoinCourse.getRegKey(),
                 studentInCourseAccount));
@@ -107,8 +108,8 @@ public class AccountsLogicIT extends BaseTestCaseWithDatabaseAccess {
 
         ______TS("failure: googleID belongs to an existing instructor in the course");
 
-        Account instructor1Account = inTransaction(() -> accountsLogic.getAccountForGoogleId(
-                instructorIdAlreadyJoinedCourse));
+        Account instructor1Account = inTransaction(() ->
+                        accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, instructorIdAlreadyJoinedCourse, null));
         EntityAlreadyExistsException eaee = assertThrowsInTransaction(EntityAlreadyExistsException.class,
                 () -> accountsLogic.joinCourse(
                         key[0], instructor1Account));

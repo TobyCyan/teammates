@@ -252,7 +252,7 @@ public abstract class AbstractBackDoor {
 
     /**
      * Gets the cookie format for the given user ID.
-     * TODO: This should be replaced to fetch by subject instead of googleId. --- IGNORE ---
+     * TODO: This and all call sites should be replaced to fetch by subject instead of googleId. --- IGNORE ---
      */
     public String getUserCookie(String userId) {
         Map<String, String> params = new HashMap<>();

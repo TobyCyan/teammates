@@ -10,6 +10,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.InstructorPrivileges;
+import teammates.common.datatransfer.Provider;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.util.Const;
 import teammates.common.util.Const.InstructorPermissions;
@@ -79,7 +80,7 @@ public class UsersLogicIT extends BaseTestCaseWithDatabaseAccess {
 
         assertEquals(instructor, resetUser);
         assertNull(instructor.getAccount());
-        assertEquals(account, inTransaction(() -> accountsLogic.getAccountForGoogleId(googleId)));
+        assertEquals(account, inTransaction(() -> accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, googleId, null)));
     }
 
     @Test
@@ -104,7 +105,7 @@ public class UsersLogicIT extends BaseTestCaseWithDatabaseAccess {
 
         assertEquals(student, resetUser);
         assertNull(student.getAccount());
-        assertEquals(account, inTransaction(() -> accountsLogic.getAccountForGoogleId(googleId)));
+        assertEquals(account, inTransaction(() -> accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, googleId, null)));
     }
 
     @Test

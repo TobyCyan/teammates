@@ -38,9 +38,16 @@ public class DeleteAccountActionTest extends BaseActionTest<DeleteAccountAction>
     @Test
     protected void textExecute_nullParams_throwsInvalidHttpParameterException() {
         String[] params = {
-                Const.ParamsNames.INSTRUCTOR_ID, null,
+                Const.ParamsNames.PROVIDER, null,
+                Const.ParamsNames.SUBJECT, "validSubject",
         };
         verifyHttpParameterFailure(params);
+
+        String[] params2 = {
+                Const.ParamsNames.PROVIDER, "validProvider",
+                Const.ParamsNames.SUBJECT, null,
+        };
+        verifyHttpParameterFailure(params2);
     }
 
     @Test
@@ -52,11 +59,14 @@ public class DeleteAccountActionTest extends BaseActionTest<DeleteAccountAction>
                 false, "", null, new InstructorPrivileges());
         instructor.setAccount(stubAccount);
         String[] params = {
-                Const.ParamsNames.INSTRUCTOR_ID, instructor.getGoogleId(),
+                Const.ParamsNames.PROVIDER, stubAccount.getProvider().name(),
+                Const.ParamsNames.SUBJECT, stubAccount.getSubject(),
+                Const.ParamsNames.TENANT_ID, stubAccount.getTenantId(),
         };
         DeleteAccountAction action = getAction(params);
         MessageOutput actionOutput = (MessageOutput) getJsonResult(action).getOutput();
         assertEquals("Account is successfully deleted.", actionOutput.getMessage());
-        verify(mockLogic, times(1)).deleteAccountCascade(googleId);
+        verify(mockLogic, times(1))
+                .deleteAccountCascade(stubAccount.getProvider(), stubAccount.getSubject(), stubAccount.getTenantId());
     }
 }

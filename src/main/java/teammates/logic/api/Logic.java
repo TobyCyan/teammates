@@ -183,13 +183,6 @@ public class Logic {
     }
 
     /**
-     * Gets an account by googleId.
-     */
-    public Account getAccountForGoogleId(String googleId) {
-        return accountsLogic.getAccountForGoogleId(googleId);
-    }
-
-    /**
      * Gets an account by OIDC claims.
      */
     public Account getAccountByOidcClaims(Provider provider, String subject, @Nullable String tenantId) {
@@ -217,7 +210,7 @@ public class Logic {
     }
 
     /**
-     * Deletes account and all users by googleId.
+     * Deletes account and all users by OIDC claims.
      *
      * <ul>
      * <li>Fails silently if no such account.</li>
@@ -226,10 +219,11 @@ public class Logic {
      * <p>
      * Preconditions:
      * </p>
-     * All parameters are non-null.
+     * {@code provider} and {@code subject} are non-null.
+     *
      */
-    public void deleteAccountCascade(String googleId) {
-        accountsLogic.deleteAccountCascade(googleId);
+    public void deleteAccountCascade(Provider provider, String subject, @Nullable String tenantId) {
+        accountsLogic.deleteAccountCascade(provider, subject, tenantId);
     }
 
     /**
