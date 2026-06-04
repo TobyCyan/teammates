@@ -8,6 +8,7 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+
 import teammates.common.datatransfer.Provider;
 import teammates.common.util.HibernateUtil;
 import teammates.storage.entity.Account;

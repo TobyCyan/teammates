@@ -34,7 +34,8 @@ public class MarkNotificationAsReadAction extends Action {
                 getAndValidateRequestBody(MarkNotificationAsReadRequest.class);
         UUID notificationId = UUID.fromString(readNotificationCreateRequest.getNotificationId());
 
-        Account account = logic.getAccountByOidcClaims(getCurrentUserProvider(), getCurrentUserSubject(), getCurrentUserTenantId());
+        Account account = logic.getAccountByOidcClaims(
+                getCurrentUserProvider(), getCurrentUserSubject(), getCurrentUserTenantId());
         if (account == null) {
             // This should not happen as the user is authenticated
             throw new UnexpectedServerException("Account not found");

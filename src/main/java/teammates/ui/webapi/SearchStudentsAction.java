@@ -28,7 +28,8 @@ public class SearchStudentsAction extends Action {
 
         if (Const.EntityType.INSTRUCTOR.equals(entity)) {
             gateKeeper.verifyInstructorInAnyCourse(
-                    logic.getAccountByOidcClaims(getCurrentUserProvider(), getCurrentUserSubject(), getCurrentUserTenantId()));
+                    logic.getAccountByOidcClaims(
+                        getCurrentUserProvider(), getCurrentUserSubject(), getCurrentUserTenantId()));
         }
 
         if (Const.EntityType.ADMIN.equals(entity)) {

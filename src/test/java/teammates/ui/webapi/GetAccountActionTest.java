@@ -40,7 +40,7 @@ public class GetAccountActionTest extends BaseActionTest<GetAccountAction> {
         String[] params = {
                 Const.ParamsNames.PROVIDER, provider.name(),
                 Const.ParamsNames.SUBJECT, subject,
-                Const.ParamsNames.TENANT_ID, tenantId
+                Const.ParamsNames.TENANT_ID, tenantId,
         };
         GetAccountAction a = getAction(params);
         AccountData output = (AccountData) getJsonResult(a).getOutput();
@@ -54,7 +54,7 @@ public class GetAccountActionTest extends BaseActionTest<GetAccountAction> {
         String[] params = {
                 Const.ParamsNames.PROVIDER, provider.name(),
                 Const.ParamsNames.SUBJECT, subject,
-                Const.ParamsNames.TENANT_ID, tenantId
+                Const.ParamsNames.TENANT_ID, tenantId,
         };
         EntityNotFoundException e = verifyEntityNotFound(params);
         assertEquals("Account does not exist.", e.getMessage());

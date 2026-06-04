@@ -80,7 +80,8 @@ public class UsersLogicIT extends BaseTestCaseWithDatabaseAccess {
 
         assertEquals(instructor, resetUser);
         assertNull(instructor.getAccount());
-        assertEquals(account, inTransaction(() -> accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, googleId, null)));
+        assertEquals(account,
+                inTransaction(() -> accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, googleId, null)));
     }
 
     @Test
@@ -105,7 +106,8 @@ public class UsersLogicIT extends BaseTestCaseWithDatabaseAccess {
 
         assertEquals(student, resetUser);
         assertNull(student.getAccount());
-        assertEquals(account, inTransaction(() -> accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, googleId, null)));
+        assertEquals(account,
+                inTransaction(() -> accountsLogic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, googleId, null)));
     }
 
     @Test
