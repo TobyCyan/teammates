@@ -252,6 +252,7 @@ public abstract class AbstractBackDoor {
 
     /**
      * Gets the cookie format for the given user ID.
+     * TODO: This should be replaced to fetch by subject instead of googleId. --- IGNORE ---
      */
     public String getUserCookie(String userId) {
         Map<String, String> params = new HashMap<>();
@@ -265,9 +266,11 @@ public abstract class AbstractBackDoor {
     /**
      * Gets account data from the database.
      */
-    public AccountData getAccountData(String googleId) {
+    public AccountData getAccountData(String provider, String subject, String tenantId) {
         Map<String, String> params = new HashMap<>();
-        params.put(Const.ParamsNames.INSTRUCTOR_ID, googleId);
+        params.put(Const.ParamsNames.PROVIDER, provider);
+        params.put(Const.ParamsNames.SUBJECT, subject);
+        params.put(Const.ParamsNames.TENANT_ID, tenantId);
         ResponseBodyAndCode response = executeGetRequest(Const.ResourceURIs.ACCOUNT, params);
         if (response.responseCode == HttpStatus.SC_NOT_FOUND) {
             return null;

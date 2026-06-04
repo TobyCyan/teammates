@@ -238,8 +238,7 @@ public abstract class BaseActionIT<T extends Action> extends BaseTestCaseWithDat
     }
 
     private void ensureAccountExists(String googleId) {
-        // TODO: Get account should be by issuer and subject.
-        if (logic.getAccountForGoogleId(googleId) == null) {
+        if (logic.getAccountByOidcClaims(Provider.TEAMMATES_DEV, googleId, "tenant-id") == null) {
             String email = googleId.contains("@") ? googleId : googleId + "@example.com";
             String subject = googleId;
             String tenantId = "tenant-id";

@@ -17,6 +17,9 @@ import teammates.ui.output.AccountData;
 public class AdminAccountsPageE2ETest extends BaseE2ETestCase {
 
     String googleId = "tm.e2e.AAccounts.instr2";
+    String provider = "TEAMMATES_DEV";
+    String subject = "tm.e2e.AAccounts.instr2-subject";
+    String tenantId = "tm.e2e.AAccounts.instr2-tenant";
 
     @Override
     protected void prepareTestData() {
@@ -31,7 +34,7 @@ public class AdminAccountsPageE2ETest extends BaseE2ETestCase {
                 .withParam(Const.ParamsNames.INSTRUCTOR_ID, googleId);
         AdminAccountsPage accountsPage = loginAdminToPage(accountsPageUrl, AdminAccountsPage.class);
 
-        AccountData account = getAccount(googleId);
+        AccountData account = getAccount(provider, subject, tenantId);
         accountsPage.verifyAccountDetails(account);
 
         ______TS("action: remove instructor from course");
@@ -61,7 +64,7 @@ public class AdminAccountsPageE2ETest extends BaseE2ETestCase {
         accountsPage.clickDeleteAccount();
         accountsPage.verifyStatusMessage("Account \"" + googleId + "\" is successfully deleted.");
 
-        assertNull(getAccount(googleId));
+        assertNull(getAccount(provider, subject, tenantId));
 
         // student entities should be deleted
         verifyAbsentInDatabase(student2);

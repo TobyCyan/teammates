@@ -27,7 +27,8 @@ public class SearchStudentsAction extends Action {
         String entity = getNonNullRequestParamValue(Const.ParamsNames.ENTITY_TYPE);
 
         if (Const.EntityType.INSTRUCTOR.equals(entity)) {
-            gateKeeper.verifyInstructorInAnyCourse(logic.getAccountForGoogleId(getCurrentUserGoogleId()));
+            gateKeeper.verifyInstructorInAnyCourse(
+                    logic.getAccountByOidcClaims(getCurrentUserProvider(), getCurrentUserSubject(), getCurrentUserTenantId()));
         }
 
         if (Const.EntityType.ADMIN.equals(entity)) {

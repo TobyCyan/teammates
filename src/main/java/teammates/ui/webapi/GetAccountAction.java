@@ -1,5 +1,6 @@
 package teammates.ui.webapi;
 
+import teammates.common.datatransfer.Provider;
 import teammates.common.util.Const;
 import teammates.storage.entity.Account;
 import teammates.ui.exception.EntityNotFoundException;
@@ -12,9 +13,11 @@ public class GetAccountAction extends AdminOnlyAction {
 
     @Override
     public JsonResult execute() {
-        String googleId = getNonNullRequestParamValue(Const.ParamsNames.INSTRUCTOR_ID);
+        Provider provider = Provider.valueOf(getNonNullRequestParamValue(Const.ParamsNames.PROVIDER));
+        String subject = getNonNullRequestParamValue(Const.ParamsNames.SUBJECT);
+        String tenantId = getNonNullRequestParamValue(Const.ParamsNames.TENANT_ID);
 
-        Account account = logic.getAccountForGoogleId(googleId);
+        Account account = logic.getAccountByOidcClaims(provider, subject, tenantId);
 
         if (account == null) {
             throw new EntityNotFoundException("Account does not exist.");

@@ -90,9 +90,11 @@ export class AccountService {
   /**
    * Gets an account by calling API.
    */
-  getAccount(googleId: string): Observable<Account> {
+  getAccount(provider: string, subject: string, tenantId: string): Observable<Account> {
     const paramMap: Record<string, string> = {
-      instructorid: googleId,
+      provider,
+      subject,
+      tenantId,
     };
     return this.httpRequestService.get(ResourceEndpoints.ACCOUNT, paramMap);
   }

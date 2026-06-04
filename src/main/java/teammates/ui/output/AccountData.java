@@ -14,6 +14,9 @@ public class AccountData implements ApiOutput {
 
     private final UUID accountId;
     private final String googleId;
+    private final String provider;
+    private final String subject;
+    private final String tenantId;
     private final String name;
     private final String email;
     private final List<InstructorData> instructors;
@@ -21,10 +24,13 @@ public class AccountData implements ApiOutput {
 
     @JsonCreator
     private AccountData(
-            UUID accountId, String googleId, String name, String email,
+            UUID accountId, String googleId, String provider, String subject, String tenantId, String name, String email,
             List<InstructorData> instructors, List<StudentData> students) {
         this.accountId = accountId;
         this.googleId = googleId;
+        this.provider = provider;
+        this.subject = subject;
+        this.tenantId = tenantId;
         this.name = name;
         this.email = email;
         this.instructors = instructors;
@@ -34,6 +40,9 @@ public class AccountData implements ApiOutput {
     public AccountData(Account account) {
         this.accountId = account.getId();
         this.googleId = account.getGoogleId();
+        this.provider = account.getProvider().name();
+        this.subject = account.getSubject();
+        this.tenantId = account.getTenantId();
         this.name = account.getName();
         this.email = account.getEmail();
         this.instructors = account.getInstructors().stream().map(InstructorData::new).toList();
@@ -42,6 +51,18 @@ public class AccountData implements ApiOutput {
 
     public UUID getAccountId() {
         return accountId;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public String getTenantId() {
+        return tenantId;
     }
 
     public String getEmail() {

@@ -11,6 +11,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.NotificationTargetUser;
+import teammates.common.datatransfer.Provider;
 import teammates.common.util.Const;
 import teammates.storage.entity.Notification;
 import teammates.ui.output.NotificationData;
@@ -21,6 +22,9 @@ import teammates.ui.output.NotificationsData;
  */
 public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsAction> {
     private static final String GOOGLE_ID = "google-id";
+    private static final String TENANT_ID = "tenant-id";
+    private static final String SUBJECT = "subject";
+    private static final Provider PROVIDER = Provider.TEAMMATES_DEV;
     private static final int READ_NOTIFICATION_COUNT = 5;
     private static final int UNREAD_NOTIFICATION_COUNT = 10;
 
@@ -36,7 +40,7 @@ public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsA
 
     @BeforeMethod
     public void setUpMethod() {
-        when(mockLogic.getAccountForGoogleId(GOOGLE_ID)).thenReturn(getTypicalAccount());
+        when(mockLogic.getAccountByOidcClaims(PROVIDER, SUBJECT, TENANT_ID)).thenReturn(getTypicalAccount());
     }
 
     @Test

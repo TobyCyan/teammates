@@ -50,7 +50,7 @@ public final class AccountsLogic {
      * Gets an account.
      */
     public Account getAccount(UUID id) {
-        assert id != null;
+        Objects.requireNonNull(id);
         return accountsDb.getAccount(id);
     }
 
@@ -77,7 +77,7 @@ public final class AccountsLogic {
      * Gets accounts associated with email.
      */
     public List<Account> getAccountsForEmail(String email) {
-        assert email != null;
+        Objects.requireNonNull(email);
 
         return accountsDb.getAccountsByEmail(email);
     }
@@ -98,8 +98,7 @@ public final class AccountsLogic {
         Objects.requireNonNull(email);
 
         String googleId = email;
-        // TODO: Fetch account by provider, subject and tenantId.
-        Account account = getAccountForGoogleId(googleId);
+        Account account = getAccountByOidcClaims(provider, subject, tenantId);
         if (account != null) {
             return account;
         }

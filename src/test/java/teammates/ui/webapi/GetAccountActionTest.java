@@ -18,6 +18,9 @@ import teammates.ui.output.AccountData;
  */
 public class GetAccountActionTest extends BaseActionTest<GetAccountAction> {
     String googleId = "test.googleId";
+    Provider provider = Provider.TEAMMATES_DEV;
+    String subject = "testSubject";
+    String tenantId = "validTenantId";
 
     @Override
     protected String getActionUri() {
@@ -32,11 +35,12 @@ public class GetAccountActionTest extends BaseActionTest<GetAccountAction> {
     @Test
     void testExecute_validParams_success() {
         loginAsAdmin();
-        Account account = new Account(googleId, Provider.TEAMMATES_DEV, "testSubject",
-                "validTenantId", "name", "email");
-        when(mockLogic.getAccountForGoogleId(googleId)).thenReturn(account);
+        Account account = new Account(googleId, provider, subject, tenantId, "name", "email");
+        when(mockLogic.getAccountByOidcClaims(provider, subject, tenantId)).thenReturn(account);
         String[] params = {
-                Const.ParamsNames.INSTRUCTOR_ID, googleId,
+                Const.ParamsNames.PROVIDER, provider.name(),
+                Const.ParamsNames.SUBJECT, subject,
+                Const.ParamsNames.TENANT_ID, tenantId
         };
         GetAccountAction a = getAction(params);
         AccountData output = (AccountData) getJsonResult(a).getOutput();
@@ -46,13 +50,15 @@ public class GetAccountActionTest extends BaseActionTest<GetAccountAction> {
     @Test
     void testExecute_accountDoesNotExist_throwsEntityNotFoundException() {
         loginAsAdmin();
-        when(mockLogic.getAccountForGoogleId(googleId)).thenReturn(null);
+        when(mockLogic.getAccountByOidcClaims(provider, subject, tenantId)).thenReturn(null);
         String[] params = {
-                Const.ParamsNames.INSTRUCTOR_ID, googleId,
+                Const.ParamsNames.PROVIDER, provider.name(),
+                Const.ParamsNames.SUBJECT, subject,
+                Const.ParamsNames.TENANT_ID, tenantId
         };
         EntityNotFoundException e = verifyEntityNotFound(params);
         assertEquals("Account does not exist.", e.getMessage());
-        verify(mockLogic, times(1)).getAccountForGoogleId(googleId);
+        verify(mockLogic, times(1)).getAccountByOidcClaims(provider, subject, tenantId);
     }
 
     @Test

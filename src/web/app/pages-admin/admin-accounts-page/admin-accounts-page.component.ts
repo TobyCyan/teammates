@@ -40,17 +40,17 @@ export class AdminAccountsPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((queryParams: any) => {
-      this.loadAccountInfo(queryParams.instructorid);
+      this.loadAccountInfo(queryParams.provider, queryParams.subject, queryParams.tenantId);
     });
   }
 
   /**
    * Loads the account information based on the given ID.
    */
-  loadAccountInfo(instructorid: string): void {
+  loadAccountInfo(provider: string, subject: string, tenantId: string): void {
     this.isLoadingAccountInfo = true;
     this.accountService
-      .getAccount(instructorid)
+      .getAccount(provider, subject, tenantId)
       .pipe(
         finalize(() => {
           this.isLoadingAccountInfo = false;
@@ -70,12 +70,14 @@ export class AdminAccountsPageComponent implements OnInit {
    * Deletes the entire account.
    */
   deleteAccount(): void {
-    const id: string = this.accountInfo.googleId;
-    this.accountService.deleteAccount(id).subscribe({
+    const provider: string = this.accountInfo.provider;
+    const subject: string = this.accountInfo.subject;
+    const tenantId: string = this.accountInfo.tenantId;
+    this.accountService.deleteAccount(provider, subject, tenantId).subscribe({
       next: () => {
         this.navigationService.navigateWithSuccessMessage(
           '/web/admin/search',
-          `Account "${id}" is successfully deleted.`,
+          `Account is successfully deleted.`,
         );
       },
       error: (resp: ErrorMessageOutput) => {

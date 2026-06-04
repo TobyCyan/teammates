@@ -402,15 +402,15 @@ public abstract class BaseE2ETestCase extends BaseTestCase {
     /**
      * Gets the account data for the given Google ID.
      */
-    protected AccountData getAccount(String googleId) {
-        return BACKDOOR.getAccountData(googleId);
+    protected AccountData getAccount(String provider, String subject, String tenantId) {
+        return BACKDOOR.getAccountData(provider, subject, tenantId);
     }
 
     /**
      * Gets the account data for the given account.
      */
     protected AccountData getAccount(Account account) {
-        return getAccount(account.getGoogleId());
+        return getAccount(account.getProvider().name(), account.getSubject(), account.getTenantId());
     }
 
     /**

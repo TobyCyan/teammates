@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import teammates.common.datatransfer.AuthContext;
 import teammates.common.datatransfer.InstructorPermissionSet;
+import teammates.common.datatransfer.Provider;
 import teammates.common.datatransfer.logs.RequestLogUser;
 import teammates.common.util.Const;
 import teammates.common.util.HttpRequestHelper;
@@ -135,6 +136,21 @@ public abstract class Action {
     String getCurrentUserGoogleId() {
         Account account = getCurrentAccount();
         return account == null ? null : account.getGoogleId();
+    }
+
+    String getCurrentUserSubject() {
+        Account account = getCurrentAccount();
+        return account == null ? null : account.getSubject();
+    }
+
+    Provider getCurrentUserProvider() {
+        Account account = getCurrentAccount();
+        return account == null ? null : account.getProvider();
+    }
+
+    String getCurrentUserTenantId() {
+        Account account = getCurrentAccount();
+        return account == null ? null : account.getTenantId();
     }
 
     /**
