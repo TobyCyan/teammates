@@ -13,11 +13,13 @@ public class GetAccountAction extends AdminOnlyAction {
 
     @Override
     public JsonResult execute() {
-        Provider provider = Provider.valueOf(getNonNullRequestParamValue(Const.ParamsNames.PROVIDER));
+        String provider = getNonNullRequestParamValue(Const.ParamsNames.PROVIDER);
         String subject = getNonNullRequestParamValue(Const.ParamsNames.SUBJECT);
-        String tenantId = getNonNullRequestParamValue(Const.ParamsNames.TENANT_ID);
+        String tenantId = getRequestParamValue(Const.ParamsNames.TENANT_ID);
 
-        Account account = logic.getAccountByOidcClaims(provider, subject, tenantId);
+        Provider providerEnum = getProviderFromRequest(provider);
+
+        Account account = logic.getAccountByOidcClaims(providerEnum, subject, tenantId);
 
         if (account == null) {
             throw new EntityNotFoundException("Account does not exist.");

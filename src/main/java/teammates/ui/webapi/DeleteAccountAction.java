@@ -14,7 +14,9 @@ public class DeleteAccountAction extends AdminOnlyAction {
         String subject = getNonNullRequestParamValue(Const.ParamsNames.SUBJECT);
         String tenantId = getRequestParamValue(Const.ParamsNames.TENANT_ID);
 
-        logic.deleteAccountCascade(Provider.valueOf(provider), subject, tenantId);
+        Provider providerEnum = getProviderFromRequest(provider);
+
+        logic.deleteAccountCascade(providerEnum, subject, tenantId);
 
         return new JsonResult("Account is successfully deleted.");
     }

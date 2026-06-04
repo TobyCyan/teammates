@@ -44,10 +44,19 @@ public class DeleteAccountActionTest extends BaseActionTest<DeleteAccountAction>
         verifyHttpParameterFailure(params);
 
         String[] params2 = {
-                Const.ParamsNames.PROVIDER, "validProvider",
+                Const.ParamsNames.PROVIDER, "TEAMMATES_DEV",
                 Const.ParamsNames.SUBJECT, null,
         };
         verifyHttpParameterFailure(params2);
+    }
+
+    @Test
+    protected void testExecute_invalidProvider_throwsInvalidHttpParameterException() {
+        String[] params = {
+                Const.ParamsNames.PROVIDER, "INVALID_PROVIDER",
+                Const.ParamsNames.SUBJECT, "validSubject",
+        };
+        verifyHttpParameterFailure(params);
     }
 
     @Test

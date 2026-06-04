@@ -70,6 +70,30 @@ public class GetAccountActionTest extends BaseActionTest<GetAccountAction> {
     }
 
     @Test
+    void testExecute_nullParameter_throwsInvalidHttpParameterException() {
+        String[] params = {
+                Const.ParamsNames.PROVIDER, "TEAMMATES_DEV",
+                Const.ParamsNames.SUBJECT, null,
+        };
+        verifyHttpParameterFailure(params);
+
+        String[] params2 = {
+                Const.ParamsNames.PROVIDER, null,
+                Const.ParamsNames.SUBJECT, "validSubject",
+        };
+        verifyHttpParameterFailure(params2);
+    }
+
+    @Test
+    void testExecute_invalidProvider_throwsInvalidHttpParameterException() {
+        String[] params = {
+                Const.ParamsNames.PROVIDER, "INVALID_PROVIDER",
+                Const.ParamsNames.SUBJECT, subject,
+        };
+        verifyHttpParameterFailure(params);
+    }
+
+    @Test
     void testAccessControl() {
         verifyOnlyAdminsCanAccess();
     }

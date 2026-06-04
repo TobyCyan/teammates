@@ -316,6 +316,14 @@ public abstract class Action {
         return logic.getStudentByGoogleId(courseId, account.getGoogleId());
     }
 
+    Provider getProviderFromRequest(String provider) {
+        try {
+            return Provider.valueOf(provider);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidHttpParameterException("Invalid provider: " + provider, e);
+        }
+    }
+
     InstructorPermissionSet constructInstructorPrivileges(Instructor instructor, String feedbackSessionName) {
         InstructorPermissionSet privilege = instructor.getPrivileges().getCourseLevelPrivileges();
         if (feedbackSessionName != null) {
