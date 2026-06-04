@@ -190,6 +190,13 @@ public class Logic {
     }
 
     /**
+     * Gets an account by OIDC claims.
+     */
+    public Account getAccountByOidcClaims(Provider provider, String subject, @Nullable String tenantId) {
+        return accountsLogic.getAccountByOidcClaims(provider, subject, tenantId);
+    }
+
+    /**
      * Get a list of accounts associated with email provided.
      */
     public List<Account> getAccountsForEmail(String email) {

@@ -64,6 +64,16 @@ public final class AccountsLogic {
     }
 
     /**
+     * Gets an account by OIDC claims.
+     */
+    public Account getAccountByOidcClaims(Provider provider, String subject, @Nullable String tenantId) {
+        Objects.requireNonNull(provider);
+        Objects.requireNonNull(subject);
+
+        return accountsDb.getAccountByOidcClaims(provider, subject, tenantId);
+    }
+
+    /**
      * Gets accounts associated with email.
      */
     public List<Account> getAccountsForEmail(String email) {
