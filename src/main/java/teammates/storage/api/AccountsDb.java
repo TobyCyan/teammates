@@ -34,8 +34,6 @@ public final class AccountsDb {
      * Returns an Account with the {@code id} or null if it does not exist.
      */
     public Account getAccount(UUID id) {
-        assert id != null;
-
         return HibernateUtil.get(Account.class, id);
     }
 
@@ -65,8 +63,6 @@ public final class AccountsDb {
      * Gets accounts based on email.
      */
     public List<Account> getAccountsByEmail(String email) {
-        assert email != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Account> cr = cb.createQuery(Account.class);
         Root<Account> accountRoot = cr.from(Account.class);
@@ -80,16 +76,14 @@ public final class AccountsDb {
      * Persists an Account.
      */
     public Account persistAccount(Account account) {
-        assert account != null;
-
         HibernateUtil.persist(account);
         return account;
     }
 
     /**
-     * Deletes an Account.
+     * Removes an Account.
      */
-    public void deleteAccount(Account account) {
+    public void removeAccount(Account account) {
         HibernateUtil.remove(account);
     }
 

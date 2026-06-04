@@ -49,7 +49,7 @@ public class AccountsLogicTest extends BaseTestCase {
 
         accountsLogic.deleteAccount(provider, subject, tenantId);
 
-        verify(accountsDb, times(1)).deleteAccount(account);
+        verify(accountsDb, times(1)).removeAccount(account);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class AccountsLogicTest extends BaseTestCase {
         for (User user : users) {
             verify(usersLogic, times(1)).deleteUser(user);
         }
-        verify(accountsDb, times(1)).deleteAccount(account);
+        verify(accountsDb, times(1)).removeAccount(account);
     }
 
     @Test
