@@ -108,7 +108,7 @@ public final class DeadlineExtensionsLogic {
                     String.format(Const.ERROR_CREATE_ENTITY_ALREADY_EXISTS, deadlineExtension.toString()));
         }
 
-        return deadlineExtensionsDb.createDeadlineExtension(deadlineExtension);
+        return deadlineExtensionsDb.persistDeadlineExtension(deadlineExtension);
     }
 
     /**
@@ -145,7 +145,7 @@ public final class DeadlineExtensionsLogic {
                 feedbackSession.addDeadlineExtension(newDeadlineExtension);
 
                 validateDeadlineExtension(newDeadlineExtension);
-                deadlineExtensionsDb.createDeadlineExtension(newDeadlineExtension);
+                deadlineExtensionsDb.persistDeadlineExtension(newDeadlineExtension);
                 results.add(new UpdateExtensionsResult(user, sessionDeadline, newDeadline, ExtensionUpdateType.CREATED));
             } else if (!existingDeadlineExtension.getEndTime().equals(newDeadline)) {
                 Instant oldDeadline = existingDeadlineExtension.getEndTime();
@@ -179,7 +179,7 @@ public final class DeadlineExtensionsLogic {
             return;
         }
 
-        deadlineExtensionsDb.deleteDeadlineExtension(de);
+        deadlineExtensionsDb.removeDeadlineExtension(de);
     }
 
     /**
@@ -205,27 +205,6 @@ public final class DeadlineExtensionsLogic {
      */
     public List<DeadlineExtension> getDeadlineExtensionsPossiblyNeedingClosingSoonEmail() {
         return deadlineExtensionsDb.getDeadlineExtensionsPossiblyNeedingClosingSoonEmail();
-    }
-
-    /**
-     * Deletes a user's deadline extensions.
-     */
-    public void deleteDeadlineExtensionsForUser(User user) {
-        String courseId = user.getCourseId();
-        List<FeedbackSession> feedbackSessions = feedbackSessionsLogic.getFeedbackSessionsForCourse(courseId);
-
-        feedbackSessions.forEach(feedbackSession -> {
-            Set<DeadlineExtension> deadlineExtensions = feedbackSession.getDeadlineExtensions();
-
-            deadlineExtensions = deadlineExtensions
-                    .stream()
-                    .filter(deadlineExtension -> deadlineExtension.getUser().equals(user))
-                    .collect(Collectors.toSet());
-
-            for (DeadlineExtension deadlineExtension : deadlineExtensions) {
-                deleteDeadlineExtension(deadlineExtension);
-            }
-        });
     }
 
     private void validateDeadlineExtension(DeadlineExtension deadlineExtension) throws InvalidParametersException {

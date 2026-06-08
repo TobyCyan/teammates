@@ -8,7 +8,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
 import teammates.common.util.HibernateUtil;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.FeedbackQuestion;
@@ -32,13 +32,9 @@ public final class FeedbackQuestionsDb {
     }
 
     /**
-     * Creates a new feedback question.
-     *
-     * @return the created question
+     * Persists a new feedback question.
      */
-    public FeedbackQuestion createFeedbackQuestion(FeedbackQuestion feedbackQuestion) {
-        assert feedbackQuestion != null;
-
+    public FeedbackQuestion persistFeedbackQuestion(FeedbackQuestion feedbackQuestion) {
         HibernateUtil.persist(feedbackQuestion);
         return feedbackQuestion;
     }
@@ -49,8 +45,6 @@ public final class FeedbackQuestionsDb {
      * @return null if not found
      */
     public FeedbackQuestion getFeedbackQuestion(UUID fqId) {
-        assert fqId != null;
-
         return HibernateUtil.get(FeedbackQuestion.class, fqId);
     }
 
@@ -72,10 +66,7 @@ public final class FeedbackQuestionsDb {
      * @return null if not found
      */
     public List<FeedbackQuestion> getFeedbackQuestionsForGiverType(
-            FeedbackSession feedbackSession, FeedbackParticipantType giverType) {
-        assert feedbackSession != null;
-        assert giverType != null;
-
+            FeedbackSession feedbackSession, QuestionGiverType giverType) {
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<FeedbackQuestion> cq = cb.createQuery(FeedbackQuestion.class);
         Root<FeedbackQuestion> root = cq.from(FeedbackQuestion.class);
@@ -88,9 +79,9 @@ public final class FeedbackQuestionsDb {
     }
 
     /**
-     * Deletes a feedback question.
+     * Removes a feedback question.
      */
-    public void deleteFeedbackQuestion(FeedbackQuestion fq) {
+    public void removeFeedbackQuestion(FeedbackQuestion fq) {
         HibernateUtil.remove(fq);
     }
 
@@ -98,7 +89,7 @@ public final class FeedbackQuestionsDb {
      * Checks if there is any feedback questions in a session in a course for the given giver type.
      */
     public boolean hasFeedbackQuestionsForGiverType(
-            String feedbackSessionName, String courseId, FeedbackParticipantType giverType) {
+            String feedbackSessionName, String courseId, QuestionGiverType giverType) {
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<FeedbackQuestion> cq = cb.createQuery(FeedbackQuestion.class);
         Root<FeedbackQuestion> root = cq.from(FeedbackQuestion.class);

@@ -5,8 +5,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
 import teammates.common.datatransfer.SessionResultsBundle;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
 import teammates.common.util.JsonUtils;
 import teammates.storage.entity.FeedbackQuestion;
 
@@ -27,9 +27,8 @@ import teammates.storage.entity.FeedbackQuestion;
         @JsonSubTypes.Type(value = FeedbackMcqQuestionDetails.class, name = "MCQ"),
         @JsonSubTypes.Type(value = FeedbackMsqQuestionDetails.class, name = "MSQ"),
         @JsonSubTypes.Type(value = FeedbackNumericalScaleQuestionDetails.class, name = "NUMSCALE"),
-        @JsonSubTypes.Type(
-                value = FeedbackConstantSumQuestionDetails.class,
-                names = {"CONSTSUM", "CONSTSUM_OPTIONS", "CONSTSUM_RECIPIENTS"}),
+        @JsonSubTypes.Type(value = FeedbackConstantSumOptionsQuestionDetails.class, name = "CONSTSUM_OPTIONS"),
+        @JsonSubTypes.Type(value = FeedbackConstantSumRecipientsQuestionDetails.class, name = "CONSTSUM_RECIPIENTS"),
         @JsonSubTypes.Type(value = FeedbackContributionQuestionDetails.class, name = "CONTRIB"),
         @JsonSubTypes.Type(value = FeedbackRubricQuestionDetails.class, name = "RUBRIC"),
         @JsonSubTypes.Type(value = FeedbackRankOptionsQuestionDetails.class, name = "RANK_OPTIONS"),
@@ -51,15 +50,8 @@ public abstract class FeedbackQuestionDetails {
     /**
     * Get question result statistics as JSON string.
     */
-    @SuppressWarnings("PMD.EmptyMethodInAbstractClassShouldBeAbstract")
-    public String getQuestionResultStatisticsJson(
-            FeedbackQuestion question, String studentEmail, SessionResultsBundle bundle) {
-        // Statistics are calculated in the front-end as it is dependent on the responses being filtered.
-        // The only exception is contribution question, where there is only one statistics for the entire question.
-        // It is also necessary to calculate contribution question statistics here
-        // to be displayed in student result page as students are not supposed to be able to see the exact responses.
-        return "";
-    }
+    public abstract String getQuestionResultStatisticsJson(
+            FeedbackQuestion question, String studentEmail, SessionResultsBundle bundle);
 
     /**
      * Checks whether the changes to the question details require deletion of corresponding responses.
@@ -110,11 +102,12 @@ public abstract class FeedbackQuestionDetails {
      * Checks whether missing responses should be generated.
      */
     public boolean shouldGenerateMissingResponses(FeedbackQuestion question) {
-        // generate combinations against all students/teams are meaningless
-        return question.getRecipientType() != FeedbackParticipantType.STUDENTS
-                && question.getRecipientType() != FeedbackParticipantType.STUDENTS_EXCLUDING_SELF
-                && question.getRecipientType() != FeedbackParticipantType.TEAMS
-                && question.getRecipientType() != FeedbackParticipantType.TEAMS_EXCLUDING_SELF;
+        // Do not generate missing responses for questions with recipient types
+        // that are not addressed to specific students/teams.
+        return question.getRecipientType() != QuestionRecipientType.STUDENTS
+                && question.getRecipientType() != QuestionRecipientType.STUDENTS_EXCLUDING_SELF
+                && question.getRecipientType() != QuestionRecipientType.TEAMS
+                && question.getRecipientType() != QuestionRecipientType.TEAMS_EXCLUDING_SELF;
     }
 
     /**

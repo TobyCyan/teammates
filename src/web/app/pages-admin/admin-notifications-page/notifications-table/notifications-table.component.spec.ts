@@ -17,7 +17,6 @@ const notificationTableRowModel1: NotificationsTableRowModel = {
     targetUser: NotificationTargetUser.INSTRUCTOR,
     title: 'valid title 1',
     message: 'valid message 1',
-    shown: false,
   },
 };
 
@@ -32,7 +31,6 @@ const notificationTableRowModel2: NotificationsTableRowModel = {
     targetUser: NotificationTargetUser.GENERAL,
     title: 'valid title 2',
     message: 'valid message 2',
-    shown: false,
   },
 };
 
@@ -44,9 +42,7 @@ describe('NotificationsTableComponent', () => {
     await TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(NotificationsTableComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -127,14 +127,14 @@
             </td>
             <td>
               @if (response.participantComment) {
-                <div [innerHTML]="response.participantComment.commentText | safeHtml"></div>
+                <div [innerHTML]="response.participantComment | safeHtml"></div>
               }
             </td>
             <td class="text-center no-print">
-              @if (response.relatedGiverEmail) {
+              @if (response.userIdForModeration) {
                 <tm-response-moderation-button
                   [session]="session"
-                  [relatedGiverEmail]="response.relatedGiverEmail"
+                  [userIdForModeration]="response.userIdForModeration"
                   [moderatedQuestionId]="question.feedbackQuestionId"
                   [isGiverInstructor]="question.giverType === 'INSTRUCTORS'"
                   btnStyle="LIGHT"

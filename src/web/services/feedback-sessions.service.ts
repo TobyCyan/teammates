@@ -11,6 +11,7 @@ import {
   DeadlineExtensions,
   FeedbackQuestion,
   FeedbackSession,
+  FeedbackSessionView,
   FeedbackSessionPublishStatus,
   FeedbackSessions,
   FeedbackSessionStats,
@@ -20,6 +21,7 @@ import {
   OngoingSessions,
   SessionLinksRecoveryResponse,
   SessionResults,
+  SessionSubmission,
   Student,
   Students,
 } from '../types/api-output';
@@ -30,6 +32,7 @@ import {
   FeedbackSessionUpdateRequest,
   Intent,
 } from '../types/api-request';
+import { DEFAULT_SECTION_ID } from '../app/pages-instructor/instructor-session-result-page/instructor-session-tab.model';
 
 /**
  * A template session.
@@ -66,7 +69,7 @@ export class FeedbackSessionsService {
     key?: string;
     moderatedPerson?: string;
     previewAs?: string;
-  }): Observable<FeedbackSession> {
+  }): Observable<FeedbackSessionView> {
     const paramMap: Record<string, string> = {
       intent: queryParams.intent,
       fsid: queryParams.feedbackSessionId,
@@ -85,6 +88,36 @@ export class FeedbackSessionsService {
     }
 
     return this.httpRequestService.get(ResourceEndpoints.SESSION, paramMap);
+  }
+
+  /**
+   * Retrieves all data needed for a feedback session submission.
+   */
+  getSessionSubmissionData(queryParams: {
+    feedbackSessionId: string;
+    intent: Intent;
+    key?: string;
+    moderatedPerson?: string;
+    previewAs?: string;
+  }): Observable<SessionSubmission> {
+    const paramMap: Record<string, string> = {
+      intent: queryParams.intent,
+      fsid: queryParams.feedbackSessionId,
+    };
+
+    if (queryParams.key) {
+      paramMap['key'] = queryParams.key;
+    }
+
+    if (queryParams.moderatedPerson) {
+      paramMap['moderatedperson'] = queryParams.moderatedPerson;
+    }
+
+    if (queryParams.previewAs) {
+      paramMap['previewas'] = queryParams.previewAs;
+    }
+
+    return this.httpRequestService.get(ResourceEndpoints.SESSION_SUBMISSION, paramMap);
   }
 
   /**
@@ -274,15 +307,15 @@ export class FeedbackSessionsService {
     const allStudentsObservable: Observable<Students> = this.studentService.getStudentsFromCourse({
       courseId,
     });
-    const studentsWithResponseObservable: Observable<FeedbackSessionSubmittedGiverSet> =
+    const submittedGiverSetObservable: Observable<FeedbackSessionSubmittedGiverSet> =
       this.getFeedbackSessionSubmittedGiverSet({
         feedbackSessionId,
       });
-    return forkJoin([allStudentsObservable, studentsWithResponseObservable]).pipe(
-      map((result: any[]) => {
-        const allStudents: Student[] = (result[0] as Students).students;
-        const studentEmailsWithResponse: string[] = (result[1] as FeedbackSessionSubmittedGiverSet).giverIdentifiers;
-        return allStudents.filter((student: Student) => !studentEmailsWithResponse.includes(student.email));
+    return forkJoin({ allStudents: allStudentsObservable, submittedGiverSet: submittedGiverSetObservable }).pipe(
+      map(({ allStudents, submittedGiverSet }) => {
+        const allStudentsList: Student[] = allStudents.students;
+        const studentIdsWithoutResponse: string[] = submittedGiverSet.studentNonGivers;
+        return allStudentsList.filter((student: Student) => studentIdsWithoutResponse.includes(student.userId));
       }),
     );
   }
@@ -331,49 +364,57 @@ export class FeedbackSessionsService {
 
   /**
    * Download session results.
+   *
+   * <p>When provided, {@code groupBySection} should be a section ID (UUID), not section name.
    */
   downloadSessionResults(
     feedbackSessionId: string,
-    intent: Intent,
     indicateMissingResponses: boolean,
     showStatistics: boolean,
     questionId?: string,
-    groupBySection?: string,
-    sectionDetail?: InstructorSessionResultSectionType,
+    sectionOptions?: {
+      groupBySectionId?: string;
+      sectionDetail?: InstructorSessionResultSectionType;
+      sectionNameForCsv?: string;
+    },
   ): Observable<string> {
-    return this.getFeedbackSessionResults({
+    const isDefaultSection = sectionOptions?.groupBySectionId
+      ? sectionOptions.groupBySectionId === DEFAULT_SECTION_ID
+      : undefined;
+    const groupBySectionId =
+      sectionOptions?.groupBySectionId === DEFAULT_SECTION_ID ? undefined : sectionOptions?.groupBySectionId;
+    return this.getCourseSessionResults({
       feedbackSessionId,
-      intent,
       questionId,
-      groupBySection,
+      groupBySection: groupBySectionId,
+      isDefaultSection: isDefaultSection,
     }).pipe(
       map((results: SessionResults) =>
         this.sessionResultCsvService.getCsvForSessionResult(
           results,
           indicateMissingResponses,
           showStatistics,
-          groupBySection,
-          sectionDetail,
+          sectionOptions?.sectionNameForCsv,
+          sectionOptions?.sectionDetail,
+          sectionOptions?.groupBySectionId,
         ),
       ),
     );
   }
 
   /**
-   * Retrieves the results for a feedback session.
+   * Retrieves course-wide results for a feedback session.
+   *
+   * <p>When provided, {@code groupBySection} should be a section ID (UUID), not section name.
    */
-  getFeedbackSessionResults(queryParams: {
+  getCourseSessionResults(queryParams: {
     feedbackSessionId: string;
-    intent: Intent;
     questionId?: string;
     groupBySection?: string;
-    key?: string;
-    sectionByGiverReceiver?: string;
-    previewAs?: string;
+    isDefaultSection?: boolean;
   }): Observable<SessionResults> {
     const paramMap: Record<string, string> = {
       fsid: queryParams.feedbackSessionId,
-      intent: queryParams.intent,
     };
 
     if (queryParams.questionId) {
@@ -384,25 +425,42 @@ export class FeedbackSessionsService {
       paramMap['frgroupbysection'] = queryParams.groupBySection;
     }
 
-    if (queryParams.key) {
-      paramMap['key'] = queryParams.key;
+    if (queryParams.isDefaultSection !== undefined) {
+      paramMap['isdefaultsection'] = queryParams.isDefaultSection.toString();
     }
 
-    if (queryParams.sectionByGiverReceiver) {
-      paramMap['sectionByGiverReceiver'] = queryParams.sectionByGiverReceiver;
+    return this.httpRequestService.get(ResourceEndpoints.COURSE_SESSION_RESULTS, paramMap);
+  }
+
+  /**
+   * Retrieves user-scoped results for a feedback session.
+   */
+  getUserSessionResults(queryParams: {
+    feedbackSessionId: string;
+    intent: Intent;
+    key?: string;
+    previewAs?: string;
+  }): Observable<SessionResults> {
+    const paramMap: Record<string, string> = {
+      fsid: queryParams.feedbackSessionId,
+      intent: queryParams.intent,
+    };
+
+    if (queryParams.key) {
+      paramMap['key'] = queryParams.key;
     }
 
     if (queryParams.previewAs) {
       paramMap['previewas'] = queryParams.previewAs;
     }
 
-    return this.httpRequestService.get(ResourceEndpoints.RESULT, paramMap);
+    return this.httpRequestService.get(ResourceEndpoints.USER_SESSION_RESULTS, paramMap);
   }
 
   /**
    * Soft delete a session by moving it to the recycle bin.
    */
-  moveSessionToRecycleBin(feedbackSessionId: string): Observable<any> {
+  moveSessionToRecycleBin(feedbackSessionId: string): Observable<FeedbackSession> {
     const paramMap: Record<string, string> = {
       fsid: feedbackSessionId,
     };

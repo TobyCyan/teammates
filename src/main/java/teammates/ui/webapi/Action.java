@@ -6,16 +6,11 @@ import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import teammates.common.datatransfer.InstructorPermissionSet;
-import teammates.common.datatransfer.UserInfo;
-import teammates.common.datatransfer.UserInfoCookie;
+import teammates.common.datatransfer.AuthContext;
+import teammates.common.datatransfer.RequestContext;
 import teammates.common.datatransfer.logs.RequestLogUser;
-import teammates.common.util.AutomatedRequestAuth;
-import teammates.common.util.Config;
-import teammates.common.util.Const;
 import teammates.common.util.HttpRequestHelper;
 import teammates.common.util.JsonUtils;
-import teammates.common.util.StringHelper;
 import teammates.logic.api.EmailGenerator;
 import teammates.logic.api.EmailSender;
 import teammates.logic.api.Logic;
@@ -23,15 +18,17 @@ import teammates.logic.api.LogsProcessor;
 import teammates.logic.api.RecaptchaVerifier;
 import teammates.logic.api.TaskQueuer;
 import teammates.logic.api.UserProvision;
+import teammates.storage.entity.Account;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Student;
+import teammates.storage.entity.User;
 import teammates.ui.exception.EntityNotFoundException;
 import teammates.ui.exception.InvalidHttpParameterException;
+import teammates.ui.exception.InvalidHttpRequestBodyException;
 import teammates.ui.exception.InvalidOperationException;
 import teammates.ui.exception.UnauthorizedAccessException;
 import teammates.ui.request.BasicRequest;
-import teammates.ui.request.InvalidHttpRequestBodyException;
 
 /**
  * An "action" to be performed by the system.
@@ -50,11 +47,7 @@ public abstract class Action {
     LogsProcessor logsProcessor = LogsProcessor.inst();
 
     HttpServletRequest req;
-    UserInfo userInfo;
-    AuthType authType;
-
-    private Student unregisteredStudent;
-    private Instructor unregisteredInstructor;
+    RequestContext requestContext;
 
     // buffer to store the request body
     private String requestBody;
@@ -62,9 +55,10 @@ public abstract class Action {
     /**
      * Initializes the action object based on the HTTP request.
      */
-    public void init(HttpServletRequest req) {
+    public void init(HttpServletRequest req) throws UnauthorizedAccessException {
         this.req = req;
-        initAuthInfo();
+        AuthContext authContext = userProvision.getAuthContextFromRequest(req);
+        this.requestContext = new RequestContext(authContext);
     }
 
     /**
@@ -101,20 +95,14 @@ public abstract class Action {
     /**
      * Checks if the requesting user has sufficient authority to access the resource.
      */
-    public void checkAccessControl() throws UnauthorizedAccessException {
-        String userParam = getRequestParamValue(Const.ParamsNames.USER_ID);
-        if (userInfo != null && userParam != null && !userInfo.isAdmin && !userParam.equals(userInfo.id)) {
-            throw new UnauthorizedAccessException("User " + userInfo.id
-                    + " is trying to masquerade as " + userParam + " without admin permission.");
-        }
-
-        if (authType.getLevel() < getMinAuthLevel().getLevel()) {
+    public void checkAccessControl() throws InvalidHttpRequestBodyException, UnauthorizedAccessException {
+        if (requestContext.getAuthType().getLevel() < getMinAuthLevel().getLevel()) {
             // Access control level lower than required
             throw new UnauthorizedAccessException("Not authorized to access this resource.");
         }
 
-        if (authType == AuthType.ALL_ACCESS) {
-            // All-access pass granted
+        if (requestContext.getAuthType() == AuthType.ALL_ACCESS) {
+            // All-access auth type is allowed to access all resources without further checks
             return;
         }
 
@@ -128,52 +116,26 @@ public abstract class Action {
     public RequestLogUser getUserInfoForLogging() {
         RequestLogUser user = new RequestLogUser();
 
-        String googleId = userInfo == null ? null : userInfo.getId();
+        Account account = getCurrentAccount();
+        User regKeyUser = requestContext.getRegKeyUser();
 
-        user.setGoogleId(googleId);
-        if (unregisteredStudent == null && unregisteredInstructor == null) {
-            user.setRegkey(getRequestParamValue(Const.ParamsNames.REGKEY));
-        } else if (unregisteredStudent != null) {
-            user.setRegkey(unregisteredStudent.getRegKey());
-            user.setEmail(unregisteredStudent.getEmail());
-        } else {
-            user.setRegkey(unregisteredInstructor.getRegKey());
-            user.setEmail(unregisteredInstructor.getEmail());
+        if (account != null) {
+            user.setEmail(account.getEmail());
+            user.setGoogleId(account.getGoogleId());
+        } else if (regKeyUser != null) {
+            user.setEmail(regKeyUser.getEmail());
         }
+
         return user;
     }
 
-    private void initAuthInfo() {
-        if (Config.BACKDOOR_KEY.equals(req.getHeader(Const.HeaderNames.BACKDOOR_KEY))) {
-            authType = AuthType.ALL_ACCESS;
-            userInfo = userProvision.getAdminOnlyUser(getNullableUuidRequestParamValue(Const.ParamsNames.USER_ID));
-            userInfo.isStudent = true;
-            userInfo.isInstructor = true;
-            return;
-        }
+    Account getCurrentAccount() {
+        return requestContext.getAccount();
+    }
 
-        boolean trustedAutomatedCronOrWorker = AutomatedRequestAuth.isTrustedCronOrWorkerRequest(req);
-        if (trustedAutomatedCronOrWorker) {
-            userInfo = userProvision.getAutomatedServiceUser(
-                    AutomatedRequestAuth.isCronRequestPath(req)
-                            ? Const.AutomatedService.CRON_SERVICE_USER_ID
-                            : Const.AutomatedService.WORKER_SERVICE_USER_ID);
-        } else {
-            String cookie = HttpRequestHelper.getCookieValueFromRequest(req, Const.SecurityConfig.AUTH_COOKIE_NAME);
-            UserInfoCookie uic = UserInfoCookie.fromCookie(cookie);
-            userInfo = userProvision.getCurrentUser(uic);
-        }
-
-        String regKey = getRequestParamValue(Const.ParamsNames.REGKEY);
-
-        if (userInfo == null) {
-            authType = StringHelper.isEmpty(regKey) ? AuthType.PUBLIC : AuthType.REG_KEY;
-        } else if (userInfo.isAdmin) {
-            userInfo = userProvision.getMasqueradeUser(userInfo.accountId);
-            authType = AuthType.MASQUERADE;
-        } else {
-            authType = AuthType.LOGGED_IN;
-        }
+    String getCurrentUserGoogleId() {
+        Account account = getCurrentAccount();
+        return account == null ? null : account.getGoogleId();
     }
 
     /**
@@ -194,6 +156,9 @@ public abstract class Action {
         return value;
     }
 
+    /**
+     * Returns all values for the specified parameter expected to be present in the HTTP request.
+     */
     String[] getNonNullRequestParamValues(String paramName) {
         String[] values = req.getParameterValues(paramName);
         if (values == null || values.length == 0) {
@@ -213,6 +178,17 @@ public abstract class Action {
             throw new InvalidHttpParameterException(
                     "Expected boolean value for " + paramName + " parameter, but found: [" + value + "]");
         }
+    }
+
+    /**
+     * Returns the first value or null for the specified parameter expected to be present in the HTTP request as boolean.
+     */
+    Optional<Boolean> getNullableBooleanRequestParamValue(String paramName) {
+        String value = getRequestParamValue(paramName);
+        if (value == null) {
+            return Optional.empty();
+        }
+        return Optional.of(getBooleanRequestParamValue(paramName));
     }
 
     /**
@@ -288,82 +264,20 @@ public abstract class Action {
      * Deserializes and validates the request body payload.
      */
     <T extends BasicRequest> T getAndValidateRequestBody(Type typeOfBody) throws InvalidHttpRequestBodyException {
-        T requestBody = JsonUtils.fromJson(getRequestBody(), typeOfBody);
-        if (requestBody == null) {
+        T reqBody = JsonUtils.fromJson(getRequestBody(), typeOfBody);
+        if (reqBody == null) {
             throw new InvalidHttpRequestBodyException("The request body is null");
         }
-        requestBody.validate();
-        return requestBody;
+        reqBody.validate();
+        return reqBody;
     }
 
-    /**
-     * Gets the unregistered student by the HTTP param.
-     */
-    Optional<Student> getUnregisteredStudent() {
-        String key = getRequestParamValue(Const.ParamsNames.REGKEY);
-        if (!StringHelper.isEmpty(key)) {
-            Student student = logic.getStudentByRegistrationKey(key);
-            if (student == null) {
-                return Optional.empty();
-            }
-            unregisteredStudent = student;
-            return Optional.of(student);
-        }
-        return Optional.empty();
+    Instructor getInstructorFromRequest(String courseId) {
+        return requestContext.getInstructorForCourse(courseId, logic::getInstructorFromAuthContext);
     }
 
-    /**
-     * Gets the unregistered instructor by the HTTP param.
-     */
-    Optional<Instructor> getUnregisteredInstructor() {
-        String key = getRequestParamValue(Const.ParamsNames.REGKEY);
-        if (!StringHelper.isEmpty(key)) {
-            Instructor instructor = logic.getInstructorByRegistrationKey(key);
-            if (instructor == null) {
-                return Optional.empty();
-            }
-            unregisteredInstructor = instructor;
-            return Optional.of(instructor);
-        }
-        return Optional.empty();
-    }
-
-    Instructor getPossiblyUnregisteredInstructor(String courseId) {
-        return getUnregisteredInstructor().orElseGet(() -> {
-            if (userInfo == null) {
-                return null;
-            }
-            return logic.getInstructorByGoogleId(courseId, userInfo.getId());
-        });
-    }
-
-    Student getPossiblyUnregisteredStudent(String courseId) {
-        return getUnregisteredStudent().orElseGet(() -> {
-            if (userInfo == null) {
-                return null;
-            }
-            return logic.getStudentByGoogleId(courseId, userInfo.getId());
-        });
-    }
-
-    InstructorPermissionSet constructInstructorPrivileges(Instructor instructor, String feedbackSessionName) {
-        InstructorPermissionSet privilege = instructor.getPrivileges().getCourseLevelPrivileges();
-        if (feedbackSessionName != null) {
-            privilege.setCanSubmitSessionInSections(
-                    instructor.isAllowedForPrivilege(Const.InstructorPermissions.CAN_SUBMIT_SESSION_IN_SECTIONS)
-                            || instructor.isAllowedForPrivilegeAnySection(
-                            feedbackSessionName, Const.InstructorPermissions.CAN_SUBMIT_SESSION_IN_SECTIONS));
-            privilege.setCanViewSessionInSections(
-                    instructor.isAllowedForPrivilege(Const.InstructorPermissions.CAN_VIEW_SESSION_IN_SECTIONS)
-                            || instructor.isAllowedForPrivilegeAnySection(
-                            feedbackSessionName, Const.InstructorPermissions.CAN_VIEW_SESSION_IN_SECTIONS));
-            privilege.setCanModifySessionCommentsInSections(
-                    instructor.isAllowedForPrivilege(
-                            Const.InstructorPermissions.CAN_MODIFY_SESSION_COMMENT_IN_SECTIONS)
-                            || instructor.isAllowedForPrivilegeAnySection(feedbackSessionName,
-                            Const.InstructorPermissions.CAN_MODIFY_SESSION_COMMENT_IN_SECTIONS));
-        }
-        return privilege;
+    Student getStudentFromRequest(String courseId) {
+        return requestContext.getStudentForCourse(courseId, logic::getStudentFromAuthContext);
     }
 
     /**
@@ -374,7 +288,7 @@ public abstract class Action {
     /**
      * Checks the specific access control needs for the resource.
      */
-    abstract void checkSpecificAccessControl() throws UnauthorizedAccessException;
+    abstract void checkSpecificAccessControl() throws InvalidHttpRequestBodyException, UnauthorizedAccessException;
 
     /**
      * Executes the action.

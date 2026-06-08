@@ -1,13 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
 import { Observable } from 'rxjs';
 import { finalize, switchMap, tap } from 'rxjs/operators';
 import { FeedbackQuestionModel } from './feedback-question.model';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import { CourseService } from '../../../services/course.service';
-import { FeedbackQuestionsService } from '../../../services/feedback-questions.service';
 import { FeedbackSessionsService } from '../../../services/feedback-sessions.service';
 import { InstructorService } from '../../../services/instructor.service';
 import { LogService } from '../../../services/log.service';
@@ -17,14 +16,14 @@ import { StudentService } from '../../../services/student.service';
 import { TimezoneService } from '../../../services/timezone.service';
 import {
   AuthInfo,
-  Course,
-  FeedbackQuestion,
-  FeedbackQuestions,
+  CourseView,
   FeedbackSession,
+  FeedbackSessionView,
   FeedbackSessionLogType,
   FeedbackSessionPublishStatus,
   FeedbackSessionSubmissionStatus,
   Instructor,
+  QuestionOutput,
   RegkeyValidity,
   ResponseVisibleSetting,
   SessionVisibleSetting,
@@ -49,21 +48,20 @@ import { ErrorMessageOutput } from '../../error-message-output';
   imports: [LoadingSpinnerDirective, LoadingRetryComponent, QuestionResponsePanelComponent],
 })
 export class SessionResultPageComponent implements OnInit {
-  private feedbackQuestionsService = inject(FeedbackQuestionsService);
-  private feedbackSessionsService = inject(FeedbackSessionsService);
-  private route = inject(ActivatedRoute);
-  private timezoneService = inject(TimezoneService);
-  private navigationService = inject(NavigationService);
-  private authService = inject(AuthService);
-  private studentService = inject(StudentService);
-  private instructorService = inject(InstructorService);
-  private courseService = inject(CourseService);
-  private statusMessageService = inject(StatusMessageService);
-  private logService = inject(LogService);
-  private ngbModal = inject(NgbModal);
+  private readonly feedbackSessionsService = inject(FeedbackSessionsService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly timezoneService = inject(TimezoneService);
+  private readonly navigationService = inject(NavigationService);
+  private readonly authService = inject(AuthService);
+  private readonly studentService = inject(StudentService);
+  private readonly instructorService = inject(InstructorService);
+  private readonly courseService = inject(CourseService);
+  private readonly statusMessageService = inject(StatusMessageService);
+  private readonly logService = inject(LogService);
+  private readonly ngbModal = inject(NgbModal);
 
   // enum
-  Intent: typeof Intent = Intent;
+  Intent!: typeof Intent;
 
   session: FeedbackSession = {
     feedbackSessionId: '',
@@ -110,9 +108,10 @@ export class SessionResultPageComponent implements OnInit {
   feedbackSessionId = '';
   studentId: string | undefined = '';
 
-  private backendUrl: string = environment.backendUrl;
+  private readonly backendUrl: string = environment.backendUrl;
 
   constructor() {
+    this.Intent = Intent;
     this.timezoneService.getTzVersion(); // import timezone service to load timezone data
   }
 
@@ -125,8 +124,6 @@ export class SessionResultPageComponent implements OnInit {
         switchMap(() => this.route.queryParams),
       )
       .subscribe((queryParams: any) => {
-        this.courseId = queryParams.courseid;
-        this.feedbackSessionName = queryParams.fsname;
         this.feedbackSessionId = queryParams.fsid;
         this.regKey = queryParams.key || '';
         this.previewAsPerson = queryParams.previewas ? queryParams.previewas : '';
@@ -135,8 +132,8 @@ export class SessionResultPageComponent implements OnInit {
           this.intent = Intent.INSTRUCTOR_RESULT;
         }
 
-        const nextUrl = `${window.location.pathname}${window.location.search.replace(/&/g, '%26')}`;
-        this.authService.getAuthUser(undefined, nextUrl).subscribe({
+        const nextUrl = `${globalThis.location.pathname}${globalThis.location.search.replaceAll('&', '%26')}`;
+        this.authService.getAuthUser(nextUrl).subscribe({
           next: (auth: AuthInfo) => {
             const isPreview = !!(auth.user && this.previewAsPerson);
             if (auth.user) {
@@ -158,14 +155,10 @@ export class SessionResultPageComponent implements OnInit {
                       // The logged in user matches the registration key; redirect to the logged in URL
 
                       this.navigationService.navigateByURLWithParamEncoding(`/web/${this.entityType}/sessions/result`, {
-                        courseid: this.courseId,
-                        fsname: this.feedbackSessionName,
                         fsid: this.feedbackSessionId,
                       });
                     } else {
                       // Valid, unused registration key; load information based on the key
-                      this.loadCourseInfo();
-                      this.loadPersonName();
                       this.loadFeedbackSession();
                     }
                   } else if (resp.isValid) {
@@ -182,7 +175,7 @@ export class SessionResultPageComponent implements OnInit {
                       );
                     } else {
                       // There is no logged in user for a valid, used registration key, redirect to login page
-                      window.location.href = `${this.backendUrl}${auth.loginUrl}`;
+                      globalThis.location.href = `${this.backendUrl}${auth.loginUrl}`;
                     }
                   } else {
                     // The registration key is invalid
@@ -202,8 +195,6 @@ export class SessionResultPageComponent implements OnInit {
             } else if (this.loggedInUser) {
               // Load information based on logged in user
               // This will also cover preview cases
-              this.loadCourseInfo();
-              this.loadPersonName();
               this.loadFeedbackSession();
             } else {
               this.navigationService.navigateWithErrorMessage(
@@ -221,7 +212,7 @@ export class SessionResultPageComponent implements OnInit {
 
   private loadCourseInfo(): void {
     this.isCourseLoading = true;
-    let request: Observable<Course>;
+    let request: Observable<CourseView>;
     switch (this.intent) {
       case Intent.STUDENT_RESULT:
         if (this.previewAsPerson) {
@@ -238,9 +229,9 @@ export class SessionResultPageComponent implements OnInit {
         return;
     }
     request.subscribe({
-      next: (resp: Course) => {
-        this.courseName = resp.courseName;
-        this.courseInstitute = resp.institute;
+      next: (resp: CourseView) => {
+        this.courseName = resp.course.courseName;
+        this.courseInstitute = resp.course.institute;
         this.isCourseLoading = false;
       },
       error: () => {
@@ -252,20 +243,28 @@ export class SessionResultPageComponent implements OnInit {
   private loadPersonName(): void {
     switch (this.intent) {
       case Intent.STUDENT_RESULT:
-        this.studentService
-          .getStudent(this.courseId, this.previewAsPerson, this.regKey)
-          .subscribe((student: Student) => {
-            this.studentId = student.userId;
-            this.personName = student.name;
-            this.personEmail = student.email;
-            this.logStudentView();
-          });
+        if (this.previewAsPerson) {
+          this.studentService
+            .getStudent({ courseId: this.courseId, userId: this.previewAsPerson })
+            .subscribe((student: Student) => {
+              this.studentId = student.userId;
+              this.personName = student.name;
+              this.personEmail = student.email;
+            });
+        } else {
+          this.studentService
+            .getStudent({ courseId: this.courseId, regKey: this.regKey })
+            .subscribe((student: Student) => {
+              this.studentId = student.userId;
+              this.personName = student.name;
+              this.personEmail = student.email;
+            });
+        }
         break;
       case Intent.INSTRUCTOR_RESULT:
         this.instructorService
           .getInstructor({
             courseId: this.courseId,
-            feedbackSessionName: this.feedbackSessionName,
             intent: this.intent,
             key: this.regKey,
             previewAs: this.previewAsPerson,
@@ -295,10 +294,13 @@ export class SessionResultPageComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: (feedbackSession: FeedbackSession) => {
+        next: (feedbackSessionView: FeedbackSessionView) => {
           const TIME_FORMAT = 'ddd, DD MMM, YYYY, hh:mm A zz';
+          const feedbackSession = feedbackSessionView.feedbackSession;
           this.session = feedbackSession;
           this.feedbackSessionId = feedbackSession.feedbackSessionId;
+          this.courseId = feedbackSession.courseId;
+          this.feedbackSessionName = feedbackSession.feedbackSessionName;
           this.formattedSessionOpeningTime = this.timezoneService.formatToString(
             this.session.submissionStartTimestamp,
             this.session.timeZone,
@@ -311,47 +313,52 @@ export class SessionResultPageComponent implements OnInit {
           );
 
           this.logStudentView();
-
-          this.feedbackQuestionsService
-            .getFeedbackQuestions({
-              feedbackSessionId: this.feedbackSessionId,
-              intent: this.intent,
-              key: this.regKey,
-              previewAs: this.previewAsPerson,
-            })
-            .pipe(
-              finalize(() => {
-                this.isFeedbackSessionResultsLoading = false;
-              }),
-            )
-            .subscribe({
-              next: (feedbackQuestions: FeedbackQuestions) => {
-                feedbackQuestions.questions.sort(
-                  (a: FeedbackQuestion, b: FeedbackQuestion) => a.questionNumber - b.questionNumber,
-                );
-                for (const question of feedbackQuestions.questions) {
-                  this.questions.push({
-                    feedbackQuestion: question,
-                    questionStatistics: '',
-                    allResponses: [],
-                    responsesToSelf: [],
-                    responsesFromSelf: [],
-                    otherResponses: [],
-                    isLoading: false,
-                    isLoaded: false,
-                    hasResponse: false,
-                    hasResponseButNotVisibleForPreview: false,
-                    hasCommentNotVisibleForPreview: false,
-                  });
-                }
-              },
-              error: (resp: ErrorMessageOutput) => {
-                this.handleError(resp);
-              },
-            });
+          this.loadCourseInfo();
+          this.loadPersonName();
+          this.loadFeedbackSessionResults();
         },
         error: (resp: ErrorMessageOutput) => {
           this.isFeedbackSessionResultsLoading = false;
+          this.handleError(resp);
+        },
+      });
+  }
+
+  private loadFeedbackSessionResults(): void {
+    this.isFeedbackSessionResultsLoading = true;
+    this.feedbackSessionsService
+      .getUserSessionResults({
+        feedbackSessionId: this.feedbackSessionId,
+        intent: this.intent,
+        key: this.regKey,
+        previewAs: this.previewAsPerson,
+      })
+      .pipe(
+        finalize(() => {
+          this.isFeedbackSessionResultsLoading = false;
+        }),
+      )
+      .subscribe({
+        next: (sessionResults) => {
+          sessionResults.questions.sort(
+            (a: QuestionOutput, b: QuestionOutput) =>
+              a.feedbackQuestion.questionNumber - b.feedbackQuestion.questionNumber,
+          );
+
+          this.questions = sessionResults.questions.map((question: QuestionOutput) => ({
+            feedbackQuestion: question.feedbackQuestion,
+            questionStatistics: question.questionStatistics,
+            allResponses: question.allResponses,
+            responsesToSelf: question.responsesToSelf,
+            responsesFromSelf: question.responsesFromSelf,
+            otherResponses: question.otherResponses,
+            isLoading: false,
+            isLoaded: true,
+            hasResponseButNotVisibleForPreview: question.hasResponseButNotVisibleForPreview,
+            hasCommentNotVisibleForPreview: question.hasCommentNotVisibleForPreview,
+          }));
+        },
+        error: (resp: ErrorMessageOutput) => {
           this.handleError(resp);
         },
       });
@@ -366,8 +373,6 @@ export class SessionResultPageComponent implements OnInit {
 
   navigateToSessionReportPage(): void {
     this.navigationService.navigateByURL('/web/instructor/sessions/report', {
-      courseid: this.courseId,
-      fsname: this.feedbackSessionName,
       fsid: this.feedbackSessionId,
     });
   }
@@ -387,7 +392,7 @@ export class SessionResultPageComponent implements OnInit {
     this.hasFeedbackSessionResultsLoadingFailed = true;
     if (this.retryAttempts < 0) {
       const report: NgbModalRef = this.ngbModal.open(ErrorReportComponent);
-      report.componentInstance.requestId = resp.error.requestId;
+      report.componentInstance.requestId = resp.headers?.get('X-Request-Id');
       report.componentInstance.errorMessage = resp.error.message;
     } else {
       this.statusMessageService.showErrorToast(resp.error.message);
@@ -402,8 +407,7 @@ export class SessionResultPageComponent implements OnInit {
       return;
     }
 
-    // dummy vars to check that both student and session has been loaded
-    if (!this.personEmail || !this.session.courseId) {
+    if (!this.feedbackSessionId) {
       return;
     }
 

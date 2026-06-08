@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AdminNotificationsPageComponent should snap when notification edit form expanded for adding notification 1`] = `
+exports[`AdminNotificationsPageComponent > should snap when notification edit form expanded for adding notification 1`] = `
 <tm-admin-notifications-page
   NotificationEditFormMode={[Function Object]}
   currentNotificationEditFormMode="0"
@@ -9,14 +9,14 @@ exports[`AdminNotificationsPageComponent should snap when notification edit form
   isNotificationEditFormExpanded={[Function Boolean]}
   isNotificationLoading="false"
   notificationEditFormModel={[Function Object]}
-  notificationService={[Function NotificationService]}
+  notificationService={[Function _NotificationService]}
   notificationsTableRowModels={[Function Array]}
   notificationsTableRowModelsSortBy={[Function Number]}
   notificationsTableRowModelsSortOrder="0"
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <h1>
     Notifications
@@ -227,9 +227,16 @@ exports[`AdminNotificationsPageComponent should snap when notification edit form
                   <tm-rich-text-editor
                     id="notification-message"
                   >
-                    <div
-                      inviewport=""
-                    >
+                    <div>
+                      <editor
+                        class="editor ng-untouched ng-pristine ng-valid"
+                        placeholder=""
+                      >
+                        <textarea
+                          id="tinymce-editor-id-1"
+                          style="visibility: hidden;"
+                        />
+                      </editor>
                     </div>
                   </tm-rich-text-editor>
                 </div>
@@ -675,7 +682,7 @@ exports[`AdminNotificationsPageComponent should snap when notification edit form
 </tm-admin-notifications-page>
 `;
 
-exports[`AdminNotificationsPageComponent should snap when notifications are loading 1`] = `
+exports[`AdminNotificationsPageComponent > should snap when notifications are loading 1`] = `
 <tm-admin-notifications-page
   NotificationEditFormMode={[Function Object]}
   currentNotificationEditFormMode="0"
@@ -684,14 +691,14 @@ exports[`AdminNotificationsPageComponent should snap when notifications are load
   isNotificationEditFormExpanded="false"
   isNotificationLoading={[Function Boolean]}
   notificationEditFormModel={[Function Object]}
-  notificationService={[Function NotificationService]}
+  notificationService={[Function _NotificationService]}
   notificationsTableRowModels={[Function Array]}
   notificationsTableRowModelsSortBy={[Function Number]}
   notificationsTableRowModelsSortOrder="0"
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <h1>
     Notifications
@@ -901,9 +908,16 @@ exports[`AdminNotificationsPageComponent should snap when notifications are load
                   <tm-rich-text-editor
                     id="notification-message"
                   >
-                    <div
-                      inviewport=""
-                    >
+                    <div>
+                      <editor
+                        class="editor ng-untouched ng-pristine ng-valid"
+                        placeholder=""
+                      >
+                        <textarea
+                          id="tinymce-editor-id-1"
+                          style="visibility: hidden;"
+                        />
+                      </editor>
                     </div>
                   </tm-rich-text-editor>
                 </div>
@@ -1356,7 +1370,7 @@ exports[`AdminNotificationsPageComponent should snap when notifications are load
 </tm-admin-notifications-page>
 `;
 
-exports[`AdminNotificationsPageComponent should snap when notifications failed to load 1`] = `
+exports[`AdminNotificationsPageComponent > should snap when notifications failed to load 1`] = `
 <tm-admin-notifications-page
   NotificationEditFormMode={[Function Object]}
   currentNotificationEditFormMode="0"
@@ -1365,14 +1379,14 @@ exports[`AdminNotificationsPageComponent should snap when notifications failed t
   isNotificationEditFormExpanded="false"
   isNotificationLoading={[Function Boolean]}
   notificationEditFormModel={[Function Object]}
-  notificationService={[Function NotificationService]}
+  notificationService={[Function _NotificationService]}
   notificationsTableRowModels={[Function Array]}
   notificationsTableRowModelsSortBy={[Function Number]}
   notificationsTableRowModelsSortOrder="0"
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <h1>
     Notifications
@@ -1582,9 +1596,16 @@ exports[`AdminNotificationsPageComponent should snap when notifications failed t
                   <tm-rich-text-editor
                     id="notification-message"
                   >
-                    <div
-                      inviewport=""
-                    >
+                    <div>
+                      <editor
+                        class="editor ng-untouched ng-pristine ng-valid"
+                        placeholder=""
+                      >
+                        <textarea
+                          id="tinymce-editor-id-1"
+                          style="visibility: hidden;"
+                        />
+                      </editor>
                     </div>
                   </tm-rich-text-editor>
                 </div>
@@ -2035,7 +2056,7 @@ exports[`AdminNotificationsPageComponent should snap when notifications failed t
 </tm-admin-notifications-page>
 `;
 
-exports[`AdminNotificationsPageComponent should snap with default view 1`] = `
+exports[`AdminNotificationsPageComponent > should snap with default view 1`] = `
 <tm-admin-notifications-page
   NotificationEditFormMode={[Function Object]}
   currentNotificationEditFormMode="0"
@@ -2044,14 +2065,14 @@ exports[`AdminNotificationsPageComponent should snap with default view 1`] = `
   isNotificationEditFormExpanded="false"
   isNotificationLoading={[Function Boolean]}
   notificationEditFormModel={[Function Object]}
-  notificationService={[Function NotificationService]}
+  notificationService={[Function _NotificationService]}
   notificationsTableRowModels={[Function Array]}
   notificationsTableRowModelsSortBy={[Function Number]}
   notificationsTableRowModelsSortOrder="0"
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <h1>
     Notifications
@@ -2261,9 +2282,16 @@ exports[`AdminNotificationsPageComponent should snap with default view 1`] = `
                   <tm-rich-text-editor
                     id="notification-message"
                   >
-                    <div
-                      inviewport=""
-                    >
+                    <div>
+                      <editor
+                        class="editor ng-untouched ng-pristine ng-valid"
+                        placeholder=""
+                      >
+                        <textarea
+                          id="tinymce-editor-id-1"
+                          style="visibility: hidden;"
+                        />
+                      </editor>
                     </div>
                   </tm-rich-text-editor>
                 </div>

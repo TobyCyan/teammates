@@ -8,11 +8,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
+import teammates.common.datatransfer.participanttypes.ResponseRecipientType;
 import teammates.common.util.Const;
 import teammates.common.util.StringHelper;
 import teammates.storage.entity.FeedbackQuestion;
 import teammates.storage.entity.FeedbackResponse;
-import teammates.storage.entity.FeedbackResponseComment;
+import teammates.storage.entity.ResponseGiver;
+import teammates.storage.entity.ResponseInstructorComment;
+import teammates.storage.entity.ResponseRecipient;
 
 /**
  * Represents detailed results for a feedback session.
@@ -24,7 +27,7 @@ public class SessionResultsBundle {
     private final Set<FeedbackQuestion> questionsWithCommentNotVisibleForPreviewSet;
     private final Map<FeedbackQuestion, List<FeedbackResponse>> questionResponseMap;
     private final Map<FeedbackQuestion, List<FeedbackMissingResponse>> questionMissingResponseMap;
-    private final Map<FeedbackResponse, List<FeedbackResponseComment>> responseCommentsMap;
+    private final Map<FeedbackResponse, List<ResponseInstructorComment>> responseCommentsMap;
     private final Map<UUID, Boolean> responseGiverVisibilityTable;
     private final Map<UUID, Boolean> responseRecipientVisibilityTable;
     private final Map<UUID, Boolean> commentGiverVisibilityTable;
@@ -37,7 +40,7 @@ public class SessionResultsBundle {
                                 List<FeedbackMissingResponse> missingResponses,
                                 Map<UUID, Boolean> responseGiverVisibilityTable,
                                 Map<UUID, Boolean> responseRecipientVisibilityTable,
-                                Map<FeedbackResponse, List<FeedbackResponseComment>> responseCommentsMap,
+                                Map<FeedbackResponse, List<ResponseInstructorComment>> responseCommentsMap,
                                 Map<UUID, Boolean> commentGiverVisibilityTable,
                                 CourseRoster roster) {
 
@@ -74,17 +77,16 @@ public class SessionResultsBundle {
      * Returns true if the giver of a response is visible to the current user.
      * Returns false otherwise.
      */
-    public boolean isResponseGiverVisible(UUID responseId, FeedbackParticipantType giverParticipantType) {
-        return giverParticipantType == FeedbackParticipantType.NONE
-                || responseGiverVisibilityTable.getOrDefault(responseId, false);
+    public boolean isResponseGiverVisible(UUID responseId) {
+        return responseGiverVisibilityTable.getOrDefault(responseId, false);
     }
 
     /**
      * Returns true if the recipient of a response is visible to the current user.
      * Returns false otherwise.
      */
-    public boolean isResponseRecipientVisible(UUID responseId, FeedbackParticipantType recipientParticipantType) {
-        return recipientParticipantType == FeedbackParticipantType.NONE
+    public boolean isResponseRecipientVisible(UUID responseId, ResponseRecipientType recipientParticipantType) {
+        return recipientParticipantType == ResponseRecipientType.NO_SPECIFIC_RECIPIENT
                 || responseRecipientVisibilityTable.getOrDefault(responseId, false);
     }
 
@@ -92,18 +94,32 @@ public class SessionResultsBundle {
      * Returns true if the giver of a comment is visible to the current user.
      * Returns false otherwise.
      */
-    public boolean isCommentGiverVisible(FeedbackResponseComment comment) {
+    public boolean isCommentGiverVisible(ResponseInstructorComment comment) {
         return commentGiverVisibilityTable.get(comment.getId());
     }
 
     /**
-     * Gets the anonymous name for a given name.
+     * Gets the anonymous name for a question giver.
      *
      * <p>The anonymous name will be deterministic based on {@code name}.
      */
-    public static String getAnonName(FeedbackParticipantType type, String name) {
+    public static String getAnonGiverName(ResponseGiver responseGiver) {
+        String name = responseGiver.getDisplayName();
+        String participantType = responseGiver.toSingularFormString();
         String hashedSignedName = getHashOfName(StringHelper.generateSha256Hmac("anon-name:" + name));
-        String participantType = type.toSingularFormString();
+        return String.format(
+            "%s %s %s", Const.DISPLAYED_NAME_FOR_ANONYMOUS_PARTICIPANT, participantType, hashedSignedName);
+    }
+
+    /**
+     * Gets the anonymous name for a question recipient.
+     *
+     * <p>The anonymous name will be deterministic based on {@code name}.
+     */
+    public static String getAnonRecipientName(ResponseRecipient responseRecipient) {
+        String name = responseRecipient.getDisplayName();
+        String participantType = responseRecipient.toSingularFormString();
+        String hashedSignedName = getHashOfName(StringHelper.generateSha256Hmac("anon-name:" + name));
         return String.format(
             "%s %s %s", Const.DISPLAYED_NAME_FOR_ANONYMOUS_PARTICIPANT, participantType, hashedSignedName);
     }
@@ -124,7 +140,7 @@ public class SessionResultsBundle {
         return questions;
     }
 
-    public Map<FeedbackResponse, List<FeedbackResponseComment>> getResponseCommentsMap() {
+    public Map<FeedbackResponse, List<ResponseInstructorComment>> getResponseCommentsMap() {
         return responseCommentsMap;
     }
 

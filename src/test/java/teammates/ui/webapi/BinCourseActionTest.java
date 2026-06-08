@@ -1,11 +1,13 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 
 import org.testng.annotations.Test;
 
+import teammates.common.datatransfer.InstructorPermissionRole;
 import teammates.common.datatransfer.InstructorPrivileges;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.util.Const;
@@ -70,7 +72,7 @@ public class BinCourseActionTest extends BaseActionTest<BinCourseAction> {
         Course course = new Course("course-id", "name", Const.DEFAULT_TIME_ZONE, "institute");
 
         Instructor instructor = new Instructor(course, "name", "instructoremail@tm.tmt",
-                false, "", null, new InstructorPrivileges());
+                false, "", InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM, new InstructorPrivileges());
 
         loginAsInstructor(googleId);
         when(mockLogic.getCourse(course.getId())).thenReturn(course);
@@ -90,7 +92,7 @@ public class BinCourseActionTest extends BaseActionTest<BinCourseAction> {
         InstructorPrivileges instructorPrivileges = new InstructorPrivileges();
         instructorPrivileges.updatePrivilege(Const.InstructorPermissions.CAN_MODIFY_COURSE, true);
         Instructor instructor = new Instructor(course, "name", "instructoremail@tm.tmt",
-                false, "", null, instructorPrivileges);
+                false, "", InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM, instructorPrivileges);
 
         loginAsInstructor(googleId);
         when(mockLogic.getCourse(course.getId())).thenReturn(course);
@@ -109,6 +111,7 @@ public class BinCourseActionTest extends BaseActionTest<BinCourseAction> {
                 Const.ParamsNames.COURSE_ID, "course-id",
         };
 
+        when(mockLogic.getInstructorByGoogleId("course-id", googleId)).thenReturn(null);
         loginAsStudent(googleId);
         verifyCannotAccess(params);
 

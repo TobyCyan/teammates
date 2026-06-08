@@ -32,24 +32,28 @@ import teammates.common.datatransfer.DataBundle;
 import teammates.common.exception.HttpRequestFailedException;
 import teammates.common.util.Const;
 import teammates.common.util.JsonUtils;
+import teammates.storage.entity.ResponseGiver;
+import teammates.storage.entity.ResponseRecipient;
 import teammates.ui.output.AccountData;
 import teammates.ui.output.AccountRequestData;
 import teammates.ui.output.CourseData;
+import teammates.ui.output.CourseViewData;
 import teammates.ui.output.DeadlineExtensionsData;
 import teammates.ui.output.FeedbackQuestionData;
 import teammates.ui.output.FeedbackQuestionsData;
-import teammates.ui.output.FeedbackResponseCommentData;
 import teammates.ui.output.FeedbackResponseData;
 import teammates.ui.output.FeedbackResponsesData;
 import teammates.ui.output.FeedbackSessionData;
+import teammates.ui.output.FeedbackSessionViewData;
 import teammates.ui.output.FeedbackSessionsData;
 import teammates.ui.output.InstructorData;
 import teammates.ui.output.InstructorsData;
 import teammates.ui.output.MessageOutput;
 import teammates.ui.output.NotificationData;
 import teammates.ui.output.StudentData;
-import teammates.ui.request.FeedbackResponseCommentUpdateRequest;
+import teammates.ui.output.StudentsData;
 import teammates.ui.request.Intent;
+import teammates.ui.request.ResponseInstructorCommentUpdateRequest;
 
 import tools.jackson.databind.JsonNode;
 
@@ -263,9 +267,9 @@ public abstract class AbstractBackDoor {
     /**
      * Gets account data from the database.
      */
-    public AccountData getAccountData(String googleId) {
+    public AccountData getAccountData(UUID accountId) {
         Map<String, String> params = new HashMap<>();
-        params.put(Const.ParamsNames.INSTRUCTOR_ID, googleId);
+        params.put(Const.ParamsNames.ACCOUNT_ID, accountId.toString());
         ResponseBodyAndCode response = executeGetRequest(Const.ResourceURIs.ACCOUNT, params);
         if (response.responseCode == HttpStatus.SC_NOT_FOUND) {
             return null;
@@ -285,7 +289,8 @@ public abstract class AbstractBackDoor {
             return null;
         }
 
-        return JsonUtils.fromJson(response.responseBody, CourseData.class);
+        CourseViewData courseViewData = JsonUtils.fromJson(response.responseBody, CourseViewData.class);
+        return courseViewData == null ? null : courseViewData.getCourse();
     }
 
     /**
@@ -331,12 +336,15 @@ public abstract class AbstractBackDoor {
     public StudentData getStudentData(String courseId, String studentEmail) {
         Map<String, String> params = new HashMap<>();
         params.put(Const.ParamsNames.COURSE_ID, courseId);
-        params.put(Const.ParamsNames.STUDENT_EMAIL, studentEmail);
-        ResponseBodyAndCode response = executeGetRequest(Const.ResourceURIs.STUDENT, params);
+        ResponseBodyAndCode response = executeGetRequest(Const.ResourceURIs.STUDENTS, params);
         if (response.responseCode == HttpStatus.SC_NOT_FOUND) {
             return null;
         }
-        return JsonUtils.fromJson(response.responseBody, StudentData.class);
+        return JsonUtils.fromJson(response.responseBody, StudentsData.class).getStudents()
+                .stream()
+                .filter(student -> student.getEmail().equals(studentEmail))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -350,7 +358,9 @@ public abstract class AbstractBackDoor {
         if (response.responseCode == HttpStatus.SC_NOT_FOUND) {
             return null;
         }
-        return JsonUtils.fromJson(response.responseBody, FeedbackSessionData.class);
+        FeedbackSessionViewData feedbackSessionViewData = JsonUtils.fromJson(response.responseBody,
+                FeedbackSessionViewData.class);
+        return feedbackSessionViewData == null ? null : feedbackSessionViewData.getFeedbackSession();
     }
 
     /**
@@ -365,17 +375,19 @@ public abstract class AbstractBackDoor {
             return Collections.emptyList();
         }
         FeedbackSessionsData sessionsData = JsonUtils.fromJson(response.responseBody, FeedbackSessionsData.class);
-        return sessionsData.getFeedbackSessions();
+        return sessionsData.getFeedbackSessions().stream()
+                .map(FeedbackSessionViewData::getFeedbackSession)
+                .collect(Collectors.toList());
     }
 
     /**
      * Get soft deleted feedback session from database.
      */
-    public FeedbackSessionData getSoftDeletedSessionData(String feedbackSessionName, String instructorId) {
+    public FeedbackSessionData getSoftDeletedSessionData(String feedbackSessionName, UUID instructorAccountId) {
         Map<String, String> params = new HashMap<>();
         params.put(Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR);
         params.put(Const.ParamsNames.IS_IN_RECYCLE_BIN, "true");
-        params.put(Const.ParamsNames.USER_ID, instructorId);
+        params.put(Const.ParamsNames.MASQUERADE_ACCOUNT_ID, instructorAccountId.toString());
         ResponseBodyAndCode response = executeGetRequest(Const.ResourceURIs.SESSIONS, params);
         if (response.responseCode == HttpStatus.SC_NOT_FOUND) {
             return null;
@@ -384,6 +396,7 @@ public abstract class AbstractBackDoor {
         FeedbackSessionsData sessionsData = JsonUtils.fromJson(response.responseBody, FeedbackSessionsData.class);
         return sessionsData.getFeedbackSessions()
                 .stream()
+                .map(FeedbackSessionViewData::getFeedbackSession)
                 .filter(fs -> fs.getFeedbackSessionName().equals(feedbackSessionName))
                 .findFirst()
                 .orElse(null);
@@ -412,12 +425,12 @@ public abstract class AbstractBackDoor {
     /**
      * Get feedback response data from database.
      */
-    public FeedbackResponseData getFeedbackResponseData(String feedbackQuestionId, String giver,
-                                                                String recipient) {
+    public FeedbackResponseData getFeedbackResponseData(String feedbackQuestionId, ResponseGiver giver,
+                                                                ResponseRecipient recipient) {
         Map<String, String> params = new HashMap<>();
         params.put(Const.ParamsNames.FEEDBACK_QUESTION_ID, feedbackQuestionId);
         params.put(Const.ParamsNames.INTENT, Intent.STUDENT_SUBMISSION.toString());
-        params.put(Const.ParamsNames.FEEDBACK_SESSION_MODERATED_PERSON, giver);
+        params.put(Const.ParamsNames.FEEDBACK_SESSION_MODERATED_PERSON, giver.getGiverUserId().toString());
         ResponseBodyAndCode response = executeGetRequest(Const.ResourceURIs.RESPONSES, params);
         if (response.responseCode == HttpStatus.SC_NOT_FOUND) {
             return null;
@@ -426,25 +439,10 @@ public abstract class AbstractBackDoor {
         FeedbackResponsesData responsesData = JsonUtils.fromJson(response.responseBody, FeedbackResponsesData.class);
         return responsesData.getResponses()
                 .stream()
-                .filter(r -> r.getGiverIdentifier().equals(giver) && r.getRecipientIdentifier().equals(recipient))
+            .filter(r -> r.getGiverIdentifier().equals(giver.getIdentifier())
+                && r.getRecipientIdentifier().equals(recipient.getIdentifier()))
                 .findFirst()
                 .orElse(null);
-    }
-
-    /**
-     * Get feedback response comment data from database.
-     */
-    public FeedbackResponseCommentData getFeedbackResponseCommentData(String feedbackResponseId) {
-        Map<String, String> params = new HashMap<>();
-        params.put(Const.ParamsNames.FEEDBACK_RESPONSE_ID, feedbackResponseId);
-        params.put(Const.ParamsNames.INTENT, Intent.STUDENT_SUBMISSION.toString());
-        ResponseBodyAndCode response = executeGetRequest(Const.ResourceURIs.RESPONSE_COMMENT, params);
-        if (response.responseCode == HttpStatus.SC_NOT_FOUND
-                || response.responseCode == HttpStatus.SC_NO_CONTENT) {
-            return null;
-        }
-
-        return JsonUtils.fromJson(response.responseBody, FeedbackResponseCommentData.class);
     }
 
     /**
@@ -453,30 +451,21 @@ public abstract class AbstractBackDoor {
      *
      * @param commentId the ID of the comment to update
      * @param commentText the new comment text
-     * @param instructorGoogleId the Google ID of an instructor with permission to modify comments
+     * @param instructorAccountId the ID of the instructor account
      */
-    public void updateFeedbackResponseComment(UUID commentId, String commentText, String instructorGoogleId) {
+    public void updateResponseInstructorComment(UUID commentId, String commentText, UUID instructorAccountId) {
         Map<String, String> params = new HashMap<>();
         params.put(Const.ParamsNames.FEEDBACK_RESPONSE_COMMENT_ID, commentId.toString());
         params.put(Const.ParamsNames.INTENT, Intent.INSTRUCTOR_RESULT.toString());
-        params.put(Const.ParamsNames.USER_ID, instructorGoogleId);
+        params.put(Const.ParamsNames.MASQUERADE_ACCOUNT_ID, instructorAccountId.toString());
 
-        FeedbackResponseCommentUpdateRequest body = new FeedbackResponseCommentUpdateRequest(
+        ResponseInstructorCommentUpdateRequest body = new ResponseInstructorCommentUpdateRequest(
                 commentText,
                 new ArrayList<>(),
                 new ArrayList<>()
         );
 
         executePutRequest(Const.ResourceURIs.RESPONSE_COMMENT, params, JsonUtils.toJson(body));
-    }
-
-    /**
-     * Deletes a course from the database.
-     */
-    public void deleteCourse(String courseId) {
-        Map<String, String> params = new HashMap<>();
-        params.put(Const.ParamsNames.COURSE_ID, courseId);
-        executeDeleteRequest(Const.ResourceURIs.COURSE, params);
     }
 
     /**

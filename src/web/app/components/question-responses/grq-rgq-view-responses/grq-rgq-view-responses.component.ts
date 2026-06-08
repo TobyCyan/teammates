@@ -1,22 +1,23 @@
-import { KeyValue, NgTemplateOutlet, KeyValuePipe } from '@angular/common';
+import { NgTemplateOutlet, KeyValuePipe } from '@angular/common';
 import { Component, Input, OnChanges, OnInit, inject } from '@angular/core';
 import { FeedbackResponsesService } from '../../../../services/feedback-responses.service';
 import {
-  FeedbackParticipantType,
   FeedbackSession,
   FeedbackSessionPublishStatus,
   FeedbackSessionSubmissionStatus,
+  QuestionGiverType,
   QuestionOutput,
   ResponseOutput,
   ResponseVisibleSetting,
   SessionVisibleSetting,
 } from '../../../../types/api-output';
 import { InstructorSessionResultSectionType } from '../../../pages-instructor/instructor-session-result-page/instructor-session-result-section-type.enum';
+import { DEFAULT_SECTION_ID } from '../../../pages-instructor/instructor-session-result-page/instructor-session-tab.model';
 import { ResponseModerationButtonComponent } from '../../../pages-instructor/instructor-session-result-page/response-moderation-button/response-moderation-button.component';
 import { PanelChevronComponent } from '../../panel-chevron/panel-chevron.component';
-import { collapseAnim } from '../../teammates-common/collapse-anim';
 import { GroupedResponsesComponent } from '../grouped-responses/grouped-responses.component';
 import { InstructorResponsesViewBase } from '../instructor-responses-view-base';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
 
 /**
  * Component to display list of responses in GRQ/RGQ view.
@@ -25,8 +26,8 @@ import { InstructorResponsesViewBase } from '../instructor-responses-view-base';
   selector: 'tm-grq-rgq-view-responses',
   templateUrl: './grq-rgq-view-responses.component.html',
   styleUrls: ['./grq-rgq-view-responses.component.scss'],
-  animations: [collapseAnim],
   imports: [
+    NgbCollapse,
     PanelChevronComponent,
     NgTemplateOutlet,
     ResponseModerationButtonComponent,
@@ -67,7 +68,7 @@ export class GrqRgqViewResponsesComponent extends InstructorResponsesViewBase im
   teamsToUsers: Record<string, string[]> = {};
   usersToTeams: Record<string, string> = {};
   userToEmail: Record<string, string> = {};
-  userToRelatedEmail: Record<string, string> = {};
+  userToUserIdForModeration: Record<string, string> = {};
 
   teamExpanded: Record<string, boolean> = {};
   userExpanded: Record<string, boolean> = {};
@@ -84,17 +85,13 @@ export class GrqRgqViewResponsesComponent extends InstructorResponsesViewBase im
     this.filterResponses();
   }
 
-  trackByName(_: number, keyVal: KeyValue<string, boolean>): string {
-    return keyVal.key;
-  }
-
   private filterResponses(): void {
     this.responsesToShow = {};
     this.userHasRealResponses = {};
     this.teamsToUsers = {};
     this.usersToTeams = {};
     this.userToEmail = {};
-    this.userToRelatedEmail = {};
+    this.userToUserIdForModeration = {};
     this.teamExpanded = {};
     this.userExpanded = {};
     for (const question of this.responses) {
@@ -106,8 +103,8 @@ export class GrqRgqViewResponsesComponent extends InstructorResponsesViewBase im
 
         if (this.sectionOfView) {
           if (
-            (this.isGrq && response.giverSection !== this.sectionOfView) ||
-            (!this.isGrq && response.recipientSection !== this.sectionOfView)
+            (this.isGrq && !this.isResponseSection(response.giverSectionId, this.sectionOfView)) ||
+            (!this.isGrq && !this.isResponseSection(response.recipientSectionId, this.sectionOfView))
           ) {
             continue;
           }
@@ -133,12 +130,11 @@ export class GrqRgqViewResponsesComponent extends InstructorResponsesViewBase im
             this.usersToTeams[response.giver] = response.giverTeam;
             this.teamExpanded[response.giverTeam] = this.isExpandAll;
           }
-          if (response.relatedGiverEmail) {
-            this.userToRelatedEmail[response.giver] = response.relatedGiverEmail;
+          if (response.userIdForModeration) {
+            this.userToUserIdForModeration[response.giver] = response.userIdForModeration;
           }
           this.userExpanded[response.giver] = this.isExpandAll;
-          this.userIsInstructor[response.giver] =
-            question.feedbackQuestion.giverType === FeedbackParticipantType.INSTRUCTORS;
+          this.userIsInstructor[response.giver] = question.feedbackQuestion.giverType === QuestionGiverType.INSTRUCTORS;
         } else {
           this.usersToTeams[response.recipient] = this.usersToTeams[response.recipient] || '';
           this.userExpanded[response.recipient] = this.isExpandAll;
@@ -165,7 +161,7 @@ export class GrqRgqViewResponsesComponent extends InstructorResponsesViewBase im
       this.userHasRealResponses[user] = false;
 
       for (const question of this.responses) {
-        const questionCopy: QuestionOutput = JSON.parse(JSON.stringify(question));
+        const questionCopy: QuestionOutput = structuredClone(question);
         questionCopy.allResponses = questionCopy.allResponses.filter((response: ResponseOutput) => {
           if (!this.indicateMissingResponses && response.isMissingResponse) {
             // filter out missing responses
@@ -197,7 +193,7 @@ export class GrqRgqViewResponsesComponent extends InstructorResponsesViewBase im
             return this.isGrq ? response.recipient : response.giver;
           });
           for (const other of others) {
-            const questionCopy2: QuestionOutput = JSON.parse(JSON.stringify(questionCopy));
+            const questionCopy2: QuestionOutput = structuredClone(questionCopy);
             questionCopy2.allResponses = questionCopy2.allResponses.filter((response: ResponseOutput) => {
               return this.isGrq ? response.recipient === other : response.giver === other;
             });
@@ -214,5 +210,9 @@ export class GrqRgqViewResponsesComponent extends InstructorResponsesViewBase im
         }
       }
     }
+  }
+
+  private isResponseSection(responseSectionId: string | null | undefined, sectionId: string): boolean {
+    return sectionId === DEFAULT_SECTION_ID ? !responseSectionId : responseSectionId === sectionId;
   }
 }

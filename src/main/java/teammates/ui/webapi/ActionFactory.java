@@ -40,7 +40,6 @@ public final class ActionFactory {
         map(ResourceURIs.AUTH, GET, GetAuthInfoAction.class);
         map(ResourceURIs.AUTH_REGKEY, GET, GetRegkeyValidityAction.class);
         map(ResourceURIs.ACCOUNT, GET, GetAccountAction.class);
-        map(ResourceURIs.ACCOUNT, POST, CreateAccountAction.class);
         map(ResourceURIs.ACCOUNT, DELETE, DeleteAccountAction.class);
         map(ResourceURIs.ACCOUNT_RESET, PUT, ResetAccountAction.class);
         map(ResourceURIs.ACCOUNT_REQUEST, GET, GetAccountRequestAction.class);
@@ -48,7 +47,6 @@ public final class ActionFactory {
         map(ResourceURIs.ACCOUNT_REQUEST, DELETE, DeleteAccountRequestAction.class);
         map(ResourceURIs.ACCOUNT_REQUEST, PUT, UpdateAccountRequestAction.class);
         map(ResourceURIs.ACCOUNT_REQUESTS, GET, GetAccountRequestsAction.class);
-        map(ResourceURIs.ACCOUNT_REQUEST_RESET, PUT, ResetAccountRequestAction.class);
         map(ResourceURIs.ACCOUNT_REQUEST_REJECTION, POST, RejectAccountRequestAction.class);
         map(ResourceURIs.ACCOUNT_REQUEST_APPROVAL, POST, ApproveAccountRequestAction.class);
         map(ResourceURIs.COURSE, GET, GetCourseAction.class);
@@ -57,18 +55,19 @@ public final class ActionFactory {
         map(ResourceURIs.COURSE, PUT, UpdateCourseAction.class);
         map(ResourceURIs.BIN_COURSE, PUT, BinCourseAction.class);
         map(ResourceURIs.BIN_COURSE, DELETE, RestoreCourseAction.class);
+        map(ResourceURIs.DEMO_COURSE, POST, CreateDemoCourseAction.class);
         map(ResourceURIs.COURSES, GET, GetCoursesAction.class);
-        map(ResourceURIs.COURSE_SECTIONS, GET, GetCourseSectionNamesAction.class);
+        map(ResourceURIs.COURSE_SECTIONS, GET, GetCourseSectionsAction.class);
         map(ResourceURIs.INSTRUCTORS, GET, GetInstructorsAction.class);
         map(ResourceURIs.INSTRUCTOR, GET, GetInstructorAction.class);
         map(ResourceURIs.INSTRUCTOR, DELETE, DeleteInstructorAction.class);
         map(ResourceURIs.INSTRUCTOR_PRIVILEGE, GET, GetInstructorPrivilegeAction.class);
-        map(ResourceURIs.INSTRUCTOR_PRIVILEGE, PUT, UpdateInstructorPrivilegeAction.class);
-        map(ResourceURIs.RESPONSE_COMMENT, POST, CreateFeedbackResponseCommentAction.class);
-        map(ResourceURIs.RESPONSE_COMMENT, GET, GetFeedbackResponseCommentAction.class);
-        map(ResourceURIs.RESPONSE_COMMENT, PUT, UpdateFeedbackResponseCommentAction.class);
-        map(ResourceURIs.RESPONSE_COMMENT, DELETE, DeleteFeedbackResponseCommentAction.class);
-        map(ResourceURIs.RESULT, GET, GetSessionResultsAction.class);
+        map(ResourceURIs.RESPONSE_COMMENT, POST, CreateResponseInstructorCommentAction.class);
+        map(ResourceURIs.RESPONSE_COMMENT, PUT, UpdateResponseInstructorCommentAction.class);
+        map(ResourceURIs.RESPONSE_COMMENT, DELETE, DeleteResponseInstructorCommentAction.class);
+        map(ResourceURIs.RESPONSE_GIVER_COMMENT, DELETE, DeleteFeedbackResponseGiverCommentAction.class);
+        map(ResourceURIs.COURSE_SESSION_RESULTS, GET, GetCourseSessionResultsAction.class);
+        map(ResourceURIs.USER_SESSION_RESULTS, GET, GetUserSessionResultsAction.class);
         map(ResourceURIs.EMAIL, GET, GenerateEmailAction.class);
 
         //STUDENTS APIs
@@ -110,16 +109,15 @@ public final class ActionFactory {
         map(ResourceURIs.SESSION_SUBMITTED_GIVER_SET, GET, GetFeedbackSessionSubmittedGiverSetAction.class);
         map(ResourceURIs.SESSION_REMIND_SUBMISSION, POST, RemindFeedbackSessionSubmissionAction.class);
         map(ResourceURIs.SESSION_REMIND_RESULT, POST, RemindFeedbackSessionResultAction.class);
+        map(ResourceURIs.SESSION_SUBMISSION, GET, GetSessionSubmissionDataAction.class);
         map(ResourceURIs.SESSIONS, GET, GetFeedbackSessionsAction.class);
         map(ResourceURIs.BIN_SESSION, PUT, BinFeedbackSessionAction.class);
         map(ResourceURIs.BIN_SESSION, DELETE, RestoreFeedbackSessionAction.class);
-        map(ResourceURIs.INSTRUCTOR_KEY, POST, RegenerateInstructorKeyAction.class);
-        map(ResourceURIs.STUDENT_KEY, POST, RegenerateStudentKeyAction.class);
+        map(ResourceURIs.USER_KEY, POST, RegenerateUserKeyAction.class);
         map(ResourceURIs.QUESTIONS, GET, GetFeedbackQuestionsAction.class);
         map(ResourceURIs.QUESTION, POST, CreateFeedbackQuestionAction.class);
         map(ResourceURIs.QUESTION, PUT, UpdateFeedbackQuestionAction.class);
         map(ResourceURIs.QUESTION, DELETE, DeleteFeedbackQuestionAction.class);
-        map(ResourceURIs.QUESTION_RECIPIENTS, GET, GetFeedbackQuestionRecipientsAction.class);
         map(ResourceURIs.RESPONSES, GET, GetFeedbackResponsesAction.class);
         map(ResourceURIs.RESPONSES, PUT, SubmitFeedbackResponsesAction.class);
         map(ResourceURIs.HAS_RESPONSES, GET, GetHasResponsesAction.class);

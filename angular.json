@@ -27,7 +27,16 @@
             "polyfills": ["zone.js", "@angular/localize/init"],
             "tsConfig": "tsconfig.app.json",
             "allowedCommonJsDependencies": ["moment-timezone"],
-            "assets": ["src/web/assets/", "src/web/manifest.webmanifest", "src/web/robots.txt"],
+            "assets": [
+              "src/web/assets/",
+              "src/web/robots.txt",
+              "src/web/ngsw-worker.js",
+              {
+                "glob": "**/*",
+                "input": "node_modules/tinymce",
+                "output": "/tinymce"
+              }
+            ],
             "styles": ["src/web/styles.scss"],
             "browser": "src/web/main.ts"
           },
@@ -39,10 +48,6 @@
                   "with": "src/web/environments/environment.prod.ts"
                 }
               ],
-              "index": {
-                "input": "src/web/index.prod.html",
-                "output": "index.html"
-              },
               "optimization": {
                 "scripts": true,
                 "styles": {
@@ -53,7 +58,6 @@
               },
               "outputHashing": "all",
               "subresourceIntegrity": true,
-              "serviceWorker": "ngsw-config.json",
               "budgets": [
                 {
                   "type": "initial",
@@ -95,9 +99,10 @@
           }
         },
         "test": {
-          "builder": "@angular-builders/jest:run",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "cache": false
+            "tsConfig": "tsconfig.spec.json",
+            "runnerConfig": "src/web/test-helpers/vitest.config.ts"
           }
         },
         "lint": {

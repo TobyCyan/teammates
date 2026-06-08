@@ -54,16 +54,24 @@ export const courseBuilder = createBuilder<Course>({
 });
 
 export const instructorBuilder = createBuilder<Instructor>({
+  userId: 'example-user-id',
   courseId: 'exampleId',
+  courseName: 'example course',
+  institute: 'example institute',
   email: '',
   name: '',
   joinState: JoinState.JOINED,
 });
 
 export const studentBuilder = createBuilder<Student>({
+  userId: 'example-user-id',
   courseId: 'exampleId',
+  courseName: 'example course',
+  institute: 'example institute',
   email: 'examplestudent@gmail.com',
   name: 'test-student',
+  teamId: 'test-team-id',
   teamName: 'test-team-name',
+  sectionId: 'test-section-id',
   sectionName: 'test-section-name',
 });

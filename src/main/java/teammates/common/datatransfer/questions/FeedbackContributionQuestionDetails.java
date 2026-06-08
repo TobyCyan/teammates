@@ -12,9 +12,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
 import teammates.common.datatransfer.SessionResultsBundle;
 import teammates.common.datatransfer.TeamEvalResult;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
+import teammates.common.datatransfer.participanttypes.ViewerType;
 import teammates.common.util.Const;
 import teammates.common.util.JsonUtils;
 import teammates.common.util.Logger;
@@ -82,7 +84,7 @@ public class FeedbackContributionQuestionDetails extends FeedbackQuestionDetails
         if (isStudent) {
             teamNames = getTeamsWithAtLeastOneResponse(responses, bundle);
         } else {
-            teamNames = new ArrayList<>(bundle.getRoster().getTeamToMembersTable().keySet());
+            teamNames = new ArrayList<>(bundle.getRoster().getTeamToMembers().keySet());
         }
 
         // Each team's member (email) list
@@ -218,8 +220,8 @@ public class FeedbackContributionQuestionDetails extends FeedbackQuestionDetails
             List<FeedbackResponse> teamResponseList = teamResponses.get(team);
             List<String> memberEmailList = teamMembersEmail.get(team);
             for (FeedbackResponse response : teamResponseList) {
-                int giverIndx = memberEmailList.indexOf(response.getGiver());
-                int recipientIndx = memberEmailList.indexOf(response.getRecipient());
+                int giverIndx = memberEmailList.indexOf(response.getGiver().getIdentifier());
+                int recipientIndx = memberEmailList.indexOf(response.getRecipient().getIdentifier());
                 if (giverIndx == -1 || recipientIndx == -1) {
                     continue;
                 }
@@ -237,7 +239,7 @@ public class FeedbackContributionQuestionDetails extends FeedbackQuestionDetails
             teamResponses.put(teamName, new ArrayList<>());
         }
         for (FeedbackResponse response : responses) {
-            String team = bundle.getRoster().getInfoForIdentifier(response.getGiver()).getTeamName();
+            String team = bundle.getRoster().getInfoForIdentifier(response.getGiver().getIdentifier()).getTeamName();
             if (teamResponses.containsKey(team)) {
                 teamResponses.get(team).add(response);
             }
@@ -249,7 +251,7 @@ public class FeedbackContributionQuestionDetails extends FeedbackQuestionDetails
             SessionResultsBundle bundle, List<String> teamNames) {
         Map<String, List<String>> teamMembersEmail = new LinkedHashMap<>();
         for (String teamName : teamNames) {
-            List<String> memberEmails = bundle.getRoster().getTeamToMembersTable().get(teamName)
+            List<String> memberEmails = bundle.getRoster().getTeamToMembers().get(teamName)
                     .stream().map(Student::getEmail)
                     .collect(Collectors.toList());
             teamMembersEmail.put(teamName, memberEmails);
@@ -261,7 +263,9 @@ public class FeedbackContributionQuestionDetails extends FeedbackQuestionDetails
             List<FeedbackResponse> responses, SessionResultsBundle bundle) {
         Set<String> teamNames = new HashSet<>();
         for (FeedbackResponse response : responses) {
-            String teamNameOfResponseGiver = bundle.getRoster().getInfoForIdentifier(response.getGiver()).getTeamName();
+            String teamNameOfResponseGiver = bundle.getRoster()
+                    .getInfoForIdentifier(response.getGiver().getIdentifier())
+                    .getTeamName();
             teamNames.add(teamNameOfResponseGiver);
         }
         return new ArrayList<>(teamNames);
@@ -328,35 +332,35 @@ public class FeedbackContributionQuestionDetails extends FeedbackQuestionDetails
         String errorMsg = "";
 
         // giver type can only be STUDENTS
-        if (feedbackQuestion.getGiverType() != FeedbackParticipantType.STUDENTS) {
+        if (feedbackQuestion.getGiverType() != QuestionGiverType.STUDENTS) {
             log.severe("Unexpected giverType for contribution question: " + feedbackQuestion.getGiverType()
-                       + " (forced to :" + FeedbackParticipantType.STUDENTS + ")");
-            feedbackQuestion.setGiverType(FeedbackParticipantType.STUDENTS);
+                       + " (forced to :" + QuestionGiverType.STUDENTS + ")");
+            feedbackQuestion.setGiverType(QuestionGiverType.STUDENTS);
             errorMsg = CONTRIB_ERROR_INVALID_FEEDBACK_PATH;
         }
 
         // recipient type can only be OWN_TEAM_MEMBERS_INCLUDING_SELF
-        if (feedbackQuestion.getRecipientType() != FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF) {
+        if (feedbackQuestion.getRecipientType() != QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF) {
             log.severe("Unexpected recipientType for contribution question: "
                        + feedbackQuestion.getRecipientType()
-                       + " (forced to :" + FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF + ")");
-            feedbackQuestion.setRecipientType(FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF);
+                       + " (forced to :" + QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF + ")");
+            feedbackQuestion.setRecipientType(QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF);
             errorMsg = CONTRIB_ERROR_INVALID_FEEDBACK_PATH;
         }
 
         // restrictions on visibility options
-        if (!(feedbackQuestion.getShowResponsesTo().contains(FeedbackParticipantType.RECEIVER)
-                == feedbackQuestion.getShowResponsesTo().contains(FeedbackParticipantType.RECEIVER_TEAM_MEMBERS)
-                && feedbackQuestion.getShowResponsesTo().contains(FeedbackParticipantType.RECEIVER_TEAM_MEMBERS)
-                == feedbackQuestion.getShowResponsesTo().contains(FeedbackParticipantType.OWN_TEAM_MEMBERS))) {
+        if (!(feedbackQuestion.getShowResponsesTo().contains(ViewerType.RECEIVER)
+                == feedbackQuestion.getShowResponsesTo().contains(ViewerType.RECEIVER_TEAM_MEMBERS)
+                && feedbackQuestion.getShowResponsesTo().contains(ViewerType.RECEIVER_TEAM_MEMBERS)
+                == feedbackQuestion.getShowResponsesTo().contains(ViewerType.OWN_TEAM_MEMBERS))) {
             log.severe("Unexpected showResponsesTo for contribution question: "
                        + feedbackQuestion.getShowResponsesTo() + " (forced to :"
                        + "Shown anonymously to recipient and team members, visible to instructors"
                        + ")");
-            feedbackQuestion.setShowResponsesTo(Arrays.asList(FeedbackParticipantType.RECEIVER,
-                                                                       FeedbackParticipantType.RECEIVER_TEAM_MEMBERS,
-                                                                       FeedbackParticipantType.OWN_TEAM_MEMBERS,
-                                                                       FeedbackParticipantType.INSTRUCTORS));
+            feedbackQuestion.setShowResponsesTo(Arrays.asList(ViewerType.RECEIVER,
+                                                                       ViewerType.RECEIVER_TEAM_MEMBERS,
+                                                                       ViewerType.OWN_TEAM_MEMBERS,
+                                                                       ViewerType.INSTRUCTORS));
             errorMsg = CONTRIB_ERROR_INVALID_VISIBILITY_OPTIONS;
         }
 

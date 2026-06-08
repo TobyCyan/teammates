@@ -1,5 +1,14 @@
 <div class="background-color-light-green margin-top-15px padding-15px">
   <div><b class="feedback-path-title">Feedback Path</b> (Who is giving feedback about whom?)</div>
+  @if (model.isEditable && mayHaveExistingResponses) {
+    <div class="alert alert-warning my-2">
+      <strong>Changing feedback path settings is not recommended</strong>
+      <p>
+        There may already be responses to this question. Changing the feedback path will result in existing responses
+        being deleted.
+      </p>
+    </div>
+  }
   <div ngbDropdown #mainMenu="ngbDropdown" class="margin-top-15px w-100" autoClose="outside">
     <button
       id="btn-feedback-path"
@@ -101,13 +110,13 @@
     </div>
   }
   @if (
-    model.recipientType === FeedbackParticipantType.STUDENTS ||
-    model.recipientType === FeedbackParticipantType.STUDENTS_EXCLUDING_SELF ||
-    model.recipientType === FeedbackParticipantType.STUDENTS_IN_SAME_SECTION ||
-    model.recipientType === FeedbackParticipantType.TEAMS ||
-    model.recipientType === FeedbackParticipantType.TEAMS_EXCLUDING_SELF ||
-    model.recipientType === FeedbackParticipantType.TEAMS_IN_SAME_SECTION ||
-    model.recipientType === FeedbackParticipantType.INSTRUCTORS
+    model.recipientType === QuestionRecipientType.STUDENTS ||
+    model.recipientType === QuestionRecipientType.STUDENTS_EXCLUDING_SELF ||
+    model.recipientType === QuestionRecipientType.STUDENTS_IN_SAME_SECTION ||
+    model.recipientType === QuestionRecipientType.TEAMS ||
+    model.recipientType === QuestionRecipientType.TEAMS_EXCLUDING_SELF ||
+    model.recipientType === QuestionRecipientType.TEAMS_IN_SAME_SECTION ||
+    model.recipientType === QuestionRecipientType.INSTRUCTORS
   ) {
     <div class="row margin-top-15px align-items-center">
       <div class="offset-1 col-md-4 text-md-end">

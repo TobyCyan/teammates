@@ -7,8 +7,6 @@
           <a
             tmRouterLink="/web/instructor/sessions/individual-extension"
             [queryParams]="{
-              courseid: session.courseId,
-              fsname: session.feedbackSessionName,
               fsid: session.feedbackSessionId,
               preselectnonsubmitters: true,
             }"
@@ -79,10 +77,8 @@
                         rel="noopener noreferrer"
                         target="_blank"
                         [queryParams]="{
-                          courseid: session.courseId,
-                          fsname: session.feedbackSessionName,
                           fsid: session.feedbackSessionId,
-                          moderatedperson: noResponseStudent.email,
+                          moderatedperson: noResponseStudent.userId,
                         }"
                         class="btn btn-light btn-sm button"
                       >

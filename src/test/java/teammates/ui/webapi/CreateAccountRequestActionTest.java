@@ -1,5 +1,6 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -13,9 +14,9 @@ import teammates.common.datatransfer.AccountRequestStatus;
 import teammates.common.exception.InvalidParametersException;
 import teammates.common.util.Const;
 import teammates.storage.entity.AccountRequest;
+import teammates.ui.exception.InvalidHttpRequestBodyException;
 import teammates.ui.output.AccountRequestData;
 import teammates.ui.request.AccountCreateRequest;
-import teammates.ui.request.InvalidHttpRequestBodyException;
 
 /**
  * SUT: {@link CreateAccountRequestAction}.
@@ -159,7 +160,7 @@ public class CreateAccountRequestActionTest extends BaseActionTest<CreateAccount
     }
 
     private void verifyAccountRequestCreated(AccountRequestData output, AccountRequest accountRequest) {
-        assertEquals(output.getId(), accountRequest.getId());
+        assertEquals(output.getAccountRequestId(), accountRequest.getId());
         assertEquals(output.getEmail(), accountRequest.getEmail());
         assertEquals(output.getName(), accountRequest.getName());
         assertEquals(output.getInstitute(), accountRequest.getInstitute());

@@ -1,18 +1,19 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { RecycleBinTableFormatDatePipe } from './recycle-bin-table-format-date.pipe';
-import { FeedbackSession } from '../../../types/api-output';
+import { FeedbackSession, InstructorFeedbackSessionPermissions } from '../../../types/api-output';
 import { SortBy, SortOrder } from '../../../types/sort-properties';
 import { AjaxLoadingComponent } from '../ajax-loading/ajax-loading.component';
 import { PanelChevronComponent } from '../panel-chevron/panel-chevron.component';
-import { collapseAnim } from '../teammates-common/collapse-anim';
 import { FormatDateDetailPipe } from '../teammates-common/format-date-detail.pipe';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
 
 /**
  * Model for a row of recycle bin feedback session
  */
 export interface RecycleBinFeedbackSessionRowModel {
   feedbackSession: FeedbackSession;
+  instructorPrivilege?: InstructorFeedbackSessionPermissions;
 }
 
 /**
@@ -22,9 +23,9 @@ export interface RecycleBinFeedbackSessionRowModel {
   selector: 'tm-sessions-recycle-bin-table',
   templateUrl: './sessions-recycle-bin-table.component.html',
   styleUrls: ['./sessions-recycle-bin-table.component.scss'],
-  animations: [collapseAnim],
   imports: [
     NgbTooltip,
+    NgbCollapse,
     PanelChevronComponent,
     AjaxLoadingComponent,
     FormatDateDetailPipe,
@@ -33,8 +34,8 @@ export interface RecycleBinFeedbackSessionRowModel {
 })
 export class SessionsRecycleBinTableComponent {
   // enum
-  SortBy: typeof SortBy = SortBy;
-  SortOrder: typeof SortOrder = SortOrder;
+  SortBy!: typeof SortBy;
+  SortOrder!: typeof SortOrder;
 
   // variable
   rowClicked = -1;
@@ -71,6 +72,11 @@ export class SessionsRecycleBinTableComponent {
 
   @Output()
   recycleBinExpandEvent: EventEmitter<any> = new EventEmitter<any>();
+
+  constructor() {
+    this.SortBy = SortBy;
+    this.SortOrder = SortOrder;
+  }
 
   /**
    * Sorts the list of deleted feedback session row

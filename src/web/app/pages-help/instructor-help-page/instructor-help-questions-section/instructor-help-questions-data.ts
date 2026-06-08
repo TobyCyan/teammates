@@ -1,12 +1,11 @@
 import {
   ContributionStatistics,
   FeedbackConstantSumDistributePointsType,
-  FeedbackConstantSumQuestionDetails,
-  FeedbackConstantSumResponseDetails,
+  FeedbackConstantSumOptionsQuestionDetails,
+  FeedbackConstantSumOptionsResponseDetails,
   FeedbackContributionResponseDetails,
   FeedbackMcqQuestionDetails,
   FeedbackNumericalScaleResponseDetails,
-  FeedbackParticipantType,
   FeedbackQuestionType,
   FeedbackRankRecipientsResponseDetails,
   FeedbackRubricQuestionDetails,
@@ -16,6 +15,8 @@ import {
   FeedbackSessionSubmissionStatus,
   FeedbackVisibilityType,
   NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionGiverType,
+  QuestionRecipientType,
   ResponseOutput,
   ResponseVisibleSetting,
   SessionVisibleSetting,
@@ -30,10 +31,13 @@ import {
   DEFAULT_RUBRIC_QUESTION_DETAILS,
   DEFAULT_TEXT_QUESTION_DETAILS,
 } from '../../../../types/default-question-structs';
+import { Response } from '../../../../types/question-statistics.model';
 import { CommentTableModel } from '../../../components/comment-box/comment-table/comment-table.model';
 import { QuestionEditFormModel } from '../../../components/question-edit-form/question-edit-form-model';
-import { QuestionSubmissionFormModel } from '../../../components/question-submission-form/question-submission-form-model';
-import { Response } from '../../../components/question-types/question-statistics/question-statistics';
+import {
+  QuestionSubmissionFormModel,
+  ResponseSubmissionStatus,
+} from '../../../components/question-submission-form/question-submission-form-model';
 import { QuestionTabModel } from '../../../pages-instructor/instructor-session-result-page/instructor-session-tab.model';
 
 /**
@@ -41,7 +45,6 @@ import { QuestionTabModel } from '../../../pages-instructor/instructor-session-r
  */
 export const EXAMPLE_ESSAY_QUESTION_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: '',
@@ -58,8 +61,8 @@ export const EXAMPLE_ESSAY_QUESTION_MODEL: QuestionEditFormModel = {
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -73,7 +76,6 @@ export const EXAMPLE_ESSAY_QUESTION_MODEL: QuestionEditFormModel = {
  */
 export const EXAMPLE_NUMERICAL_SCALE_QUESTION_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: '',
@@ -90,8 +92,8 @@ export const EXAMPLE_NUMERICAL_SCALE_QUESTION_MODEL: QuestionEditFormModel = {
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -381,10 +383,10 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
   1: {
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
 
-        isUsingCustomVisibilities: false,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -397,10 +399,10 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
   2: {
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
 
-        isUsingCustomVisibilities: false,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -413,10 +415,10 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
   3: {
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
 
-        isUsingCustomVisibilities: false,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -429,10 +431,10 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
   4: {
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
 
-        isUsingCustomVisibilities: false,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -445,10 +447,10 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
   5: {
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
 
-        isUsingCustomVisibilities: false,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -461,10 +463,10 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
   6: {
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
 
-        isUsingCustomVisibilities: false,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -477,10 +479,10 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
   7: {
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
 
-        isUsingCustomVisibilities: false,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -493,10 +495,10 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
   8: {
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
 
-        isUsingCustomVisibilities: false,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -530,9 +532,8 @@ export const EXAMPLE_FEEDBACK_SESSION: FeedbackSession = {
 /**
  * Structure for example of distrution point option question detail
  */
-export const EXAMPLE_DISTRIBUTE_POINT_OPTION_QUESTION_DETAIL: FeedbackConstantSumQuestionDetails = {
+export const EXAMPLE_DISTRIBUTE_POINT_OPTION_QUESTION_DETAIL: FeedbackConstantSumOptionsQuestionDetails = {
   constSumOptions: ['Option A', 'Option B'],
-  distributeToRecipients: false,
   pointsPerOption: false,
   forceUnevenDistribution: false,
   distributePointsFor: FeedbackConstantSumDistributePointsType.NONE,
@@ -547,7 +548,6 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_QUESTION_DETAIL: FeedbackConstantSu
  */
 export const EXAMPLE_DISTRIBUTED_POINT_OPTION_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: '',
@@ -564,8 +564,8 @@ export const EXAMPLE_DISTRIBUTED_POINT_OPTION_MODEL: QuestionEditFormModel = {
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -591,8 +591,8 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_RESPONSE_OUTPUT: ResponseOutput[] =
     recipientSection: '',
     responseDetails: {
       answers: [2, 8],
-      questionType: FeedbackQuestionType.CONSTSUM,
-    } as FeedbackConstantSumResponseDetails,
+      questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
+    } as FeedbackConstantSumOptionsResponseDetails,
     instructorComments: [],
   },
   {
@@ -608,8 +608,8 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_RESPONSE_OUTPUT: ResponseOutput[] =
     recipientSection: '',
     responseDetails: {
       answers: [3, 7],
-      questionType: FeedbackQuestionType.CONSTSUM,
-    } as FeedbackConstantSumResponseDetails,
+      questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
+    } as FeedbackConstantSumOptionsResponseDetails,
     instructorComments: [],
   },
   {
@@ -625,8 +625,8 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_RESPONSE_OUTPUT: ResponseOutput[] =
     recipientSection: '',
     responseDetails: {
       answers: [5, 5],
-      questionType: FeedbackQuestionType.CONSTSUM,
-    } as FeedbackConstantSumResponseDetails,
+      questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
+    } as FeedbackConstantSumOptionsResponseDetails,
     instructorComments: [],
   },
   {
@@ -642,8 +642,8 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_RESPONSE_OUTPUT: ResponseOutput[] =
     recipientSection: '',
     responseDetails: {
       answers: [5, 5],
-      questionType: FeedbackQuestionType.CONSTSUM,
-    } as FeedbackConstantSumResponseDetails,
+      questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
+    } as FeedbackConstantSumOptionsResponseDetails,
     instructorComments: [],
   },
   {
@@ -659,8 +659,8 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_RESPONSE_OUTPUT: ResponseOutput[] =
     recipientSection: '',
     responseDetails: {
       answers: [9, 1],
-      questionType: FeedbackQuestionType.CONSTSUM,
-    } as FeedbackConstantSumResponseDetails,
+      questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
+    } as FeedbackConstantSumOptionsResponseDetails,
     instructorComments: [],
   },
   {
@@ -676,8 +676,8 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_RESPONSE_OUTPUT: ResponseOutput[] =
     recipientSection: '',
     responseDetails: {
       answers: [6, 4],
-      questionType: FeedbackQuestionType.CONSTSUM,
-    } as FeedbackConstantSumResponseDetails,
+      questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
+    } as FeedbackConstantSumOptionsResponseDetails,
     instructorComments: [],
   },
   {
@@ -693,8 +693,8 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_RESPONSE_OUTPUT: ResponseOutput[] =
     recipientSection: '',
     responseDetails: {
       answers: [4, 6],
-      questionType: FeedbackQuestionType.CONSTSUM,
-    } as FeedbackConstantSumResponseDetails,
+      questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
+    } as FeedbackConstantSumOptionsResponseDetails,
     instructorComments: [],
   },
   {
@@ -710,8 +710,8 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_RESPONSE_OUTPUT: ResponseOutput[] =
     recipientSection: '',
     responseDetails: {
       answers: [7, 3],
-      questionType: FeedbackQuestionType.CONSTSUM,
-    } as FeedbackConstantSumResponseDetails,
+      questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
+    } as FeedbackConstantSumOptionsResponseDetails,
     instructorComments: [],
   },
 ];
@@ -736,7 +736,6 @@ export const EXAMPLE_DISTRIBUTE_POINT_OPTION_QUESTIONS: Record<string, QuestionT
  */
 export const EXAMPLE_DISTRIBUTED_POINT_RECIPIENT_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: '',
@@ -753,8 +752,8 @@ export const EXAMPLE_DISTRIBUTED_POINT_RECIPIENT_MODEL: QuestionEditFormModel = 
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -768,7 +767,6 @@ export const EXAMPLE_DISTRIBUTED_POINT_RECIPIENT_MODEL: QuestionEditFormModel = 
  */
 export const EXAMPLE_TEAM_CONTRIBUTION_QUESTION_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: '',
@@ -785,8 +783,8 @@ export const EXAMPLE_TEAM_CONTRIBUTION_QUESTION_MODEL: QuestionEditFormModel = {
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -1007,7 +1005,6 @@ export const EXAMPLE_TEAM_CONTRIBUTION_QUESTIONS: Record<string, QuestionTabMode
  */
 export const EXAMPLE_RUBRIC_QUESTION_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: '',
@@ -1046,8 +1043,8 @@ export const EXAMPLE_RUBRIC_QUESTION_MODEL: QuestionEditFormModel = {
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -1218,7 +1215,6 @@ export const EXAMPLE_RUBRIC_QUESTION_QUESTIONS: Record<string, QuestionTabModel>
  */
 export const EXAMPLE_RANK_RECIPIENT_QUESTION_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: '',
@@ -1235,8 +1231,8 @@ export const EXAMPLE_RANK_RECIPIENT_QUESTION_MODEL: QuestionEditFormModel = {
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -1407,7 +1403,6 @@ export const EXAMPLE_RANK_RECIPIENT_QUESTIONS: Record<string, QuestionTabModel> 
  */
 export const EXAMPLE_RANK_OPTION_QUESTION_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: '',
@@ -1424,8 +1419,8 @@ export const EXAMPLE_RANK_OPTION_QUESTION_MODEL: QuestionEditFormModel = {
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -1443,7 +1438,6 @@ export const EXAMPLE_RANK_OPTION_QUESTION_MODEL: QuestionEditFormModel = {
  */
 export const EXAMPLE_MCQ_QUESTION_WITHOUT_WEIGHTS_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: 'How much did you think you contributed?',
@@ -1465,8 +1459,8 @@ export const EXAMPLE_MCQ_QUESTION_WITHOUT_WEIGHTS_MODEL: QuestionEditFormModel =
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -1484,7 +1478,6 @@ export const EXAMPLE_MCQ_QUESTION_WITHOUT_WEIGHTS_MODEL: QuestionEditFormModel =
  */
 export const EXAMPLE_MCQ_QUESTION_WITH_WEIGHTS_MODEL: QuestionEditFormModel = {
   feedbackQuestionId: '',
-  isQuestionHasResponses: false,
 
   questionNumber: 1,
   questionBrief: 'How much did you think you contributed?',
@@ -1506,8 +1499,8 @@ export const EXAMPLE_MCQ_QUESTION_WITH_WEIGHTS_MODEL: QuestionEditFormModel = {
   isFeedbackPathChanged: false,
   isQuestionDetailsChanged: false,
 
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
   customNumberOfEntitiesToGiveFeedbackTo: 0,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
@@ -1524,8 +1517,6 @@ export const EXAMPLE_MCQ_QUESTION_WITH_WEIGHTS_MODEL: QuestionEditFormModel = {
  * Structure for example of responder rubric submission form model
  */
 export const EXAMPLE_RESPONDER_RUBRIC_SUBMISSION_FORM_MODEL: QuestionSubmissionFormModel = {
-  isLoading: false,
-  isLoaded: true,
   isTabExpanded: true,
   recipientList: [
     {
@@ -1542,15 +1533,15 @@ export const EXAMPLE_RESPONDER_RUBRIC_SUBMISSION_FORM_MODEL: QuestionSubmissionF
       responseId: 'response1',
       recipientIdentifier: 'alice',
       responseDetails: { questionType: FeedbackQuestionType.RUBRIC, answer: [0, 2] } as FeedbackRubricResponseDetails,
+      status: ResponseSubmissionStatus.SAVED,
       isValid: true,
-      isModified: false,
     },
     {
       responseId: 'response2',
       recipientIdentifier: 'bob',
       responseDetails: { questionType: FeedbackQuestionType.RUBRIC, answer: [1, 3] } as FeedbackRubricResponseDetails,
+      status: ResponseSubmissionStatus.SAVED,
       isValid: true,
-      isModified: false,
     },
   ],
   customNumberOfEntitiesToGiveFeedbackTo: 0,
@@ -1559,8 +1550,8 @@ export const EXAMPLE_RESPONDER_RUBRIC_SUBMISSION_FORM_MODEL: QuestionSubmissionF
   questionBrief: '',
   questionDescription: '',
   questionType: FeedbackQuestionType.RUBRIC,
-  giverType: FeedbackParticipantType.STUDENTS,
-  recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+  giverType: QuestionGiverType.STUDENTS,
+  recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
   showResponsesTo: [FeedbackVisibilityType.INSTRUCTORS, FeedbackVisibilityType.RECIPIENT],
   showGiverNameTo: [FeedbackVisibilityType.INSTRUCTORS],

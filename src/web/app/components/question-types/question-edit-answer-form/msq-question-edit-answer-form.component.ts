@@ -1,8 +1,8 @@
-import { Component, ElementRef, OnChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { QuestionEditAnswerFormComponent } from './question-edit-answer-form';
 import { FeedbackMsqQuestionDetails, FeedbackMsqResponseDetails } from '../../../../types/api-output';
-import { DEFAULT_MSQ_QUESTION_DETAILS, DEFAULT_MSQ_RESPONSE_DETAILS } from '../../../../types/default-question-structs';
+import { DEFAULT_MSQ_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 import { MSQ_ANSWER_NONE_OF_THE_ABOVE, NO_VALUE } from '../../../../types/feedback-response-details';
 
 /**
@@ -15,16 +15,19 @@ import { MSQ_ANSWER_NONE_OF_THE_ABOVE, NO_VALUE } from '../../../../types/feedba
   imports: [FormsModule],
 })
 export class MsqQuestionEditAnswerFormComponent
-  extends QuestionEditAnswerFormComponent<FeedbackMsqQuestionDetails, FeedbackMsqResponseDetails>
+  extends QuestionEditAnswerFormComponent<FeedbackMsqResponseDetails>
   implements OnChanges
 {
-  readonly NO_VALUE: number = NO_VALUE;
+  @Input() questionDetails: FeedbackMsqQuestionDetails = DEFAULT_MSQ_QUESTION_DETAILS();
+
+  readonly NO_VALUE: number;
   isMsqOptionSelected: boolean[] = [];
 
   @ViewChild('inputTextBoxOther') inputTextBoxOther?: ElementRef;
 
   constructor() {
-    super(DEFAULT_MSQ_QUESTION_DETAILS(), DEFAULT_MSQ_RESPONSE_DETAILS());
+    super();
+    this.NO_VALUE = NO_VALUE;
   }
 
   // sync the internal status with the input data

@@ -1,20 +1,18 @@
 package teammates.ui.webapi;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
 import teammates.common.exception.EntityAlreadyExistsException;
 import teammates.common.exception.InvalidParametersException;
-import teammates.common.util.Const;
-import teammates.common.util.FieldValidator;
+import teammates.common.util.HibernateUtil;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.Instructor;
+import teammates.ui.exception.InvalidHttpRequestBodyException;
 import teammates.ui.exception.InvalidOperationException;
 import teammates.ui.exception.UnauthorizedAccessException;
 import teammates.ui.output.CourseData;
 import teammates.ui.request.CourseCreateRequest;
-import teammates.ui.request.InvalidHttpRequestBodyException;
 
 /**
  * Create a new course for an instructor.
@@ -27,13 +25,11 @@ public class CreateCourseAction extends Action {
     }
 
     @Override
-    void checkSpecificAccessControl() throws UnauthorizedAccessException {
-        if (!userInfo.isInstructor) {
-            throw new UnauthorizedAccessException("Instructor privilege is required to access this resource.");
-        }
+    void checkSpecificAccessControl() throws UnauthorizedAccessException, InvalidHttpRequestBodyException {
+        CourseCreateRequest courseCreateRequest = getAndValidateRequestBody(CourseCreateRequest.class);
 
-        String institute = getNonNullRequestParamValue(Const.ParamsNames.INSTRUCTOR_INSTITUTION);
-        List<Instructor> existingInstructors = logic.getInstructorsForGoogleId(userInfo.getId());
+        String institute = courseCreateRequest.getInstitute().trim();
+        List<Instructor> existingInstructors = logic.getInstructorsByAccountId(requestContext.getAccount().getId());
         boolean canCreateCourse = existingInstructors.stream()
                 .filter(Instructor::hasCoownerPrivileges)
                 .map(instructor -> logic.getCourse(instructor.getCourseId()))
@@ -49,25 +45,14 @@ public class CreateCourseAction extends Action {
     @Override
     public JsonResult execute() throws InvalidHttpRequestBodyException, InvalidOperationException {
         CourseCreateRequest courseCreateRequest = getAndValidateRequestBody(CourseCreateRequest.class);
-        courseCreateRequest.setCourseId(courseCreateRequest.getCourseId().trim());
-
-        String newCourseTimeZone = courseCreateRequest.getTimeZone();
-        String timeZoneErrorMessage = FieldValidator.getInvalidityInfoForTimeZone(newCourseTimeZone);
-        if (!timeZoneErrorMessage.isEmpty()) {
-            throw new InvalidHttpRequestBodyException(timeZoneErrorMessage);
-        }
-
-        String newCourseId = courseCreateRequest.getCourseId();
-        String newCourseName = courseCreateRequest.getCourseName();
-        String institute = getNonNullRequestParamValue(Const.ParamsNames.INSTRUCTOR_INSTITUTION);
-        Course course = new Course(newCourseId, newCourseName, newCourseTimeZone, institute);
-        course.setCreatedAt(Instant.now());
 
         try {
-            Course createdCourse = logic.createCourseAndInstructor(userInfo.getId(), course);
+            Course createdCourse = logic.createCourseAndInstructor(
+                    getCurrentAccount(), courseCreateRequest);
+            HibernateUtil.flushSession();
             return new JsonResult(new CourseData(createdCourse));
-
         } catch (EntityAlreadyExistsException e) {
+            String newCourseId = courseCreateRequest.getCourseId().trim();
             throw new InvalidOperationException("The course ID " + newCourseId
                     + " has been used by another course, possibly by some other user."
                     + " Please try again with a different course ID.", e);

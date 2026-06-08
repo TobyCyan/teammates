@@ -1,5 +1,6 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
@@ -9,7 +10,9 @@ import java.util.List;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
+import teammates.common.datatransfer.participanttypes.ViewerType;
 import teammates.common.datatransfer.questions.FeedbackTextQuestionDetails;
 import teammates.common.util.Const;
 import teammates.common.util.JsonUtils;
@@ -81,7 +84,7 @@ public class GetFeedbackQuestionsActionTest extends BaseActionTest<GetFeedbackQu
 
     private FeedbackSession generateSession1InCourse(Course course) {
         FeedbackSession fs = new FeedbackSession("feedbacksession-1",
-                "instructor1@gmail.com", "generic instructions",
+                null, "generic instructions",
                 Instant.parse("2012-04-01T22:00:00Z"), Instant.parse("2027-04-30T22:00:00Z"),
                 Instant.parse("2012-03-28T22:00:00Z"), Instant.parse("2027-05-01T22:00:00Z"),
                 Duration.ofHours(10), true, true);
@@ -92,14 +95,14 @@ public class GetFeedbackQuestionsActionTest extends BaseActionTest<GetFeedbackQu
     }
 
     private List<FeedbackQuestion> generateFeedbackQuestionsInSession(FeedbackSession feedbackSession) {
-        List<FeedbackParticipantType> feedbackQuestionParticipantTypes =
-                List.of(FeedbackParticipantType.INSTRUCTORS);
+        List<ViewerType> feedbackQuestionParticipantTypes =
+                List.of(ViewerType.INSTRUCTORS);
 
         FeedbackTextQuestionDetails fq1Details =
                 new FeedbackTextQuestionDetails("What is the best selling point of your product?");
         FeedbackQuestion fq1 = FeedbackQuestion.makeQuestion(
                                     1, "This is a text question.",
-                                    FeedbackParticipantType.STUDENTS, FeedbackParticipantType.SELF, 1,
+                                    QuestionGiverType.STUDENTS, QuestionRecipientType.SELF, 1,
                                     feedbackQuestionParticipantTypes, feedbackQuestionParticipantTypes,
                                     feedbackQuestionParticipantTypes, fq1Details);
         feedbackSession.addFeedbackQuestion(fq1);
@@ -109,7 +112,7 @@ public class GetFeedbackQuestionsActionTest extends BaseActionTest<GetFeedbackQu
         fq2Details.setRecommendedLength(0);
         FeedbackQuestion fq2 = FeedbackQuestion.makeQuestion(
                 2, "This is a text question.",
-                FeedbackParticipantType.STUDENTS, FeedbackParticipantType.STUDENTS_EXCLUDING_SELF, 1,
+                QuestionGiverType.STUDENTS, QuestionRecipientType.STUDENTS_EXCLUDING_SELF, 1,
                 feedbackQuestionParticipantTypes, feedbackQuestionParticipantTypes, feedbackQuestionParticipantTypes,
                 fq2Details);
         feedbackSession.addFeedbackQuestion(fq2);

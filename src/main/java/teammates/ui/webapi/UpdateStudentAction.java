@@ -10,12 +10,11 @@ import teammates.common.util.Const;
 import teammates.common.util.EmailSendingStatus;
 import teammates.common.util.EmailType;
 import teammates.common.util.EmailWrapper;
-import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Student;
 import teammates.ui.exception.EntityNotFoundException;
+import teammates.ui.exception.InvalidHttpRequestBodyException;
 import teammates.ui.exception.InvalidOperationException;
 import teammates.ui.exception.UnauthorizedAccessException;
-import teammates.ui.request.InvalidHttpRequestBodyException;
 import teammates.ui.request.StudentUpdateRequest;
 
 /**
@@ -50,23 +49,19 @@ public class UpdateStudentAction extends Action {
 
     @Override
     void checkSpecificAccessControl() throws UnauthorizedAccessException {
-        if (!userInfo.isInstructor) {
-            throw new UnauthorizedAccessException("Instructor privilege is required to access this resource.");
-        }
-        UUID studentId = getUuidRequestParamValue(Const.ParamsNames.STUDENT_SQL_ID);
+        UUID studentId = getUuidRequestParamValue(Const.ParamsNames.USER_ID);
         Student existingStudent = logic.getStudent(studentId);
         if (existingStudent == null) {
             throw new EntityNotFoundException(STUDENT_NOT_FOUND_FOR_EDIT);
         }
 
-        Instructor instructor = logic.getInstructorByGoogleId(existingStudent.getCourseId(), userInfo.id);
-        gateKeeper.verifyAccessible(
-                instructor, logic.getCourse(existingStudent.getCourseId()), Const.InstructorPermissions.CAN_MODIFY_STUDENT);
+        gateKeeper.verifyInstructorHasPrivilege(requestContext, existingStudent.getCourseId(),
+                Const.InstructorPermissions.CAN_MODIFY_STUDENT);
     }
 
     @Override
     public JsonResult execute() throws InvalidHttpRequestBodyException, InvalidOperationException {
-        UUID studentId = getUuidRequestParamValue(Const.ParamsNames.STUDENT_SQL_ID);
+        UUID studentId = getUuidRequestParamValue(Const.ParamsNames.USER_ID);
         StudentUpdateRequest updateRequest = getAndValidateRequestBody(StudentUpdateRequest.class);
 
         Student existingStudent = logic.getStudent(studentId);
@@ -74,8 +69,9 @@ public class UpdateStudentAction extends Action {
             throw new EntityNotFoundException(STUDENT_NOT_FOUND_FOR_EDIT);
         }
 
+        Student updatedStudent;
         try {
-            logic.updateStudent(studentId, updateRequest);
+            updatedStudent = logic.updateStudent(studentId, updateRequest);
         } catch (EnrollException e) {
             throw new InvalidOperationException(e);
         } catch (InvalidParametersException e) {
@@ -87,8 +83,7 @@ public class UpdateStudentAction extends Action {
         }
 
         if (updateRequest.getIsSessionSummarySendEmail()) {
-            String courseId = existingStudent.getCourseId();
-            boolean emailSent = sendEmail(courseId, updateRequest.getEmail());
+            boolean emailSent = sendEmail(updatedStudent);
             String statusMessage = emailSent ? SUCCESSFUL_UPDATE_WITH_EMAIL
                     : SUCCESSFUL_UPDATE_BUT_EMAIL_FAILED;
             return new JsonResult(statusMessage);
@@ -102,9 +97,9 @@ public class UpdateStudentAction extends Action {
      *
      * @return The true if email was sent successfully or false otherwise.
      */
-    private boolean sendEmail(String courseId, String studentEmail) {
+    private boolean sendEmail(Student student) {
         EmailWrapper email = emailGenerator.generateFeedbackSessionSummaryOfCourse(
-                courseId, studentEmail, EmailType.STUDENT_EMAIL_CHANGED);
+                student, EmailType.STUDENT_EMAIL_CHANGED);
         EmailSendingStatus status = emailSender.sendEmail(email);
         return status.isSuccess();
     }

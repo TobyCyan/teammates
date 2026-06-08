@@ -77,17 +77,20 @@ public final class Config {
     /** The value {@code app.hmac.key}. */
     public static final String HMAC_KEY;
 
-    /** Value of {@code app.auth.type}. */
-    public static final String AUTH_TYPE;
+    /** Value of {@code app.oidc.google.client.id}. */
+    public static final String OIDC_GOOGLE_CLIENT_ID;
 
-    /** Value of {@code app.oauth2.client.id}. */
-    public static final String OAUTH2_CLIENT_ID;
-
-    /** Value of {@code app.oauth2.client.secret}. */
-    public static final String OAUTH2_CLIENT_SECRET;
+    /** Value of {@code app.oidc.google.client.secret}. */
+    public static final String OIDC_GOOGLE_CLIENT_SECRET;
 
     /** Value of {@code app.captcha.secretkey}. */
     public static final String CAPTCHA_SECRET_KEY;
+
+    /** Value of {@code app.recaptcha.service}. */
+    public static final String RECAPTCHA_SERVICE;
+
+    /** Value of {@code app.logging.service}. */
+    public static final String LOGGING_SERVICE;
 
     /** Value of {@code app.admins} (comma-separated in the property file). */
     public static final List<String> APP_ADMINS;
@@ -130,12 +133,6 @@ public final class Config {
 
     /** Value of {@code app.sendgrid.apikey}. */
     public static final String SENDGRID_APIKEY;
-
-    /** Value of {@code app.mailgun.apikey}. */
-    public static final String MAILGUN_APIKEY;
-
-    /** Value of {@code app.mailgun.domainname}. */
-    public static final String MAILGUN_DOMAINNAME;
 
     /** Value of {@code app.mailjet.apikey}. */
     public static final String MAILJET_APIKEY;
@@ -208,10 +205,13 @@ public final class Config {
         POSTGRES_PASSWORD = getProperty(properties, devProperties, "app.postgres.password");
         ENCRYPTION_KEY = validateHexKey(getProperty(properties, devProperties, "app.encryption.key"), "app.encryption.key");
         HMAC_KEY = validateHexKey(getProperty(properties, devProperties, "app.hmac.key"), "app.hmac.key");
-        AUTH_TYPE = getProperty(properties, devProperties, "app.auth.type");
-        OAUTH2_CLIENT_ID = getProperty(properties, devProperties, "app.oauth2.client.id");
-        OAUTH2_CLIENT_SECRET = getProperty(properties, devProperties, "app.oauth2.client.secret");
+        OIDC_GOOGLE_CLIENT_ID = getProperty(properties, devProperties, "app.oidc.google.client.id");
+        OIDC_GOOGLE_CLIENT_SECRET = getProperty(properties, devProperties, "app.oidc.google.client.secret");
         CAPTCHA_SECRET_KEY = getProperty(properties, devProperties, "app.captcha.secretkey");
+        RECAPTCHA_SERVICE = getProperty(properties, devProperties, "app.recaptcha.service",
+                IS_DEV_SERVER ? "local" : "google");
+        LOGGING_SERVICE = getProperty(properties, devProperties, "app.logging.service",
+                IS_DEV_SERVER ? "local" : "google-cloud");
         APP_ADMINS = Collections.unmodifiableList(
                 Arrays.asList(getProperty(properties, devProperties, "app.admins", "").split(",")));
         APP_MAINTAINERS = Collections.unmodifiableList(
@@ -228,8 +228,6 @@ public final class Config {
         SMTP_PASSWORD = getProperty(properties, devProperties, "app.smtp.password");
         SMTP_SECURITY_PROTOCOL = getProperty(properties, devProperties, "app.smtp.security.protocol");
         SENDGRID_APIKEY = getProperty(properties, devProperties, "app.sendgrid.apikey");
-        MAILGUN_APIKEY = getProperty(properties, devProperties, "app.mailgun.apikey");
-        MAILGUN_DOMAINNAME = getProperty(properties, devProperties, "app.mailgun.domainname");
         MAILJET_APIKEY = getProperty(properties, devProperties, "app.mailjet.apikey");
         MAILJET_SECRETKEY = getProperty(properties, devProperties, "app.mailjet.secretkey");
         MAINTENANCE = Boolean.parseBoolean(getProperty(properties, devProperties, "app.maintenance", "false"));
@@ -352,7 +350,7 @@ public final class Config {
     }
 
     /**
-     * Returns the list of admin Google IDs from {@code app.admins}.
+     * Returns the list of admin emails from {@code app.admins}.
      * TODO: refactor all direct accesses to the field to this method call for consistency.
      */
     public static List<String> getAppAdmins() {
@@ -360,7 +358,7 @@ public final class Config {
     }
 
     /**
-     * Returns the list of maintainer Google IDs from {@code app.maintainers}.
+     * Returns the list of maintainer emails from {@code app.maintainers}.
      * TODO: refactor all direct accesses to the field with this method call for consistency.
      */
     public static List<String> getAppMaintainers() {
@@ -377,6 +375,14 @@ public final class Config {
      */
     public static boolean isAllowSendingEmailsToTestDomain() {
         return IS_DEV_SERVER && EMAIL_ALLOW_SENDING_TO_TEST_DOMAIN;
+    }
+
+    public static boolean isUsingLocalRecaptcha() {
+        return "local".equalsIgnoreCase(RECAPTCHA_SERVICE);
+    }
+
+    public static boolean isUsingLocalLogging() {
+        return "local".equalsIgnoreCase(LOGGING_SERVICE);
     }
 
     /**
@@ -397,11 +403,6 @@ public final class Config {
 
     public static boolean isUsingSendgrid() {
         return "sendgrid".equalsIgnoreCase(EMAIL_SERVICE) && SENDGRID_APIKEY != null && !SENDGRID_APIKEY.isEmpty();
-    }
-
-    public static boolean isUsingMailgun() {
-        return "mailgun".equalsIgnoreCase(EMAIL_SERVICE) && MAILGUN_APIKEY != null && !MAILGUN_APIKEY.isEmpty()
-                && MAILGUN_DOMAINNAME != null && !MAILGUN_DOMAINNAME.isEmpty();
     }
 
     public static boolean isUsingMailjet() {

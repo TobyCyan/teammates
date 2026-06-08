@@ -5,12 +5,11 @@ import teammates.common.exception.InvalidParametersException;
 import teammates.common.util.Const;
 import teammates.common.util.FieldValidator;
 import teammates.storage.entity.Course;
-import teammates.storage.entity.Instructor;
 import teammates.ui.exception.EntityNotFoundException;
+import teammates.ui.exception.InvalidHttpRequestBodyException;
 import teammates.ui.exception.UnauthorizedAccessException;
 import teammates.ui.output.CourseData;
 import teammates.ui.request.CourseUpdateRequest;
-import teammates.ui.request.InvalidHttpRequestBodyException;
 
 /**
  * Updates a course.
@@ -24,15 +23,8 @@ public class UpdateCourseAction extends Action {
 
     @Override
     void checkSpecificAccessControl() throws UnauthorizedAccessException {
-        if (!userInfo.isInstructor) {
-            throw new UnauthorizedAccessException("Instructor privilege is required to access this resource.");
-        }
-
         String courseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
-        Course course = logic.getCourse(courseId);
-        Instructor instructor = logic.getInstructorByGoogleId(courseId, userInfo.id);
-
-        gateKeeper.verifyAccessible(instructor, course, Const.InstructorPermissions.CAN_MODIFY_COURSE);
+        gateKeeper.verifyInstructorHasPrivilege(requestContext, courseId, Const.InstructorPermissions.CAN_MODIFY_COURSE);
     }
 
     @Override
@@ -50,7 +42,6 @@ public class UpdateCourseAction extends Action {
 
         try {
             Course updatedCourse = logic.updateCourse(courseId, courseName, courseTimeZone);
-
             return new JsonResult(new CourseData(updatedCourse));
 
         } catch (InvalidParametersException ipe) {

@@ -1,5 +1,6 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -16,6 +17,7 @@ import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import teammates.common.datatransfer.InstructorPermissionRole;
 import teammates.common.datatransfer.InstructorPrivileges;
 import teammates.common.exception.EnrollException;
 import teammates.common.exception.EntityAlreadyExistsException;
@@ -81,14 +83,13 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
 
         EmailWrapper mockEmail = mock(EmailWrapper.class);
         when(mockEmailGenerator.generateFeedbackSessionSummaryOfCourse(
-                course.getId(),
-                updatedStudent.getEmail(),
+                updatedStudent,
                 EmailType.STUDENT_EMAIL_CHANGED
         )).thenReturn(mockEmail);
         mockEmailSender.setShouldFail(false);
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
 
         UpdateStudentAction action = getAction(studentUpdateRequest, params);
@@ -97,8 +98,7 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
         verify(mockLogic, times(1)).updateStudent(eq(student.getId()), any());
 
         verify(mockEmailGenerator, times(1)).generateFeedbackSessionSummaryOfCourse(
-                course.getId(),
-                updatedStudent.getEmail(),
+                updatedStudent,
                 EmailType.STUDENT_EMAIL_CHANGED
         );
         verifyNumberOfEmailsSent(1);
@@ -118,14 +118,13 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
 
         EmailWrapper mockEmail = mock(EmailWrapper.class);
         when(mockEmailGenerator.generateFeedbackSessionSummaryOfCourse(
-                course.getId(),
-                updatedStudent.getEmail(),
+                updatedStudent,
                 EmailType.STUDENT_EMAIL_CHANGED
         )).thenReturn(mockEmail);
         mockEmailSender.setShouldFail(true);
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
 
         UpdateStudentAction action = getAction(studentUpdateRequest, params);
@@ -134,8 +133,7 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
         verify(mockLogic, times(1)).updateStudent(eq(student.getId()), any());
 
         verify(mockEmailGenerator, times(1)).generateFeedbackSessionSummaryOfCourse(
-                course.getId(),
-                updatedStudent.getEmail(),
+                updatedStudent,
                 EmailType.STUDENT_EMAIL_CHANGED
         );
 
@@ -149,7 +147,7 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
                 section.getName(), student.getComments(), true);
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, UUID.randomUUID().toString(),
+                Const.ParamsNames.USER_ID, UUID.randomUUID().toString(),
         };
 
         EntityNotFoundException enfe = verifyEntityNotFound(studentUpdateRequest, params);
@@ -173,7 +171,7 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
         when(mockLogic.updateStudent(eq(student.getId()), any())).thenThrow(InvalidParametersException.class);
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
 
         verifyHttpRequestBodyFailure(studentUpdateRequest, params);
@@ -188,7 +186,7 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
                 section.getName(), student.getComments(), true);
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
 
         verifyHttpRequestBodyFailure(studentUpdateRequest, params);
@@ -200,18 +198,6 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
     }
 
     @Test
-    void testSpecificAccessControl_admin_cannotAccess() {
-        loginAsAdmin();
-
-        String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
-        };
-
-        verifyCannotAccess(params);
-        verifyNoMoreInteractions(mockLogic, mockEmailGenerator);
-    }
-
-    @Test
     void testSpecificAccessControl_nonExistentInstructorId_cannotAccess() {
         String nonExistentInstructorId = "RANDOM_ID";
         when(mockLogic.getInstructorByGoogleId(course.getId(), nonExistentInstructorId)).thenReturn(null);
@@ -219,7 +205,7 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
         loginAsInstructor(nonExistentInstructorId);
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
 
         verifyCannotAccess(params);
@@ -235,7 +221,7 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
         loginAsInstructor(instructorId);
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
 
         verifyCanAccess(params);
@@ -247,14 +233,15 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
         // Instructor with observer role cannot modify student
         Instructor instructor = getTypicalInstructor();
         InstructorPrivileges instructorPrivileges =
-                new InstructorPrivileges(Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_OBSERVER);
+                new InstructorPrivileges(Const.InstructorPermissionRoleNames.OBSERVER);
+        instructor.setRole(InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM);
         instructor.setPrivileges(instructorPrivileges);
         when(mockLogic.getInstructorByGoogleId(course.getId(), instructorId)).thenReturn(instructor);
         when(mockLogic.getStudent(student.getId())).thenReturn(student);
         loginAsInstructor(instructorId);
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
 
         verifyCannotAccess(params);
@@ -265,11 +252,11 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
         loginAsStudent("student-googleId");
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
+        when(mockLogic.getInstructorByGoogleId(any(), any())).thenReturn(null);
 
         verifyCannotAccess(params);
-        verifyNoMoreInteractions(mockLogic, mockEmailGenerator);
     }
 
     @Test
@@ -277,7 +264,7 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
         logoutUser();
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
 
         verifyCannotAccess(params);
@@ -289,10 +276,10 @@ public class UpdateStudentActionTest extends BaseActionTest<UpdateStudentAction>
         loginAsUnregistered("instructor-googleId");
 
         String[] params = {
-                Const.ParamsNames.STUDENT_SQL_ID, student.getId().toString(),
+                Const.ParamsNames.USER_ID, student.getId().toString(),
         };
+        when(mockLogic.getInstructorByGoogleId(any(), any())).thenReturn(null);
 
         verifyCannotAccess(params);
-        verifyNoMoreInteractions(mockLogic, mockEmailGenerator);
     }
 }

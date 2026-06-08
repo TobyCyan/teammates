@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { DebugElement } from '@angular/core';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -50,13 +50,11 @@ describe('StudentListComponent', () => {
     return null;
   };
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(StudentListComponent);
     simpleModalService = TestBed.inject(SimpleModalService);
     courseService = TestBed.inject(CourseService);
@@ -85,10 +83,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'tester',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'tester@tester.com',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 1',
+          sectionId: 'tutorial-group-1',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-001',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -97,10 +100,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Benny Charles',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'benny.c.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 1',
+          sectionId: 'tutorial-group-1',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-002',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -109,10 +117,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Alice Betsy',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'alice.b.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 2',
+          sectionId: 'tutorial-group-2',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-003',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -121,10 +134,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Danny Engrid',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'danny.e.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 2',
+          sectionId: 'tutorial-group-2',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-004',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -140,10 +158,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'tester',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'tester@tester.com',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 1',
+          sectionId: 'tutorial-group-1',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-005',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: false,
@@ -152,10 +175,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Benny Charles',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'benny.c.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 1',
+          sectionId: 'tutorial-group-1',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-006',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: false,
@@ -164,10 +192,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Alice Betsy',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'alice.b.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 2',
+          sectionId: 'tutorial-group-2',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-007',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -177,10 +210,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Danny Engrid',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'danny.e.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 2',
+          sectionId: 'tutorial-group-2',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-008',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -197,10 +235,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'tester',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'tester@tester.com',
           joinState: JoinState.NOT_JOINED,
           sectionName: 'Tutorial Group 1',
+          sectionId: 'tutorial-group-1',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-009',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -209,10 +252,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Benny Charles',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'benny.c.tmms@gmail.tmt',
           joinState: JoinState.NOT_JOINED,
           sectionName: 'Tutorial Group 1',
+          sectionId: 'tutorial-group-1',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-010',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -221,10 +269,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Alice Betsy',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'alice.b.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 2',
+          sectionId: 'tutorial-group-2',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-011',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -233,10 +286,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Danny Engrid',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'danny.e.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 2',
+          sectionId: 'tutorial-group-2',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-012',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -258,10 +316,15 @@ describe('StudentListComponent', () => {
           student: {
             name: 'tester',
             teamName: 'Team 1',
+            teamId: 'team-1',
             email: 'tester@tester.com',
             joinState: JoinState.NOT_JOINED,
             sectionName: 'Tutorial Group 1',
+            sectionId: 'tutorial-group-1',
             courseId: 'text-exa.demo',
+            courseName: 'Test Course',
+            institute: 'Test Institute',
+            userId: 'student-013',
           },
           isAllowedToViewStudentInSection: true,
           isAllowedToModifyStudent: false,
@@ -270,10 +333,15 @@ describe('StudentListComponent', () => {
           student: {
             name: 'Benny Charles',
             teamName: 'Team 1',
+            teamId: 'team-1',
             email: 'benny.c.tmms@gmail.tmt',
             joinState: JoinState.JOINED,
             sectionName: 'Tutorial Group 1',
+            sectionId: 'tutorial-group-1',
             courseId: 'text-exa.demo',
+            courseName: 'Test Course',
+            institute: 'Test Institute',
+            userId: 'student-014',
           },
           isAllowedToViewStudentInSection: true,
           isAllowedToModifyStudent: true,
@@ -282,10 +350,15 @@ describe('StudentListComponent', () => {
           student: {
             name: 'Alice Betsy',
             teamName: 'Team 1',
+            teamId: 'team-1',
             email: 'alice.b.tmms@gmail.tmt',
             joinState: JoinState.JOINED,
             sectionName: 'Tutorial Group 2',
+            sectionId: 'tutorial-group-2',
             courseId: 'text-exa.demo',
+            courseName: 'Test Course',
+            institute: 'Test Institute',
+            userId: 'student-015',
           },
           isAllowedToViewStudentInSection: true,
           isAllowedToModifyStudent: true,
@@ -294,10 +367,15 @@ describe('StudentListComponent', () => {
           student: {
             name: 'Danny Engrid',
             teamName: 'Team 1',
+            teamId: 'team-1',
             email: 'danny.e.tmms@gmail.tmt',
             joinState: JoinState.JOINED,
             sectionName: 'Tutorial Group 2',
+            sectionId: 'tutorial-group-2',
             courseId: 'text-exa.demo',
+            courseName: 'Test Course',
+            institute: 'Test Institute',
+            userId: 'student-016',
           },
           isAllowedToViewStudentInSection: true,
           isAllowedToModifyStudent: true,
@@ -317,10 +395,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'tester',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'tester@tester.com',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 1',
+          sectionId: 'tutorial-group-1',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-017',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -329,10 +412,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Benny Charles',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'benny.c.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 1',
+          sectionId: 'tutorial-group-1',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-018',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -341,10 +429,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Alice Betsy',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'alice.b.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 2',
+          sectionId: 'tutorial-group-2',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-019',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -353,10 +446,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Danny Engrid',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'danny.e.tmms@gmail.tmt',
           joinState: JoinState.JOINED,
           sectionName: 'Tutorial Group 2',
+          sectionId: 'section-2',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-020',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -375,10 +473,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'tester',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'tester@tester.com',
           joinState: JoinState.JOINED,
           sectionName: 'None',
+          sectionId: 'None',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-021',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -396,10 +499,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'tester',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'tester@tester.com',
           joinState: JoinState.NOT_JOINED,
           sectionName: 'Tutorial Group 1',
+          sectionId: 'section-1',
           courseId: 'text-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-022',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,
@@ -438,9 +546,9 @@ describe('StudentListComponent', () => {
   it('openReminderModal: should display warning when reminding student to join course', async () => {
     const promise: Promise<void> = Promise.resolve();
     const mockModalRef = createMockNgbModalRef({}, promise);
-    const modalSpy = jest.spyOn(simpleModalService, 'openConfirmationModal').mockReturnValue(mockModalRef);
+    const modalSpy = vi.spyOn(simpleModalService, 'openConfirmationModal').mockReturnValue(mockModalRef);
 
-    const reminderStudentFromCourseSpy = jest.spyOn(component, 'remindStudentFromCourse');
+    const reminderStudentFromCourseSpy = vi.spyOn(component, 'remindStudentFromCourse');
 
     const student = studentBuilder.build();
     student.joinState = JoinState.NOT_JOINED;
@@ -463,15 +571,15 @@ describe('StudentListComponent', () => {
     expect(modalSpy).toHaveBeenCalledTimes(1);
     expect(modalSpy).toHaveBeenLastCalledWith('Send join request?', SimpleModalType.INFO, expectedModalContent);
 
-    expect(reminderStudentFromCourseSpy).toHaveBeenCalledWith(studentModel.student.email);
+    expect(reminderStudentFromCourseSpy).toHaveBeenCalledWith(studentModel.student.userId);
   });
 
   it('openDeleteModal: should display warning when deleting student from course', async () => {
     const promise: Promise<void> = Promise.resolve();
     const mockModalRef = createMockNgbModalRef({}, promise);
-    const modalSpy = jest.spyOn(simpleModalService, 'openConfirmationModal').mockReturnValue(mockModalRef);
+    const modalSpy = vi.spyOn(simpleModalService, 'openConfirmationModal').mockReturnValue(mockModalRef);
 
-    const removeStudentFromCourseSpy = jest.spyOn(component, 'removeStudentFromCourse');
+    const removeStudentFromCourseSpy = vi.spyOn(component, 'removeStudentFromCourse');
 
     const studentModel = studentListRowModelBuilder.build();
     component.studentModels = [studentModel];
@@ -493,20 +601,20 @@ describe('StudentListComponent', () => {
     expect(modalSpy).toHaveBeenCalledTimes(1);
     expect(modalSpy).toHaveBeenLastCalledWith(expectedModalHeader, SimpleModalType.DANGER, expectedModalContent);
 
-    expect(removeStudentFromCourseSpy).toHaveBeenCalledWith(studentModel.student.email);
-    expect(component.students).not.toContain(studentModel.student.email);
+    expect(removeStudentFromCourseSpy).toHaveBeenCalledWith(studentModel);
+    expect(component.students).not.toContain(studentModel);
   });
 
   it(
     'remindStudentFromCourse: should call statusMessageService.showSuccessToast with' + 'correct message upon success',
     () => {
       const successMessage = 'success';
-      jest.spyOn(courseService, 'remindStudentForJoin').mockReturnValue(of({ message: successMessage }));
-      const studentEmail = 'testemail@gmail.com';
+      vi.spyOn(courseService, 'remindUserForJoin').mockReturnValue(of({ message: successMessage }));
+      const studentId = 'test-user-id';
 
-      const statusMessageServiceSpy = jest.spyOn(statusMessageService, 'showSuccessToast');
+      const statusMessageServiceSpy = vi.spyOn(statusMessageService, 'showSuccessToast');
 
-      component.remindStudentFromCourse(studentEmail);
+      component.remindStudentFromCourse(studentId);
 
       expect(statusMessageServiceSpy).toHaveBeenLastCalledWith(successMessage);
     },
@@ -514,16 +622,16 @@ describe('StudentListComponent', () => {
 
   it('remindStudentFromCourse: should call statusMessageService.showErrorToast with correct message upon error', () => {
     const errorMessage = 'error';
-    jest.spyOn(courseService, 'remindStudentForJoin').mockReturnValue(
+    vi.spyOn(courseService, 'remindUserForJoin').mockReturnValue(
       throwError(() => ({
         error: { message: errorMessage },
       })),
     );
-    const studentEmail = 'testemail@gmail.com';
+    const studentId = 'test-user-id';
 
-    const statusMessageServiceSpy = jest.spyOn(statusMessageService, 'showErrorToast');
+    const statusMessageServiceSpy = vi.spyOn(statusMessageService, 'showErrorToast');
 
-    component.remindStudentFromCourse(studentEmail);
+    component.remindStudentFromCourse(studentId);
 
     expect(statusMessageServiceSpy).toHaveBeenLastCalledWith(errorMessage);
   });
@@ -536,10 +644,15 @@ describe('StudentListComponent', () => {
         student: {
           name: 'Tester',
           teamName: 'Team 1',
+          teamId: 'team-1',
           email: 'tester@example.com',
           joinState: JoinState.JOINED,
           sectionName: 'Section 1',
+          sectionId: 'section-1',
           courseId: 'test-exa.demo',
+          courseName: 'Test Course',
+          institute: 'Test Institute',
+          userId: 'student-023',
         },
         isAllowedToViewStudentInSection: true,
         isAllowedToModifyStudent: true,

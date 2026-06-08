@@ -1,5 +1,7 @@
 package teammates.common.util;
 
+import java.util.UUID;
+
 /**
  * A specific implementation of {@link Url} used to encapsulate URLs of the application.
  */
@@ -10,8 +12,8 @@ public class AppUrl extends Url {
         assert url.startsWith("http"); // must either be http or https
     }
 
-    public AppUrl withUserId(String userId) {
-        return withParam(Const.ParamsNames.USER_ID, userId);
+    public AppUrl withMasqueradeAccount(UUID accountId) {
+        return withParam(Const.ParamsNames.MASQUERADE_ACCOUNT_ID, accountId.toString());
     }
 
     public AppUrl withRegistrationKey(String key) {
@@ -26,20 +28,20 @@ public class AppUrl extends Url {
         return withParam(Const.ParamsNames.COURSE_ID, courseId);
     }
 
-    public AppUrl withSessionName(String feedbackSessionName) {
-        return withParam(Const.ParamsNames.FEEDBACK_SESSION_NAME, feedbackSessionName);
-    }
-
     public AppUrl withFeedbackSessionId(String feedbackSessionId) {
         return withParam(Const.ParamsNames.FEEDBACK_SESSION_ID, feedbackSessionId);
     }
 
-    public AppUrl withStudentEmail(String email) {
-        return withParam(Const.ParamsNames.STUDENT_EMAIL, email);
+    public AppUrl withUserId(String userId) {
+        return withParam(Const.ParamsNames.USER_ID, userId);
     }
 
     public AppUrl withEntityType(String entityType) {
         return withParam(Const.ParamsNames.ENTITY_TYPE, entityType);
+    }
+
+    public AppUrl withPreviewAs(String previewAs) {
+        return withParam(Const.ParamsNames.PREVIEWAS, previewAs);
     }
 
 }

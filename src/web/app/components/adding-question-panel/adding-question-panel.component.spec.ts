@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AddingQuestionPanelComponent } from './adding-question-panel.component';
 import { FeedbackQuestionType } from '../../../types/api-output';
@@ -9,13 +9,11 @@ describe('AddingQuestionPanelComponent', () => {
   let component: AddingQuestionPanelComponent;
   let fixture: ComponentFixture<AddingQuestionPanelComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [provideRouter([])],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(AddingQuestionPanelComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -26,7 +24,6 @@ describe('AddingQuestionPanelComponent', () => {
   });
 
   it('should contain anchor element with corresponding search query', () => {
-    expect(Object.keys(component.FeedbackQuestionType)[0]).not.toBe(component.FeedbackQuestionType.CONSTSUM);
     const firstQuestionType = Object.keys(component.FeedbackQuestionType)[0] as FeedbackQuestionType;
     const questionTypeHelpPathPipe = new QuestionTypeHelpPathPipe();
     const questionId = questionTypeHelpPathPipe.transform(firstQuestionType);

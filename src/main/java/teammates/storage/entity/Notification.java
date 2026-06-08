@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,8 +15,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import teammates.common.datatransfer.NotificationStyle;
@@ -55,14 +52,10 @@ public class Notification extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
-    @Column(nullable = false)
-    private boolean shown;
-
     @UpdateTimestamp
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "notification", cascade = CascadeType.REMOVE)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToMany(mappedBy = "notification")
     private Set<ReadNotification> readNotifications = new HashSet<>();
 
     /**
@@ -90,8 +83,6 @@ public class Notification extends BaseEntity {
         addNonEmptyError(FieldValidator.getValidityInfoForNonNullField("notification visible time", startTime), errors);
         addNonEmptyError(FieldValidator.getValidityInfoForNonNullField("notification expiry time", endTime), errors);
         addNonEmptyError(FieldValidator.getInvalidityInfoForTimeForNotificationStartAndEnd(startTime, endTime), errors);
-        addNonEmptyError(FieldValidator.getInvalidityInfoForNotificationStyle(style.name()), errors);
-        addNonEmptyError(FieldValidator.getInvalidityInfoForNotificationTargetUser(targetUser.name()), errors);
         addNonEmptyError(FieldValidator.getInvalidityInfoForNotificationTitle(title), errors);
         addNonEmptyError(FieldValidator.getInvalidityInfoForNotificationBody(message), errors);
 
@@ -154,18 +145,6 @@ public class Notification extends BaseEntity {
         this.message = SanitizationHelper.sanitizeForRichText(message);
     }
 
-    public boolean isShown() {
-        return shown;
-    }
-
-    /**
-     * Sets the notification as shown to the user.
-     * Only allowed to change value from false to true.
-     */
-    public void setShown() {
-        this.shown = true;
-    }
-
     public Instant getUpdatedAt() {
         return updatedAt;
     }
@@ -194,7 +173,7 @@ public class Notification extends BaseEntity {
     public String toString() {
         return "Notification [notificationId=" + id + ", startTime=" + startTime + ", endTime=" + endTime
                 + ", style=" + style + ", targetUser=" + targetUser + ", title=" + title + ", message=" + message
-                + ", shown=" + shown + ", createdAt=" + getCreatedAt() + ", updatedAt=" + updatedAt
+                + ", createdAt=" + getCreatedAt() + ", updatedAt=" + updatedAt
                 + ", readNotifications=" + readNotifications + "]";
     }
 

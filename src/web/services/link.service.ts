@@ -58,9 +58,9 @@ export class LinkService {
   /**
    * Generates home page link.
    */
-  generateHomePageLink(googleId: string, homePage: string): string {
+  generateHomePageLink(accountId: string, homePage: string): string {
     const params: { [key: string]: string } = {
-      user: googleId,
+      masqueradeaccountid: accountId,
     };
 
     this.filterEmptyParams(params);
@@ -71,11 +71,11 @@ export class LinkService {
   /**
    * Generates manage account link.
    */
-  generateManageAccountLink(googleId: string, accountsPage: string): string {
+  generateManageAccountLink(accountId: string, accountsPage: string): string {
     const params: {
       [key: string]: string;
     } = {
-      instructorid: googleId,
+      accountid: accountId,
     };
 
     this.filterEmptyParams(params);
@@ -86,14 +86,14 @@ export class LinkService {
   /**
    * Generates student profile page link.
    */
-  generateProfilePageLink(student: Student, instructorGoogleId: string): string {
-    const { courseId: courseid, email: studentemail }: Student = student;
+  generateProfilePageLink(student: Student, instructorAccountId: string): string {
+    const { courseId: courseid, userId: userid }: Student = student;
     const params: {
       [key: string]: string;
     } = {
       courseid,
-      studentemail,
-      user: instructorGoogleId,
+      userid,
+      masqueradeaccountid: instructorAccountId,
     };
 
     this.filterEmptyParams(params);
@@ -104,21 +104,13 @@ export class LinkService {
   /**
    * Generates submit url for a feedback session.
    */
-  generateSubmitUrl(
-    entity: Student | Instructor,
-    fsname: string,
-    isInstructor: boolean,
-    feedbackSessionId: string,
-  ): string {
+  generateSubmitUrl(entity: Student | Instructor, isInstructor: boolean, feedbackSessionId: string): string {
     const frontendUrl: string = window.location.origin;
-    const courseId: string = entity.courseId;
     const key: string = entity.key || '';
     const params: {
       [key: string]: string;
     } = {
       key,
-      fsname,
-      courseid: courseId,
       fsid: feedbackSessionId,
     };
 
@@ -134,21 +126,13 @@ export class LinkService {
   /**
    * Generates a result url for a feedback session.
    */
-  generateResultUrl(
-    entity: Student | Instructor,
-    fsname: string,
-    isInstructor: boolean,
-    feedbackSessionId: string,
-  ): string {
+  generateResultUrl(entity: Student | Instructor, isInstructor: boolean, feedbackSessionId: string): string {
     const frontendUrl: string = window.location.origin;
-    const courseId: string = entity.courseId;
     const key: string = entity.key || '';
     const params: {
       [key: string]: string;
     } = {
       key,
-      fsname,
-      courseid: courseId,
       fsid: feedbackSessionId,
     };
 

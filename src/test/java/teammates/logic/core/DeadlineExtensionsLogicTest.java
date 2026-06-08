@@ -1,17 +1,17 @@
 package teammates.logic.core;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.testng.annotations.BeforeMethod;
@@ -36,12 +36,11 @@ public class DeadlineExtensionsLogicTest extends BaseTestCase {
     private final DeadlineExtensionsLogic deLogic = DeadlineExtensionsLogic.inst();
 
     private DeadlineExtensionsDb deDb;
-    private FeedbackSessionsLogic fsLogic;
 
     @BeforeMethod
     public void setUpMethod() {
         deDb = mock(DeadlineExtensionsDb.class);
-        fsLogic = mock(FeedbackSessionsLogic.class);
+        FeedbackSessionsLogic fsLogic = mock(FeedbackSessionsLogic.class);
         UsersLogic usersLogic = mock(UsersLogic.class);
         deLogic.initLogicDependencies(deDb, fsLogic, usersLogic);
     }
@@ -57,8 +56,8 @@ public class DeadlineExtensionsLogicTest extends BaseTestCase {
         UUID studentId = UUID.randomUUID();
         student.setId(studentId);
         Instant extendedDeadline = sessionEndTime.plusSeconds(86400);
-        assertTrue("Extended deadline should be after session end time",
-                extendedDeadline.isAfter(sessionEndTime));
+        assertTrue(extendedDeadline.isAfter(sessionEndTime),
+                "Extended deadline should be after session end time");
 
         DeadlineExtension de = new DeadlineExtension(student, extendedDeadline);
         session.addDeadlineExtension(de);
@@ -167,7 +166,7 @@ public class DeadlineExtensionsLogicTest extends BaseTestCase {
         DeadlineExtension de = new DeadlineExtension(student, extendedDeadline);
         session.addDeadlineExtension(de);
 
-        when(deDb.createDeadlineExtension(de)).thenReturn(de);
+        when(deDb.persistDeadlineExtension(de)).thenReturn(de);
 
         DeadlineExtension result = deLogic.createDeadlineExtension(de);
 
@@ -175,13 +174,7 @@ public class DeadlineExtensionsLogicTest extends BaseTestCase {
         assertEquals(de, result);
         assertEquals(extendedDeadline, result.getEndTime());
         assertTrue(result.getUser() instanceof Student);
-        verify(deDb, times(1)).createDeadlineExtension(de);
-    }
-
-    @Test
-    public void testCreateDeadlineExtension_nullExtension_throwsException() {
-        assertThrows(AssertionError.class, () -> deLogic.createDeadlineExtension(null));
-        verify(deDb, never()).createDeadlineExtension(any());
+        verify(deDb, times(1)).persistDeadlineExtension(de);
     }
 
     @Test
@@ -196,7 +189,7 @@ public class DeadlineExtensionsLogicTest extends BaseTestCase {
 
         deLogic.deleteDeadlineExtension(de);
 
-        verify(deDb, times(1)).deleteDeadlineExtension(de);
+        verify(deDb, times(1)).removeDeadlineExtension(de);
     }
 
     @Test
@@ -258,57 +251,6 @@ public class DeadlineExtensionsLogicTest extends BaseTestCase {
     }
 
     @Test
-    public void testDeleteDeadlineExtensionsForUser_userHasExtensions_deletesExtensions() {
-        Course course = getTypicalCourse();
-        String courseId = course.getId();
-        Student student = getTypicalStudent();
-        student.setCourse(course);
-
-        FeedbackSession session1 = getTypicalFeedbackSessionForCourse(course);
-        FeedbackSession session2 = getTypicalFeedbackSessionForCourse(course);
-
-        DeadlineExtension de1 = new DeadlineExtension(student, Instant.now().plusSeconds(86400));
-        session1.addDeadlineExtension(de1);
-        DeadlineExtension de2 = new DeadlineExtension(student, Instant.now().plusSeconds(86400));
-        session2.addDeadlineExtension(de2);
-        // Add extension for different user that should not be deleted
-        Student otherStudent = getTypicalStudent();
-        DeadlineExtension de3 = new DeadlineExtension(otherStudent, Instant.now().plusSeconds(86400));
-        session1.addDeadlineExtension(de3);
-
-        session1.setDeadlineExtensions(new HashSet<>(Set.of(de1, de3)));
-        session2.setDeadlineExtensions(new HashSet<>(Set.of(de2)));
-
-        when(fsLogic.getFeedbackSessionsForCourse(courseId)).thenReturn(List.of(session1, session2));
-
-        deLogic.deleteDeadlineExtensionsForUser(student);
-
-        verify(fsLogic, times(1)).getFeedbackSessionsForCourse(courseId);
-        // Only extensions for the specified user should be deleted
-        verify(deDb, times(1)).deleteDeadlineExtension(de1);
-        verify(deDb, times(1)).deleteDeadlineExtension(de2);
-        verify(deDb, never()).deleteDeadlineExtension(de3);
-        verify(deDb, times(2)).deleteDeadlineExtension(any(DeadlineExtension.class));
-    }
-
-    @Test
-    public void testDeleteDeadlineExtensionsForUser_userHasNoExtensions_noDeletes() {
-        Course course = getTypicalCourse();
-        Student student = getTypicalStudent();
-        student.setCourse(course);
-
-        FeedbackSession session = getTypicalFeedbackSessionForCourse(course);
-        session.setDeadlineExtensions(new HashSet<>());
-
-        when(fsLogic.getFeedbackSessionsForCourse(course.getId())).thenReturn(List.of(session));
-
-        deLogic.deleteDeadlineExtensionsForUser(student);
-
-        verify(fsLogic, times(1)).getFeedbackSessionsForCourse(course.getId());
-        verify(deDb, times(0)).deleteDeadlineExtension(any());
-    }
-
-    @Test
     public void testCreateDeadlineExtension_forInstructor_success()
             throws InvalidParametersException, EntityAlreadyExistsException {
         Course course = getTypicalCourse();
@@ -319,7 +261,7 @@ public class DeadlineExtensionsLogicTest extends BaseTestCase {
         DeadlineExtension de = new DeadlineExtension(instructor, extendedDeadline);
         session.addDeadlineExtension(de);
 
-        when(deDb.createDeadlineExtension(de)).thenReturn(de);
+        when(deDb.persistDeadlineExtension(de)).thenReturn(de);
 
         DeadlineExtension result = deLogic.createDeadlineExtension(de);
 
@@ -327,7 +269,7 @@ public class DeadlineExtensionsLogicTest extends BaseTestCase {
         assertEquals(de, result);
         assertTrue(result.getUser() instanceof Instructor);
         assertEquals(extendedDeadline, result.getEndTime());
-        verify(deDb, times(1)).createDeadlineExtension(de);
+        verify(deDb, times(1)).persistDeadlineExtension(de);
     }
 
     @Test

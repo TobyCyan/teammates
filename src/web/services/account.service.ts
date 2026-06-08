@@ -2,14 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpRequestService } from './http-request.service';
 import { ResourceEndpoints } from '../types/api-const';
-import {
-  AccountRequest,
-  AccountRequests,
-  JoinLink,
-  MessageOutput,
-  AccountRequestStatus,
-  Account,
-} from '../types/api-output';
+import { AccountRequest, AccountRequests, MessageOutput, AccountRequestStatus, Account } from '../types/api-output';
 import {
   AccountCreateRequest,
   AccountRequestUpdateRequest,
@@ -26,17 +19,6 @@ export class AccountService {
   private httpRequestService = inject(HttpRequestService);
 
   /**
-   * Creates an account by calling API.
-   */
-  createAccount(key: string, timezone: string): Observable<MessageOutput> {
-    const paramMap: Record<string, string> = { key };
-    if (timezone) {
-      paramMap['timezone'] = timezone;
-    }
-    return this.httpRequestService.post(ResourceEndpoints.ACCOUNT, paramMap);
-  }
-
-  /**
    * Creates an account request by calling API.
    */
   createAccountRequest(request: AccountCreateRequest): Observable<AccountRequest> {
@@ -46,9 +28,9 @@ export class AccountService {
   /**
    * Deletes an account by calling API.
    */
-  deleteAccount(id: string): Observable<MessageOutput> {
+  deleteAccount(accountId: string): Observable<MessageOutput> {
     const paramMap: Record<string, string> = {
-      instructorid: id,
+      accountid: accountId,
     };
     return this.httpRequestService.delete(ResourceEndpoints.ACCOUNT, paramMap);
   }
@@ -64,33 +46,11 @@ export class AccountService {
   }
 
   /**
-   * Resets an account request by calling API.
+   * Resets a user account by calling API.
    */
-  resetAccountRequest(id: string): Observable<JoinLink> {
+  resetAccount(userId: string): Observable<MessageOutput> {
     const paramMap: Record<string, string> = {
-      id,
-    };
-    return this.httpRequestService.put(ResourceEndpoints.ACCOUNT_REQUEST_RESET, paramMap);
-  }
-
-  /**
-   * Resets a student account by calling API.
-   */
-  resetStudentAccount(courseId: string, studentEmail: string): Observable<MessageOutput> {
-    const paramMap: Record<string, string> = {
-      courseid: courseId,
-      studentemail: studentEmail,
-    };
-    return this.httpRequestService.put(ResourceEndpoints.ACCOUNT_RESET, paramMap);
-  }
-
-  /**
-   * Resets an instructor account by calling API.
-   */
-  resetInstructorAccount(courseId: string, instructorEmail: string): Observable<MessageOutput> {
-    const paramMap: Record<string, string> = {
-      courseid: courseId,
-      instructoremail: instructorEmail,
+      userid: userId,
     };
     return this.httpRequestService.put(ResourceEndpoints.ACCOUNT_RESET, paramMap);
   }
@@ -119,9 +79,9 @@ export class AccountService {
   /**
    * Gets an account by calling API.
    */
-  getAccount(googleId: string): Observable<Account> {
+  getAccount(accountId: string): Observable<Account> {
     const paramMap: Record<string, string> = {
-      instructorid: googleId,
+      accountid: accountId,
     };
     return this.httpRequestService.get(ResourceEndpoints.ACCOUNT, paramMap);
   }

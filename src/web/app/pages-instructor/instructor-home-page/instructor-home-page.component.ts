@@ -1,29 +1,20 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
-import {
-  NgbModal,
-  NgbModalRef,
-  NgbDropdown,
-  NgbDropdownToggle,
-  NgbDropdownMenu,
-  NgbTooltip,
-  NgbCollapse,
-} from '@ng-bootstrap/ng-bootstrap';
+import { Component, inject, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
+import { NgbDropdown, NgbDropdownToggle, NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap/dropdown';
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { forkJoin, Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { CourseService } from '../../../services/course.service';
-import { FeedbackQuestionsService } from '../../../services/feedback-questions.service';
-import { FeedbackSessionActionsService } from '../../../services/feedback-session-actions.service';
-import { FeedbackSessionsService } from '../../../services/feedback-sessions.service';
-import { InstructorService } from '../../../services/instructor.service';
-import { NavigationService } from '../../../services/navigation.service';
-import { ProgressBarService } from '../../../services/progress-bar.service';
-import { SimpleModalService } from '../../../services/simple-modal.service';
-import { StatusMessageService } from '../../../services/status-message.service';
-import { StudentService } from '../../../services/student.service';
-import { TableComparatorService } from '../../../services/table-comparator.service';
-import { TimezoneService } from '../../../services/timezone.service';
-import { Course, Courses, FeedbackSession, FeedbackSessions, InstructorPermissionSet } from '../../../types/api-output';
-import { DEFAULT_INSTRUCTOR_PRIVILEGE } from '../../../types/default-instructor-privilege';
+import {
+  Course,
+  CourseView,
+  Courses,
+  FeedbackSession,
+  FeedbackSessionView,
+  FeedbackSessions,
+  InstructorCoursePermissions,
+} from '../../../types/api-output';
 import { SortBy, SortOrder } from '../../../types/sort-properties';
 import { CopyCourseModalResult } from '../../components/copy-course-modal/copy-course-modal-model';
 import { CopyCourseModalComponent } from '../../components/copy-course-modal/copy-course-modal.component';
@@ -52,7 +43,7 @@ import { InstructorSessionModalPageComponent } from '../instructor-session-modal
  */
 export interface CourseTabModel {
   course: Course;
-  instructorPrivilege: InstructorPermissionSet;
+  instructorPrivilege: InstructorCoursePermissions;
   sessionsTableRowModels: SessionsTableRowModel[];
   sessionsTableRowModelsSortBy: SortBy;
   sessionsTableRowModelsSortOrder: SortOrder;
@@ -86,11 +77,13 @@ export interface CourseTabModel {
   ],
 })
 export class InstructorHomePageComponent extends InstructorSessionModalPageComponent implements OnInit {
+  private readonly courseService = inject(CourseService);
+
   private static readonly coursesToLoad: number = 3;
   // enum
-  SessionsTableColumn: typeof SessionsTableColumn = SessionsTableColumn;
-  SortableTableHeaderColorScheme: typeof SortableTableHeaderColorScheme = SortableTableHeaderColorScheme;
-  SortBy: typeof SortBy = SortBy;
+  SessionsTableColumn!: typeof SessionsTableColumn;
+  SortableTableHeaderColorScheme!: typeof SortableTableHeaderColorScheme;
+  SortBy!: typeof SortBy;
 
   instructorCoursesSortBy: SortBy = SortBy.COURSE_CREATION_DATE;
 
@@ -113,35 +106,11 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
 
   @ViewChild('modifiedTimestampsModal') modifiedTimestampsModal!: TemplateRef<any>;
 
-  constructor(
-    statusMessageService: StatusMessageService,
-    navigationService: NavigationService,
-    feedbackSessionsService: FeedbackSessionsService,
-    feedbackQuestionsService: FeedbackQuestionsService,
-    ngbModal: NgbModal,
-    studentService: StudentService,
-    instructorService: InstructorService,
-    tableComparatorService: TableComparatorService,
-    simpleModalService: SimpleModalService,
-    progressBarService: ProgressBarService,
-    feedbackSessionActionsService: FeedbackSessionActionsService,
-    timezoneService: TimezoneService,
-    private courseService: CourseService,
-  ) {
-    super(
-      instructorService,
-      statusMessageService,
-      navigationService,
-      feedbackSessionsService,
-      feedbackQuestionsService,
-      tableComparatorService,
-      ngbModal,
-      simpleModalService,
-      progressBarService,
-      feedbackSessionActionsService,
-      timezoneService,
-      studentService,
-    );
+  constructor() {
+    super();
+    this.SessionsTableColumn = SessionsTableColumn;
+    this.SortableTableHeaderColorScheme = SortableTableHeaderColorScheme;
+    this.SortBy = SortBy;
   }
 
   ngOnInit(): void {
@@ -168,10 +137,14 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
   /**
    * Initializes course tab model data on load.
    */
-  initializeCourseTabModule(course: Course): void {
+  initializeCourseTabModule(courseView: CourseView): void {
     const model: CourseTabModel = {
-      course,
-      instructorPrivilege: course.privileges || DEFAULT_INSTRUCTOR_PRIVILEGE(),
+      course: courseView.course,
+      instructorPrivilege: courseView.instructorPermissions || {
+        canModifyCourse: false,
+        canModifyStudent: false,
+        canModifyInstructor: false,
+      },
       sessionsTableRowModels: [],
       isTabExpanded: false,
       isAjaxSuccess: true,
@@ -200,8 +173,12 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
         modalRef.componentInstance.oldCourseName = courseName;
         modalRef.componentInstance.allCourses = this.allCoursesList;
         modalRef.componentInstance.newTimeZone = timeZone;
-        modalRef.componentInstance.courseToFeedbackSession[courseId] = response.feedbackSessions;
-        modalRef.componentInstance.selectedFeedbackSessions = new Set(response.feedbackSessions);
+        modalRef.componentInstance.courseToFeedbackSession[courseId] = response.feedbackSessions.map(
+          (sessionView: FeedbackSessionView) => sessionView.feedbackSession,
+        );
+        modalRef.componentInstance.selectedFeedbackSessions = new Set(
+          response.feedbackSessions.map((sessionView: FeedbackSessionView) => sessionView.feedbackSession),
+        );
         modalRef.result.then(
           (result: CopyCourseModalResult) => this.createCopiedCourse(result),
           () => {},
@@ -224,10 +201,11 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
     this.copyProgressPercentage = 0;
 
     this.courseService
-      .createCourse(result.newCourseInstitute, {
+      .createCourse({
         courseName: result.newCourseName,
         timeZone: result.newTimeZone,
         courseId: result.newCourseId,
+        institute: result.newCourseInstitute,
       })
       .subscribe({
         next: () => {
@@ -260,9 +238,9 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
           });
 
           promise.then(() => {
-            this.courseService.getCourseAsInstructor(result.newCourseId).subscribe((course: Course) => {
-              this.allCoursesList.push(course);
-              this.initializeCourseTabModule(course);
+            this.courseService.getCourseAsInstructor(result.newCourseId).subscribe((courseView: CourseView) => {
+              this.allCoursesList.push(courseView.course);
+              this.initializeCourseTabModule(courseView);
               this.sortCoursesBy(this.instructorCoursesSortBy);
               this.isCopyingCourse = false;
               if (Object.keys(this.modifiedSession).length > 0) {
@@ -303,7 +281,7 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
         this.courseService.binCourse(courseId).subscribe({
           next: (course: Course) => {
             this.courseTabModels = this.courseTabModels.filter((model: CourseTabModel) => {
-              return model.course.courseId !== courseId;
+              return model.course.courseId !== course.courseId;
             });
             this.statusMessageService.showSuccessToast(
               `The course ${course.courseId} has been deleted. You can restore it from the Recycle Bin manually.`,
@@ -334,11 +312,13 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
       )
       .subscribe({
         next: (courses: Courses) => {
-          courses.courses.forEach((course: Course) => {
-            this.allCoursesList.push(course);
-            this.initializeCourseTabModule(course);
+          courses.courses.forEach((courseView: CourseView) => {
+            this.allCoursesList.push(courseView.course);
+            this.initializeCourseTabModule(courseView);
           });
-          this.isNewUser = !courses.courses.some((course: Course) => !/-demo\d*$/.test(course.courseId));
+          this.isNewUser = !courses.courses.some(
+            (courseView: CourseView) => !/-demo\d*$/.test(courseView.course.courseId),
+          );
           this.sortCoursesBy(this.instructorCoursesSortBy);
         },
         error: (resp: ErrorMessageOutput) => {
@@ -348,7 +328,7 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
       });
     this.courseService.getAllCoursesAsInstructor('softDeleted').subscribe({
       next: (resp: Courses) => {
-        this.allCoursesList.push(...resp.courses);
+        this.allCoursesList.push(...resp.courses.map((courseView: CourseView) => courseView.course));
       },
       error: (resp: ErrorMessageOutput) => {
         this.hasCoursesLoadingFailed = true;
@@ -366,12 +346,17 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
     if (!model.hasPopulated) {
       this.feedbackSessionsService.getFeedbackSessionsForInstructor(model.course.courseId).subscribe({
         next: (response: FeedbackSessions) => {
-          response.feedbackSessions.forEach((feedbackSession: FeedbackSession) => {
+          response.feedbackSessions.forEach((feedbackSessionView: FeedbackSessionView) => {
+            const feedbackSession: FeedbackSession = feedbackSessionView.feedbackSession;
             const m: SessionsTableRowModel = {
               feedbackSession,
               responseRate: '',
               isLoadingResponseRate: false,
-              instructorPrivilege: feedbackSession.privileges || DEFAULT_INSTRUCTOR_PRIVILEGE(),
+              instructorPrivilege: feedbackSessionView.instructorPermissions || {
+                canModifySession: false,
+                canSubmitSessionInSections: false,
+                canViewSessionInSections: false,
+              },
             };
             model.sessionsTableRowModels.push(m);
           });
@@ -402,7 +387,7 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
     this.instructorCoursesSortBy = by;
 
     if (this.courseTabModels.length > 1) {
-      const modelCopy: CourseTabModel[] = JSON.parse(JSON.stringify(this.courseTabModels));
+      const modelCopy: CourseTabModel[] = structuredClone(this.courseTabModels);
       modelCopy.sort(this.sortPanelsBy(by));
       this.courseTabModels = modelCopy;
     }
@@ -508,8 +493,10 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
     this.failedToCopySessions = {};
     this.coursesOfModifiedSession = [];
     this.modifiedSession = {};
+    const sourceSessionRow: SessionsTableRowModel =
+      this.courseTabModels[tabIndex].sessionsTableRowModels[result.sessionToCopyRowIndex];
     const requestList: Observable<FeedbackSession>[] = this.createSessionCopyRequestsFromRowModel(
-      this.courseTabModels[tabIndex].sessionsTableRowModels[result.sessionToCopyRowIndex],
+      sourceSessionRow,
       result,
     );
     if (requestList.length === 1) {
@@ -536,7 +523,7 @@ export class InstructorHomePageComponent extends InstructorSessionModalPageCompo
                 feedbackSession: session,
                 responseRate: '',
                 isLoadingResponseRate: false,
-                instructorPrivilege: session.privileges || DEFAULT_INSTRUCTOR_PRIVILEGE(),
+                instructorPrivilege: sourceSessionRow.instructorPrivilege,
               };
               const courseModel: CourseTabModel | undefined = this.courseTabModels.find(
                 (tabModel: CourseTabModel) => tabModel.course.courseId === session.courseId,

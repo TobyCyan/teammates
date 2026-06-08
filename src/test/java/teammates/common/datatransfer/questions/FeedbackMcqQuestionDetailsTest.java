@@ -1,12 +1,16 @@
 package teammates.common.datatransfer.questions;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.testng.annotations.Test;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
 import teammates.test.BaseTestCase;
 
 /**
@@ -22,15 +26,15 @@ public class FeedbackMcqQuestionDetailsTest extends BaseTestCase {
         assertFalse(mcqDetails.isHasAssignedWeights());
         assertTrue(mcqDetails.getMcqWeights().isEmpty());
         assertEquals(0.0, mcqDetails.getMcqOtherWeight());
-        assertEquals(FeedbackParticipantType.NONE, mcqDetails.getGenerateOptionsFor());
+        assertEquals(QuestionRecipientType.NONE, mcqDetails.getGenerateOptionsFor());
     }
 
     @Test
     public void testSetter_generateOptionsFor_correctValue() {
         FeedbackMcqQuestionDetails mcqDetails = new FeedbackMcqQuestionDetails();
-        mcqDetails.setGenerateOptionsFor(FeedbackParticipantType.STUDENTS);
+        mcqDetails.setGenerateOptionsFor(QuestionRecipientType.STUDENTS);
 
-        assertEquals(FeedbackParticipantType.STUDENTS, mcqDetails.getGenerateOptionsFor());
+        assertEquals(QuestionRecipientType.STUDENTS, mcqDetails.getGenerateOptionsFor());
     }
 
     @Test
@@ -154,10 +158,10 @@ public class FeedbackMcqQuestionDetailsTest extends BaseTestCase {
     @Test
     public void testShouldChangesRequireResponseDeletion_differentGenerateOptionsFor_shouldReturnTrue() {
         FeedbackMcqQuestionDetails mcqDetails = new FeedbackMcqQuestionDetails();
-        mcqDetails.setGenerateOptionsFor(FeedbackParticipantType.STUDENTS);
+        mcqDetails.setGenerateOptionsFor(QuestionRecipientType.STUDENTS);
 
         FeedbackMcqQuestionDetails newMcqDetails = new FeedbackMcqQuestionDetails();
-        newMcqDetails.setGenerateOptionsFor(FeedbackParticipantType.INSTRUCTORS);
+        newMcqDetails.setGenerateOptionsFor(QuestionRecipientType.INSTRUCTORS);
 
         assertTrue(mcqDetails.shouldChangesRequireResponseDeletion(newMcqDetails));
     }
@@ -177,12 +181,12 @@ public class FeedbackMcqQuestionDetailsTest extends BaseTestCase {
     public void testShouldChangesRequireResponseDeletion_sameQuestionsDifferentOrder_shouldReturnFalse() {
         FeedbackMcqQuestionDetails mcqDetails = new FeedbackMcqQuestionDetails();
         mcqDetails.setMcqChoices(List.of("choice1", "choice2", "choice3"));
-        mcqDetails.setGenerateOptionsFor(FeedbackParticipantType.STUDENTS);
+        mcqDetails.setGenerateOptionsFor(QuestionRecipientType.STUDENTS);
         mcqDetails.setOtherEnabled(false);
 
         FeedbackMcqQuestionDetails newMcqDetails = new FeedbackMcqQuestionDetails();
         newMcqDetails.setMcqChoices(List.of("choice2", "choice3", "choice1"));
-        newMcqDetails.setGenerateOptionsFor(FeedbackParticipantType.STUDENTS);
+        newMcqDetails.setGenerateOptionsFor(QuestionRecipientType.STUDENTS);
         newMcqDetails.setOtherEnabled(false);
 
         assertFalse(mcqDetails.shouldChangesRequireResponseDeletion(newMcqDetails));
@@ -268,7 +272,7 @@ public class FeedbackMcqQuestionDetailsTest extends BaseTestCase {
         mcqDetails.setHasAssignedWeights(false);
 
         List<String> errors = mcqDetails.validateQuestionDetails();
-        assertEquals(FeedbackParticipantType.NONE, mcqDetails.getGenerateOptionsFor());
+        assertEquals(QuestionRecipientType.NONE, mcqDetails.getGenerateOptionsFor());
         assertEquals(2, errors.size());
         assertEquals(FeedbackMcqQuestionDetails.MCQ_ERROR_NOT_ENOUGH_CHOICES
                 + FeedbackMcqQuestionDetails.MCQ_MIN_NUM_OF_CHOICES + ".", errors.get(0));
@@ -318,7 +322,7 @@ public class FeedbackMcqQuestionDetailsTest extends BaseTestCase {
     @Test
     public void testValidateQuestionDetails_generateOptionsForNone_errorReturned() {
         FeedbackMcqQuestionDetails mcqDetails = new FeedbackMcqQuestionDetails();
-        mcqDetails.setGenerateOptionsFor(FeedbackParticipantType.NONE);
+        mcqDetails.setGenerateOptionsFor(QuestionRecipientType.NONE);
 
         List<String> errors = mcqDetails.validateQuestionDetails();
         assertEquals(1, errors.size());

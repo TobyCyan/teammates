@@ -1,5 +1,8 @@
 package teammates.e2e.cases;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -70,7 +73,7 @@ public class InstructorCoursesPageE2ETest extends BaseE2ETestCase {
 
         copySession = new FeedbackSession(
                 "Second Session",
-                instructor.getEmail(),
+                instructor,
                 session.getInstructions(),
                 ZonedDateTime.now(ZoneId.of(copyCourse.getTimeZone()))
                     .plus(Duration.ofDays(2))
@@ -94,7 +97,7 @@ public class InstructorCoursesPageE2ETest extends BaseE2ETestCase {
 
         copySession2 = new FeedbackSession(
                 "Second Session",
-                instructor.getEmail(),
+                instructor,
                 copySession.getInstructions(),
                 copySession.getStartTime(),
                 copySession.getEndTime(),

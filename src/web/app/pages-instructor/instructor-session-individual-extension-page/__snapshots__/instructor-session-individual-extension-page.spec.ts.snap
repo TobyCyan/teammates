@@ -1,22 +1,22 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`InstructorSessionIndividualExtensionPageComponent should select students that have not submitted yet if Select Not Submitted Student Button is checked 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should select students that have not submitted yet if Select Not Submitted Student Button is checked 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -26,16 +26,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should select student
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -61,7 +61,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should select student
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -106,6 +106,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should select student
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -493,23 +494,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should select student
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should select those that have not submitted yet if Select Not Submitted Instructor and Student Button is checked 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should select those that have not submitted yet if Select Not Submitted Instructor and Student Button is checked 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -519,16 +520,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should select those t
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -554,7 +555,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should select those t
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -599,6 +600,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should select those t
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -1052,23 +1054,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should select those t
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should snap when clicking the Select All Instructors button 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should snap when clicking the Select All Instructors button 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected={[Function Boolean]}
   isAllStudentsSelected="false"
@@ -1078,16 +1080,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when clic
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -1113,7 +1115,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when clic
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -1158,6 +1160,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when clic
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -1611,23 +1614,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when clic
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should snap when clicking the Select All Students button 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should snap when clicking the Select All Students button 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected={[Function Boolean]}
@@ -1637,16 +1640,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when clic
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -1672,7 +1675,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when clic
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -1717,6 +1720,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when clic
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -2170,23 +2174,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when clic
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should snap when feedback session loading 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should snap when feedback session loading 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
-  courseId={[Function String]}
+  courseId=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp="0"
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName=""
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -2196,16 +2200,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when feed
   isLoadingAllStudents="false"
   isLoadingFeedbackSession={[Function Boolean]}
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -2485,23 +2489,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when feed
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should snap when there are no instructors 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should snap when there are no instructors 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -2511,16 +2515,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when ther
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -2546,7 +2550,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when ther
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -2591,6 +2595,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when ther
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -2980,23 +2985,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when ther
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should snap when there are no students 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should snap when there are no students 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -3006,16 +3011,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when ther
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -3041,7 +3046,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when ther
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -3086,6 +3091,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when ther
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -3441,23 +3447,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap when ther
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should snap with details and extended students 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should snap with details and extended students 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -3467,16 +3473,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with deta
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -3502,7 +3508,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with deta
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -3547,6 +3553,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with deta
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -4002,23 +4009,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with deta
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should snap with instructor loading 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should snap with instructor loading 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
-  courseId={[Function String]}
+  courseId=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp="0"
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName=""
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -4028,16 +4035,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with inst
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -4063,7 +4070,6 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with inst
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
             </div>
           </div>
           <div
@@ -4326,23 +4332,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with inst
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should snap with student loading 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should snap with student loading 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
-  courseId={[Function String]}
+  courseId=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp="0"
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName=""
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -4352,16 +4358,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with stud
   isLoadingAllStudents={[Function Boolean]}
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -4387,7 +4393,6 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with stud
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
             </div>
           </div>
           <div
@@ -4635,23 +4640,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should snap with stud
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should stop loading if course service returns 404 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should stop loading if course service returns 404 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
-  feedbackSessionEndingTimestamp="0"
+  feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed={[Function Boolean]}
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -4661,16 +4666,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -4953,23 +4958,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should stop loading if feedback session service get feedback session submitted giver set returns 404 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should stop loading if feedback session service get feedback session submitted giver set returns 404 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed={[Function Boolean]}
   hasLoadedAllStudentsFailed={[Function Boolean]}
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -4979,16 +4984,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -5014,7 +5019,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -5059,6 +5064,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -5205,23 +5211,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should stop loading if feedback session service returns 404 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should stop loading if feedback session service returns 404 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
-  courseId={[Function String]}
+  courseId=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp="0"
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName=""
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed={[Function Boolean]}
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -5231,16 +5237,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -5523,23 +5529,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should stop loading if instructor service returns 404 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should stop loading if instructor service returns 404 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed={[Function Boolean]}
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -5549,16 +5555,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -5584,7 +5590,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -5629,6 +5635,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -5954,23 +5961,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should stop loading if student service returns 404 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should stop loading if student service returns 404 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed={[Function Boolean]}
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -5980,16 +5987,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -6015,7 +6022,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -6060,6 +6067,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -6336,23 +6344,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should stop loading i
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should unselect instructors that have not submitted yet if Select Not Submitted Instructor Button is unchecked 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should unselect instructors that have not submitted yet if Select Not Submitted Instructor Button is unchecked 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -6362,16 +6370,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should unselect instr
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -6397,7 +6405,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should unselect instr
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -6442,6 +6450,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should unselect instr
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div
@@ -6796,23 +6805,23 @@ exports[`InstructorSessionIndividualExtensionPageComponent should unselect instr
 </tm-instructor-session-individual-extension-page>
 `;
 
-exports[`InstructorSessionIndividualExtensionPageComponent should unselect only students that have not submitted yet if Select Not Submitted Student Button is unchecked 1`] = `
+exports[`InstructorSessionIndividualExtensionPageComponent > should unselect only students that have not submitted yet if Select Not Submitted Student Button is unchecked 1`] = `
 <tm-instructor-session-individual-extension-page
   SortBy={[Function Object]}
   SortOrder={[Function Object]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   feedbackSessionDetails={[Function Object]}
   feedbackSessionEndingTimestamp={[Function Number]}
   feedbackSessionId="undefined"
-  feedbackSessionName="undefined"
+  feedbackSessionName={[Function String]}
   feedbackSessionTimeZone={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadedAllInstructorsFailed="false"
   hasLoadedAllStudentsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAllInstructorsSelected="false"
   isAllStudentsSelected="false"
@@ -6822,16 +6831,16 @@ exports[`InstructorSessionIndividualExtensionPageComponent should unselect only 
   isLoadingAllStudents="false"
   isLoadingFeedbackSession="false"
   isSubmittingDeadlines="false"
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   route={[Function Object]}
   sortInstructorOrder="0"
   sortInstructorsBy={[Function Number]}
   sortStudentOrder="0"
   sortStudentsBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
+  tableComparatorService={[Function _TableComparatorService]}
   userDeadlines={[Function Object]}
 >
   <tm-loading-retry>
@@ -6857,7 +6866,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should unselect only 
               class="col-md-3 text-md-start"
               id="course-id"
             >
-               exampleId 
+               testId1 
             </div>
           </div>
           <div
@@ -6902,6 +6911,7 @@ exports[`InstructorSessionIndividualExtensionPageComponent should unselect only 
               class="col-md-10 text-md-start"
               id="session-name"
             >
+               Test Session 
             </div>
           </div>
           <div

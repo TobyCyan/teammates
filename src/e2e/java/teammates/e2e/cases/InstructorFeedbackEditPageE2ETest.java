@@ -1,5 +1,7 @@
 package teammates.e2e.cases;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -8,7 +10,9 @@ import java.util.Arrays;
 
 import org.testng.annotations.Test;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
+import teammates.common.datatransfer.participanttypes.ViewerType;
 import teammates.common.datatransfer.questions.FeedbackContributionQuestionDetails;
 import teammates.common.util.AppUrl;
 import teammates.common.util.Const;
@@ -42,9 +46,7 @@ public class InstructorFeedbackEditPageE2ETest extends BaseE2ETestCase {
     @Override
     protected void testAll() {
         AppUrl url = createFrontendUrl(Const.WebPageURIs.INSTRUCTOR_SESSION_EDIT_PAGE)
-                .withCourseId(course.getId())
-                .withFeedbackSessionId(feedbackSession.getId().toString())
-                .withSessionName(feedbackSession.getName());
+                .withFeedbackSessionId(feedbackSession.getId().toString());
         InstructorFeedbackEditPage feedbackEditPage =
                 loginToPage(url, InstructorFeedbackEditPage.class, instructor.getGoogleId());
 
@@ -154,8 +156,7 @@ public class InstructorFeedbackEditPageE2ETest extends BaseE2ETestCase {
         feedbackEditPage.deleteSession();
         feedbackEditPage.verifyStatusMessage("The feedback session has been deleted. "
                 + "You can restore it from the deleted sessions table below.");
-        assertNotNull(getSoftDeletedSession(copiedSessionName,
-                instructor.getGoogleId()));
+        assertNotNull(getSoftDeletedSession(copiedSessionName, instructor.getAccountId()));
 
     }
 
@@ -167,14 +168,14 @@ public class InstructorFeedbackEditPageE2ETest extends BaseE2ETestCase {
         FeedbackQuestion fq = FeedbackQuestion.makeQuestion(
                 2,
                 "",
-                FeedbackParticipantType.STUDENTS,
-                FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+                QuestionGiverType.STUDENTS,
+                QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
                 Const.MAX_POSSIBLE_RECIPIENTS,
-                Arrays.asList(FeedbackParticipantType.INSTRUCTORS,
-                        FeedbackParticipantType.OWN_TEAM_MEMBERS, FeedbackParticipantType.RECEIVER),
-                Arrays.asList(FeedbackParticipantType.INSTRUCTORS),
-                Arrays.asList(FeedbackParticipantType.INSTRUCTORS,
-                        FeedbackParticipantType.RECEIVER), detail);
+                Arrays.asList(ViewerType.INSTRUCTORS,
+                        ViewerType.OWN_TEAM_MEMBERS, ViewerType.RECEIVER),
+                Arrays.asList(ViewerType.INSTRUCTORS),
+                Arrays.asList(ViewerType.INSTRUCTORS,
+                        ViewerType.RECEIVER), detail);
 
         feedbackSession.addFeedbackQuestion(fq);
         return fq;

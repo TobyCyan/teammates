@@ -1,13 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { FeedbackResponseCommentService } from './feedback-response-comment.service';
+import { ResponseInstructorCommentService } from './feedback-response-comment.service';
 import { StatusMessageService } from './status-message.service';
 import { TableComparatorService } from './table-comparator.service';
-import { CommentRowModel } from '../app/components/comment-box/comment-row/comment-row.component';
+import type { InstructorCommentRowModel, NewCommentRowModel } from '../app/components/comment-box/comment.model';
 import { CommentTableModel } from '../app/components/comment-box/comment-table/comment-table.model';
-import { CommentToCommentRowModelPipe } from '../app/components/comment-box/comment-to-comment-row-model.pipe';
+import { instructorCommentToCommentRowModel } from '../app/components/comment-box/comment-row-model-mapper';
 import { ErrorMessageOutput } from '../app/error-message-output';
-import { FeedbackResponseComment } from '../types/api-output';
-import { Intent } from '../types/api-request';
+import { ResponseInstructorComment } from '../types/api-output';
 import { SortBy, SortOrder } from '../types/sort-properties';
 
 export interface InstructorCommentEventData {
@@ -19,14 +18,12 @@ export interface InstructorCommentUpdateParams {
   data: InstructorCommentEventData;
   timezone: string;
   instructorCommentTableModel: Record<string, CommentTableModel>;
-  currInstructorName?: string;
 }
 
 export interface InstructorCommentSaveParams {
   responseId: string;
   timezone: string;
   instructorCommentTableModel: Record<string, CommentTableModel>;
-  currInstructorName?: string;
 }
 
 export interface InstructorCommentDeleteParams {
@@ -36,8 +33,7 @@ export interface InstructorCommentDeleteParams {
 
 @Injectable({ providedIn: 'root' })
 export class InstructorCommentService {
-  private commentToCommentRowModel = inject(CommentToCommentRowModelPipe);
-  private commentService = inject(FeedbackResponseCommentService);
+  private commentService = inject(ResponseInstructorCommentService);
   private statusMessageService = inject(StatusMessageService);
   private tableComparatorService = inject(TableComparatorService);
 
@@ -46,9 +42,9 @@ export class InstructorCommentService {
    */
   deleteComment({ data, instructorCommentTableModel }: InstructorCommentDeleteParams): void {
     const commentTableModel: CommentTableModel = instructorCommentTableModel[data.responseId];
-    const commentToDelete: FeedbackResponseComment = commentTableModel.commentRows[data.index].originalComment!;
+    const commentId: string = commentTableModel.commentRows[data.index].commentId;
 
-    this.commentService.deleteComment(commentToDelete.feedbackResponseCommentId, Intent.INSTRUCTOR_RESULT).subscribe({
+    this.commentService.deleteComment(commentId).subscribe({
       next: () => {
         commentTableModel.commentRows.splice(data.index, 1);
         instructorCommentTableModel[data.responseId] = {
@@ -64,15 +60,10 @@ export class InstructorCommentService {
   /**
    * Updates an instructor comment.
    */
-  updateComment({
-    data,
-    timezone,
-    instructorCommentTableModel,
-    currInstructorName,
-  }: InstructorCommentUpdateParams): void {
+  updateComment({ data, timezone, instructorCommentTableModel }: InstructorCommentUpdateParams): void {
     const commentTableModel: CommentTableModel = instructorCommentTableModel[data.responseId];
-    const commentRowToUpdate: CommentRowModel = commentTableModel.commentRows[data.index];
-    const commentToUpdate: FeedbackResponseComment = commentRowToUpdate.originalComment!;
+    const commentRowToUpdate: InstructorCommentRowModel = commentTableModel.commentRows[data.index];
+    const commentId: string = commentRowToUpdate.commentId;
 
     this.commentService
       .updateComment(
@@ -81,22 +72,11 @@ export class InstructorCommentService {
           showCommentTo: commentRowToUpdate.commentEditFormModel.showCommentTo,
           showGiverNameTo: commentRowToUpdate.commentEditFormModel.showGiverNameTo,
         },
-        commentToUpdate.feedbackResponseCommentId,
-        Intent.INSTRUCTOR_RESULT,
+        commentId,
       )
       .subscribe({
-        next: (commentResponse: FeedbackResponseComment) => {
-          // Only override lastEditorName when the caller provided a current instructor name.
-          const transformedUpdatedComment = {
-            ...commentResponse,
-            commentGiverName: commentRowToUpdate.commentGiverName,
-            ...(currInstructorName ? { lastEditorName: currInstructorName } : {}),
-          };
-
-          commentTableModel.commentRows[data.index] = this.commentToCommentRowModel.transform(
-            transformedUpdatedComment,
-            timezone,
-          );
+        next: (commentResponse: ResponseInstructorComment) => {
+          commentTableModel.commentRows[data.index] = instructorCommentToCommentRowModel(commentResponse, timezone);
           instructorCommentTableModel[data.responseId] = {
             ...commentTableModel,
           };
@@ -110,14 +90,9 @@ export class InstructorCommentService {
   /**
    * Saves an instructor comment.
    */
-  saveNewComment({
-    responseId,
-    timezone,
-    instructorCommentTableModel,
-    currInstructorName,
-  }: InstructorCommentSaveParams): void {
+  saveNewComment({ responseId, timezone, instructorCommentTableModel }: InstructorCommentSaveParams): void {
     const commentTableModel: CommentTableModel = instructorCommentTableModel[responseId];
-    const commentRowToAdd: CommentRowModel = commentTableModel.newCommentRow;
+    const commentRowToAdd: NewCommentRowModel = commentTableModel.newCommentRow;
 
     this.commentService
       .createComment(
@@ -127,31 +102,18 @@ export class InstructorCommentService {
           showGiverNameTo: commentRowToAdd.commentEditFormModel.showGiverNameTo,
         },
         responseId,
-        Intent.INSTRUCTOR_RESULT,
       )
       .subscribe({
-        next: (commentResponse: FeedbackResponseComment) => {
-          commentTableModel.commentRows.push(
-            this.commentToCommentRowModel.transform(
-              {
-                ...commentResponse,
-                // the giver and editor name will be the current login instructor
-                ...(currInstructorName
-                  ? { commentGiverName: currInstructorName, lastEditorName: currInstructorName }
-                  : {}),
-              },
-              timezone,
-            ),
-          );
+        next: (commentResponse: ResponseInstructorComment) => {
+          commentTableModel.commentRows.push(instructorCommentToCommentRowModel(commentResponse, timezone));
           this.sortComments(commentTableModel);
           instructorCommentTableModel[responseId] = {
             ...commentTableModel,
             newCommentRow: {
+              ...commentRowToAdd,
               commentEditFormModel: {
+                ...commentRowToAdd.commentEditFormModel,
                 commentText: '',
-                isUsingCustomVisibilities: false,
-                showCommentTo: [],
-                showGiverNameTo: [],
               },
               isEditing: false,
             },
@@ -168,12 +130,12 @@ export class InstructorCommentService {
    * Sorts instructor's comments according to creation date.
    */
   sortComments(commentTable: CommentTableModel): void {
-    commentTable.commentRows.sort((a: CommentRowModel, b: CommentRowModel) => {
+    commentTable.commentRows.sort((a: InstructorCommentRowModel, b: InstructorCommentRowModel) => {
       return this.tableComparatorService.compare(
         SortBy.COMMENTS_CREATION_DATE,
         SortOrder.ASC,
-        String(a.originalComment?.createdAt),
-        String(b.originalComment?.createdAt),
+        String(a.createdAt),
+        String(b.createdAt),
       );
     });
   }

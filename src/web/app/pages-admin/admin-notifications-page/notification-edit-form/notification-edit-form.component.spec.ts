@@ -2,7 +2,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import moment from 'moment-timezone';
-import SpyInstance = jest.SpyInstance;
 import { NotificationEditFormModel } from './notification-edit-form-model';
 import { NotificationEditFormComponent } from './notification-edit-form.component';
 import { SimpleModalService } from '../../../../services/simple-modal.service';
@@ -14,7 +13,6 @@ import { SimpleModalType } from '../../../components/simple-modal/simple-modal-t
 
 const testNotificationEditModel: NotificationEditFormModel = {
   notificationId: 'notification1',
-  shown: false,
 
   startTime: getDefaultTimeFormat(),
   startDate: getDefaultDateFormat(),
@@ -41,14 +39,12 @@ describe('NotificationEditFormComponent', () => {
     await TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(NotificationEditFormComponent);
     component = fixture.componentInstance;
     timezoneService = TestBed.inject(TimezoneService);
     simpleModalService = TestBed.inject(SimpleModalService);
-    jest.spyOn(timezoneService, 'guessTimezone').mockReturnValue('Asia/Singapore');
+    vi.spyOn(timezoneService, 'guessTimezone').mockReturnValue('Asia/Singapore');
     moment.tz.setDefault('SGT');
     fixture.detectChanges();
   });
@@ -68,14 +64,14 @@ describe('NotificationEditFormComponent', () => {
   });
 
   it('should snap with notification that has been shown to users', () => {
-    testNotificationEditModel.shown = true;
-    component.model = testNotificationEditModel;
+    const shownModel = { ...testNotificationEditModel };
+    shownModel.startDate = { year: 2000, month: 1, day: 1 };
+    component.model = shownModel;
     fixture.detectChanges();
     expect(fixture).toMatchSnapshot();
   });
 
   it('should set up with testNotificationEditModel', () => {
-    testNotificationEditModel.shown = false;
     component.model = testNotificationEditModel;
     const model: NotificationEditFormModel = component.model;
     expect(model).toBe(testNotificationEditModel);
@@ -105,7 +101,7 @@ describe('NotificationEditFormComponent', () => {
       component.model = data;
     });
     const promise: Promise<void> = Promise.resolve();
-    const modalSpy: SpyInstance = jest
+    const modalSpy = vi
       .spyOn(simpleModalService, 'openConfirmationModal')
       .mockReturnValue(createMockNgbModalRef({}, promise));
     component.cancelHandler();

@@ -16,12 +16,16 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
-import teammates.common.datatransfer.questions.FeedbackConstantSumQuestionDetails;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
+import teammates.common.datatransfer.participanttypes.ViewerType;
+import teammates.common.datatransfer.questions.FeedbackConstantSumOptionsQuestionDetails;
+import teammates.common.datatransfer.questions.FeedbackConstantSumRecipientsQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackContributionQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackMcqQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackMsqQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackNumericalScaleQuestionDetails;
+import teammates.common.datatransfer.questions.FeedbackQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackQuestionType;
 import teammates.common.datatransfer.questions.FeedbackRankOptionsQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackRankQuestionDetails;
@@ -327,9 +331,9 @@ public class InstructorFeedbackEditPage extends AppPage {
         String feedbackReceiver = getFeedbackReceiver(questionNum);
         assertEquals(getDisplayRecipientName(feedbackQuestion.getRecipientType()), feedbackReceiver);
 
-        if (feedbackReceiver.equals(getDisplayRecipientName(FeedbackParticipantType.INSTRUCTORS))
-                || feedbackReceiver.equals(getDisplayRecipientName(FeedbackParticipantType.STUDENTS_EXCLUDING_SELF))
-                || feedbackReceiver.equals(getDisplayRecipientName(FeedbackParticipantType.TEAMS_EXCLUDING_SELF))) {
+        if (feedbackReceiver.equals(getDisplayRecipientName(QuestionRecipientType.INSTRUCTORS))
+                || feedbackReceiver.equals(getDisplayRecipientName(QuestionRecipientType.STUDENTS_EXCLUDING_SELF))
+                || feedbackReceiver.equals(getDisplayRecipientName(QuestionRecipientType.TEAMS_EXCLUDING_SELF))) {
             verifyNumberOfEntitiesToGiveFeedbackTo(questionNum, feedbackQuestion.getNumOfEntitiesToGiveFeedbackTo());
         }
     }
@@ -350,87 +354,87 @@ public class InstructorFeedbackEditPage extends AppPage {
         WebElement questionForm = getQuestionForm(questionNum);
         WebElement visibilityPanel = questionForm.findElement(By.tagName("tm-visibility-panel"));
         String visibility = visibilityPanel.findElement(By.cssSelector("#btn-question-visibility span")).getText();
-        List<FeedbackParticipantType> showResponsesTo = feedbackQuestion.getShowResponsesTo();
-        List<FeedbackParticipantType> showGiverNameTo = feedbackQuestion.getShowGiverNameTo();
-        List<FeedbackParticipantType> showRecipientNameTo = feedbackQuestion.getShowRecipientNameTo();
+        List<ViewerType> showResponsesTo = feedbackQuestion.getShowResponsesTo();
+        List<ViewerType> showGiverNameTo = feedbackQuestion.getShowGiverNameTo();
+        List<ViewerType> showRecipientNameTo = feedbackQuestion.getShowRecipientNameTo();
 
         switch (visibility) {
         case "Shown anonymously to recipient and giver's team members, visible to instructors":
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.RECEIVER));
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.OWN_TEAM_MEMBERS));
+            assertTrue(showResponsesTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showResponsesTo.contains(ViewerType.RECEIVER));
+            assertTrue(showResponsesTo.contains(ViewerType.OWN_TEAM_MEMBERS));
             assertEquals(showResponsesTo.size(), 3);
 
-            assertTrue(showGiverNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
+            assertTrue(showGiverNameTo.contains(ViewerType.INSTRUCTORS));
             assertEquals(showGiverNameTo.size(), 1);
 
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.RECEIVER));
+            assertTrue(showRecipientNameTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showRecipientNameTo.contains(ViewerType.RECEIVER));
             assertEquals(showRecipientNameTo.size(), 2);
             break;
 
         case "Visible to instructors only":
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.INSTRUCTORS));
+            assertTrue(showResponsesTo.contains(ViewerType.INSTRUCTORS));
             assertEquals(showResponsesTo.size(), 1);
 
-            assertTrue(showGiverNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
+            assertTrue(showGiverNameTo.contains(ViewerType.INSTRUCTORS));
             assertEquals(showGiverNameTo.size(), 1);
 
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
+            assertTrue(showRecipientNameTo.contains(ViewerType.INSTRUCTORS));
             assertEquals(showRecipientNameTo.size(), 1);
             break;
 
         case "Shown anonymously to recipient and instructors":
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.RECEIVER));
+            assertTrue(showResponsesTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showResponsesTo.contains(ViewerType.RECEIVER));
             assertEquals(showResponsesTo.size(), 2);
 
             assertEquals(showGiverNameTo.size(), 0);
 
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.RECEIVER));
+            assertTrue(showRecipientNameTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showRecipientNameTo.contains(ViewerType.RECEIVER));
             assertEquals(showRecipientNameTo.size(), 2);
             break;
 
         case "Shown anonymously to recipient, visible to instructors":
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.RECEIVER));
+            assertTrue(showResponsesTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showResponsesTo.contains(ViewerType.RECEIVER));
             assertEquals(showResponsesTo.size(), 2);
 
-            assertTrue(showGiverNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
+            assertTrue(showGiverNameTo.contains(ViewerType.INSTRUCTORS));
             assertEquals(showGiverNameTo.size(), 1);
 
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.RECEIVER));
+            assertTrue(showRecipientNameTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showRecipientNameTo.contains(ViewerType.RECEIVER));
             assertEquals(showRecipientNameTo.size(), 2);
             break;
 
         case "Shown anonymously to recipient and giver/recipient's team members, visible to instructors":
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.RECEIVER));
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.OWN_TEAM_MEMBERS));
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.RECEIVER_TEAM_MEMBERS));
+            assertTrue(showResponsesTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showResponsesTo.contains(ViewerType.RECEIVER));
+            assertTrue(showResponsesTo.contains(ViewerType.OWN_TEAM_MEMBERS));
+            assertTrue(showResponsesTo.contains(ViewerType.RECEIVER_TEAM_MEMBERS));
             assertEquals(showResponsesTo.size(), 4);
 
-            assertTrue(showGiverNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
+            assertTrue(showGiverNameTo.contains(ViewerType.INSTRUCTORS));
             assertEquals(showGiverNameTo.size(), 1);
 
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.RECEIVER));
+            assertTrue(showRecipientNameTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showRecipientNameTo.contains(ViewerType.RECEIVER));
             assertEquals(showRecipientNameTo.size(), 2);
             break;
 
         case "Visible to recipient and instructors":
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showResponsesTo.contains(FeedbackParticipantType.RECEIVER));
+            assertTrue(showResponsesTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showResponsesTo.contains(ViewerType.RECEIVER));
             assertEquals(showResponsesTo.size(), 2);
 
-            assertTrue(showGiverNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showGiverNameTo.contains(FeedbackParticipantType.RECEIVER));
+            assertTrue(showGiverNameTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showGiverNameTo.contains(ViewerType.RECEIVER));
             assertEquals(showGiverNameTo.size(), 2);
 
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.INSTRUCTORS));
-            assertTrue(showRecipientNameTo.contains(FeedbackParticipantType.RECEIVER));
+            assertTrue(showRecipientNameTo.contains(ViewerType.INSTRUCTORS));
+            assertTrue(showRecipientNameTo.contains(ViewerType.RECEIVER));
             assertEquals(showRecipientNameTo.size(), 2);
             break;
 
@@ -446,36 +450,36 @@ public class InstructorFeedbackEditPage extends AppPage {
         String visibility = visibilityPanel.findElement(By.cssSelector("#btn-question-visibility span")).getText();
         assertEquals(visibility, CUSTOM_VISIBILITY_OPTION);
 
-        FeedbackParticipantType giver = feedbackQuestion.getGiverType();
-        FeedbackParticipantType receiver = feedbackQuestion.getRecipientType();
+        QuestionGiverType giver = feedbackQuestion.getGiverType();
+        QuestionRecipientType receiver = feedbackQuestion.getRecipientType();
         WebElement customVisibilityTable = visibilityPanel.findElement(By.id("custom-visibility-table"));
         assertVisibilityBoxesSelected(customVisibilityTable, giver, receiver, feedbackQuestion.getShowResponsesTo(), 1);
         assertVisibilityBoxesSelected(customVisibilityTable, giver, receiver, feedbackQuestion.getShowGiverNameTo(), 2);
         assertVisibilityBoxesSelected(customVisibilityTable, giver, receiver, feedbackQuestion.getShowRecipientNameTo(), 3);
     }
 
-    private void assertVisibilityBoxesSelected(WebElement table, FeedbackParticipantType giver,
-                                               FeedbackParticipantType receiver, List<FeedbackParticipantType> participants,
+    private void assertVisibilityBoxesSelected(WebElement table, QuestionGiverType giver,
+                                               QuestionRecipientType receiver, List<ViewerType> participants,
                                                int colNum) {
-        List<FeedbackParticipantType> possibleTypes = new ArrayList<>(Arrays.asList(FeedbackParticipantType.RECEIVER,
-                FeedbackParticipantType.OWN_TEAM_MEMBERS, FeedbackParticipantType.RECEIVER_TEAM_MEMBERS,
-                FeedbackParticipantType.STUDENTS, FeedbackParticipantType.INSTRUCTORS));
-        if (giver != FeedbackParticipantType.STUDENTS) {
-            possibleTypes.remove(FeedbackParticipantType.OWN_TEAM_MEMBERS);
+        List<ViewerType> possibleTypes = new ArrayList<>(Arrays.asList(ViewerType.RECEIVER,
+                ViewerType.OWN_TEAM_MEMBERS, ViewerType.RECEIVER_TEAM_MEMBERS,
+                ViewerType.STUDENTS, ViewerType.INSTRUCTORS));
+        if (giver != QuestionGiverType.STUDENTS) {
+            possibleTypes.remove(ViewerType.OWN_TEAM_MEMBERS);
         }
-        if (receiver != FeedbackParticipantType.STUDENTS) {
-            possibleTypes.remove(FeedbackParticipantType.RECEIVER_TEAM_MEMBERS);
+        if (receiver != QuestionRecipientType.STUDENTS) {
+            possibleTypes.remove(ViewerType.RECEIVER_TEAM_MEMBERS);
         }
-        if (receiver == FeedbackParticipantType.NONE
-                || receiver == FeedbackParticipantType.SELF
-                || receiver == FeedbackParticipantType.OWN_TEAM) {
-            possibleTypes.remove(FeedbackParticipantType.RECEIVER);
-            possibleTypes.remove(FeedbackParticipantType.RECEIVER_TEAM_MEMBERS);
+        if (receiver == QuestionRecipientType.NONE
+                || receiver == QuestionRecipientType.SELF
+                || receiver == QuestionRecipientType.OWN_TEAM) {
+            possibleTypes.remove(ViewerType.RECEIVER);
+            possibleTypes.remove(ViewerType.RECEIVER_TEAM_MEMBERS);
         }
 
         List<WebElement> rows = table.findElements(By.tagName("tr"));
         int index = colNum - 1;
-        for (FeedbackParticipantType participant : participants) {
+        for (ViewerType participant : participants) {
             assertTrue(rows.get(possibleTypes.indexOf(participant)).findElements(By.tagName("input")).get(index)
                     .isSelected());
         }
@@ -638,25 +642,25 @@ public class InstructorFeedbackEditPage extends AppPage {
         clickSaveQuestionButton(questionNum);
     }
 
-    public void verifyConstSumQuestionDetails(int questionNum, FeedbackConstantSumQuestionDetails questionDetails) {
-        if (!questionDetails.isDistributeToRecipients()) {
-            verifyOptions(questionNum, questionDetails.getConstSumOptions());
+    public void verifyConstSumQuestionDetails(int questionNum, FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            verifyOptions(questionNum, optionsQuestionDetails.getConstSumOptions());
         }
 
-        if (questionDetails.isPointsPerOption()) {
+        if (isConstSumPointsPerOption(questionDetails)) {
             assertTrue(getConstSumPerOptionPointsRadioBtn(questionNum).isSelected());
             assertEquals(getConstSumPerOptionPointsInput(questionNum).getAttribute("value"),
-                    Integer.toString(questionDetails.getPoints()));
+                    Integer.toString(getConstSumPoints(questionDetails)));
             assertFalse(getConstSumTotalPointsRadioBtn(questionNum).isSelected());
         } else {
             assertTrue(getConstSumTotalPointsRadioBtn(questionNum).isSelected());
             assertEquals(getConstSumTotalPointsInput(questionNum).getAttribute("value"),
-                    Integer.toString(questionDetails.getPoints()));
+                    Integer.toString(getConstSumPoints(questionDetails)));
             assertFalse(getConstSumPerOptionPointsRadioBtn(questionNum).isSelected());
         }
 
-        if (questionDetails.isForceUnevenDistribution()) {
-            String distributeFor = questionDetails.getDistributePointsFor();
+        if (isConstSumForceUnevenDistribution(questionDetails)) {
+            String distributeFor = getConstSumDistributePointsFor(questionDetails);
             assertTrue(getConstSumUnevenDistributionCheckbox(questionNum).isSelected());
             assertEquals(getSelectedDropdownOptionText(getConstSumUnevenDistributionDropdown(questionNum)).trim(),
                     "All options".equals(distributeFor) ? "Every option" : distributeFor);
@@ -678,13 +682,12 @@ public class InstructorFeedbackEditPage extends AppPage {
     public void addConstSumQuestion(FeedbackQuestion feedbackQuestion) {
         int questionNum = getNumQuestions();
         inputQuestionDetails(questionNum, feedbackQuestion);
-        FeedbackConstantSumQuestionDetails questionDetails =
-                (FeedbackConstantSumQuestionDetails) feedbackQuestion.getQuestionDetailsCopy();
+        FeedbackQuestionDetails questionDetails = feedbackQuestion.getQuestionDetailsCopy();
         inputConstSumDetails(questionNum, questionDetails);
         clickSaveNewQuestionButton();
     }
 
-    public void editConstSumQuestion(int questionNum, FeedbackConstantSumQuestionDetails csQuestionDetails) {
+    public void editConstSumQuestion(int questionNum, FeedbackQuestionDetails csQuestionDetails) {
         clickEditQuestionButton(questionNum);
         inputConstSumDetails(questionNum, csQuestionDetails);
         clickSaveQuestionButton(questionNum);
@@ -1045,8 +1048,8 @@ public class InstructorFeedbackEditPage extends AppPage {
     }
 
     private void setFeedbackPath(int questionNum, FeedbackQuestion feedbackQuestion) {
-        FeedbackParticipantType newGiver = feedbackQuestion.getGiverType();
-        FeedbackParticipantType newRecipient = feedbackQuestion.getRecipientType();
+        QuestionGiverType newGiver = feedbackQuestion.getGiverType();
+        QuestionRecipientType newRecipient = feedbackQuestion.getRecipientType();
         String feedbackPath = getFeedbackPath(questionNum);
         WebElement questionForm = getQuestionForm(questionNum).findElement(By.tagName("tm-feedback-path-panel"));
         if (!CUSTOM_FEEDBACK_PATH_OPTION.equals(feedbackPath)) {
@@ -1054,9 +1057,9 @@ public class InstructorFeedbackEditPage extends AppPage {
         }
         // Set to type STUDENT first to adjust NumberOfEntitiesToGiveFeedbackTo
         selectDropdownOptionByText(questionForm.findElement(By.id("giver-type")),
-                getDisplayGiverName(FeedbackParticipantType.STUDENTS));
+                getDisplayGiverName(QuestionGiverType.STUDENTS));
         selectDropdownOptionByText(questionForm.findElement(By.id("receiver-type")),
-                getDisplayRecipientName(FeedbackParticipantType.STUDENTS_EXCLUDING_SELF));
+                getDisplayRecipientName(QuestionRecipientType.STUDENTS_EXCLUDING_SELF));
         if (feedbackQuestion.getNumOfEntitiesToGiveFeedbackTo() == Const.MAX_POSSIBLE_RECIPIENTS) {
             click(questionForm.findElement(By.id("unlimited-recipients")));
         } else {
@@ -1108,36 +1111,36 @@ public class InstructorFeedbackEditPage extends AppPage {
             selectVisibilityDropdownOption(questionNum, CUSTOM_VISIBILITY_OPTION + "...");
         }
 
-        FeedbackParticipantType giver = feedbackQuestion.getGiverType();
-        FeedbackParticipantType receiver = feedbackQuestion.getRecipientType();
+        QuestionGiverType giver = feedbackQuestion.getGiverType();
+        QuestionRecipientType receiver = feedbackQuestion.getRecipientType();
         WebElement customVisibilityTable = visibilityPanel.findElement(By.id("custom-visibility-table"));
         selectVisibilityBoxes(customVisibilityTable, giver, receiver, feedbackQuestion.getShowResponsesTo(), 1);
         selectVisibilityBoxes(customVisibilityTable, giver, receiver, feedbackQuestion.getShowGiverNameTo(), 2);
         selectVisibilityBoxes(customVisibilityTable, giver, receiver, feedbackQuestion.getShowRecipientNameTo(), 3);
     }
 
-    private void selectVisibilityBoxes(WebElement table, FeedbackParticipantType giver,
-                                       FeedbackParticipantType receiver, List<FeedbackParticipantType> participants,
+    private void selectVisibilityBoxes(WebElement table, QuestionGiverType giver,
+                                       QuestionRecipientType receiver, List<ViewerType> participants,
                                        int colNum) {
-        List<FeedbackParticipantType> possibleTypes = new ArrayList<>(Arrays.asList(FeedbackParticipantType.RECEIVER,
-                FeedbackParticipantType.OWN_TEAM_MEMBERS, FeedbackParticipantType.RECEIVER_TEAM_MEMBERS,
-                FeedbackParticipantType.STUDENTS, FeedbackParticipantType.INSTRUCTORS));
-        if (giver != FeedbackParticipantType.STUDENTS) {
-            possibleTypes.remove(FeedbackParticipantType.OWN_TEAM_MEMBERS);
+        List<ViewerType> possibleTypes = new ArrayList<>(Arrays.asList(ViewerType.RECEIVER,
+                ViewerType.OWN_TEAM_MEMBERS, ViewerType.RECEIVER_TEAM_MEMBERS,
+                ViewerType.STUDENTS, ViewerType.INSTRUCTORS));
+        if (giver != QuestionGiverType.STUDENTS) {
+            possibleTypes.remove(ViewerType.OWN_TEAM_MEMBERS);
         }
-        if (receiver != FeedbackParticipantType.STUDENTS_EXCLUDING_SELF) {
-            possibleTypes.remove(FeedbackParticipantType.RECEIVER_TEAM_MEMBERS);
+        if (receiver != QuestionRecipientType.STUDENTS_EXCLUDING_SELF) {
+            possibleTypes.remove(ViewerType.RECEIVER_TEAM_MEMBERS);
         }
-        if (receiver == FeedbackParticipantType.NONE
-                || receiver == FeedbackParticipantType.SELF
-                || receiver == FeedbackParticipantType.OWN_TEAM) {
-            possibleTypes.remove(FeedbackParticipantType.RECEIVER);
-            possibleTypes.remove(FeedbackParticipantType.RECEIVER_TEAM_MEMBERS);
+        if (receiver == QuestionRecipientType.NONE
+                || receiver == QuestionRecipientType.SELF
+                || receiver == QuestionRecipientType.OWN_TEAM) {
+            possibleTypes.remove(ViewerType.RECEIVER);
+            possibleTypes.remove(ViewerType.RECEIVER_TEAM_MEMBERS);
         }
 
         List<WebElement> rows = table.findElements(By.tagName("tr"));
         int index = colNum - 1;
-        for (FeedbackParticipantType participant : participants) {
+        for (ViewerType participant : participants) {
             markOptionAsSelected(rows.get(possibleTypes.indexOf(participant)).findElements(By.tagName("input")).get(index));
         }
     }
@@ -1160,6 +1163,7 @@ public class InstructorFeedbackEditPage extends AppPage {
         int newQuestionNum = getNumQuestions() + 1;
         click(button);
         waitForElementPresence(By.id("question-form-" + newQuestionNum));
+        waitForPageToLoad(true);
     }
 
     private void addNewQuestion(int optionNumber) {
@@ -1205,7 +1209,7 @@ public class InstructorFeedbackEditPage extends AppPage {
         return getQuestionForm(questionNum).findElement(By.id("make-question-dropdown"));
     }
 
-    private String getGeneratedOptionString(FeedbackParticipantType type) {
+    private String getGeneratedOptionString(QuestionRecipientType type) {
         switch (type) {
         case STUDENTS:
         case STUDENTS_IN_SAME_SECTION:
@@ -1246,8 +1250,8 @@ public class InstructorFeedbackEditPage extends AppPage {
         return getQuestionForm(questionNum).findElement(By.id("other-weight"));
     }
 
-    private boolean verifyGeneratedOptions(int questionNum, FeedbackParticipantType participantType) {
-        if (participantType != FeedbackParticipantType.NONE) {
+    private boolean verifyGeneratedOptions(int questionNum, QuestionRecipientType participantType) {
+        if (participantType != QuestionRecipientType.NONE) {
             assertTrue(getGenerateOptionsCheckbox(questionNum).isSelected());
             assertEquals(getSelectedDropdownOptionText(getGenerateOptionsDropdown(questionNum)),
                     getGeneratedOptionString(participantType));
@@ -1299,8 +1303,8 @@ public class InstructorFeedbackEditPage extends AppPage {
         inputDropdownEnabledChoice(questionNum, questionDetails.isQuestionDropdownEnabled());
     }
 
-    private boolean inputGenerateOptions(int questionNum, FeedbackParticipantType participantType) {
-        if (participantType != FeedbackParticipantType.NONE) {
+    private boolean inputGenerateOptions(int questionNum, QuestionRecipientType participantType) {
+        if (participantType != QuestionRecipientType.NONE) {
             markOptionAsSelected(getGenerateOptionsCheckbox(questionNum));
             selectDropdownOptionByText(getGenerateOptionsDropdown(questionNum),
                     getGeneratedOptionString(participantType));
@@ -1476,25 +1480,53 @@ public class InstructorFeedbackEditPage extends AppPage {
         return getQuestionForm(questionNum).findElement(By.id("uneven-distribution-dropdown"));
     }
 
-    private void inputConstSumDetails(int questionNum, FeedbackConstantSumQuestionDetails questionDetails) {
-        if (!questionDetails.isDistributeToRecipients()) {
-            inputOptions(questionNum, questionDetails.getConstSumOptions());
+    private void inputConstSumDetails(int questionNum, FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            inputOptions(questionNum, optionsQuestionDetails.getConstSumOptions());
         }
-        if (questionDetails.isPointsPerOption()) {
+        if (isConstSumPointsPerOption(questionDetails)) {
             click(getConstSumPerOptionPointsRadioBtn(questionNum));
-            fillTextBox(getConstSumPerOptionPointsInput(questionNum), Integer.toString(questionDetails.getPoints()));
+            fillTextBox(getConstSumPerOptionPointsInput(questionNum), Integer.toString(getConstSumPoints(questionDetails)));
         } else {
             click(getConstSumTotalPointsRadioBtn(questionNum));
-            fillTextBox(getConstSumTotalPointsInput(questionNum), Integer.toString(questionDetails.getPoints()));
+            fillTextBox(getConstSumTotalPointsInput(questionNum), Integer.toString(getConstSumPoints(questionDetails)));
         }
-        String distributeFor = questionDetails.getDistributePointsFor();
-        if (questionDetails.isForceUnevenDistribution()) {
+        String distributeFor = getConstSumDistributePointsFor(questionDetails);
+        if (isConstSumForceUnevenDistribution(questionDetails)) {
             markOptionAsSelected(getConstSumUnevenDistributionCheckbox(questionNum));
             selectDropdownOptionByText(getConstSumUnevenDistributionDropdown(questionNum),
                     "All options".equals(distributeFor) ? "Every option" : distributeFor);
         } else {
             markOptionAsUnselected(getConstSumUnevenDistributionCheckbox(questionNum));
         }
+    }
+
+    private boolean isConstSumPointsPerOption(FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            return optionsQuestionDetails.isPointsPerOption();
+        }
+        return ((FeedbackConstantSumRecipientsQuestionDetails) questionDetails).isPointsPerOption();
+    }
+
+    private boolean isConstSumForceUnevenDistribution(FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            return optionsQuestionDetails.isForceUnevenDistribution();
+        }
+        return ((FeedbackConstantSumRecipientsQuestionDetails) questionDetails).isForceUnevenDistribution();
+    }
+
+    private int getConstSumPoints(FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            return optionsQuestionDetails.getPoints();
+        }
+        return ((FeedbackConstantSumRecipientsQuestionDetails) questionDetails).getPoints();
+    }
+
+    private String getConstSumDistributePointsFor(FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            return optionsQuestionDetails.getDistributePointsFor();
+        }
+        return ((FeedbackConstantSumRecipientsQuestionDetails) questionDetails).getDistributePointsFor();
     }
 
     private WebElement getZeroSumCheckbox(int questionNum) {

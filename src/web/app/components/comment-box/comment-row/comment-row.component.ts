@@ -1,43 +1,19 @@
 import { Component, EventEmitter, Input, OnChanges, Output, inject } from '@angular/core';
-import { NgbModalRef, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { CommentRowMode } from './comment-row.mode';
 import { CommentVisibilityStateMachine } from '../../../../services/comment-visibility-state-machine';
-import { FeedbackResponseCommentService } from '../../../../services/feedback-response-comment.service';
+import { ResponseInstructorCommentService } from '../../../../services/feedback-response-comment.service';
 import { SimpleModalService } from '../../../../services/simple-modal.service';
-import {
-  CommentVisibilityType,
-  FeedbackResponseComment,
-  FeedbackVisibilityType,
-  ResponseOutput,
-} from '../../../../types/api-output';
+import { CommentVisibilityType, FeedbackVisibilityType, ResponseOutput } from '../../../../types/api-output';
 import { CommentVisibilityControl } from '../../../../types/comment-visibility-control';
 import { SimpleModalType } from '../../simple-modal/simple-modal-type';
 import { FormatDateBriefPipe } from '../../teammates-common/format-date-brief.pipe';
 import { FormatDateDetailPipe } from '../../teammates-common/format-date-detail.pipe';
 import { SafeHtmlPipe } from '../../teammates-common/safe-html.pipe';
-import { CommentEditFormModel, CommentEditFormComponent } from '../comment-edit-form/comment-edit-form.component';
+import { CommentEditFormComponent } from '../comment-edit-form/comment-edit-form.component';
+import type { CommentRowModel, InstructorCommentRowModel, SavedCommentRowModel } from '../comment.model';
 import { CommentVisibilityTypesJointNamePipe } from '../comment-visibility-setting.pipe';
-
-/**
- * Model for a comment row.
- */
-export interface CommentRowModel {
-  // original comment and recipient identifier can be null under ADD mode
-  originalComment?: FeedbackResponseComment;
-  originalRecipientIdentifier?: string;
-  /**
-   * Timezone of the original comment.
-   */
-  timezone?: string;
-  // timezone and originalComment are optional under ADD mode.
-
-  // optional fields that make the display name more readable
-  commentGiverName?: string;
-  lastEditorName?: string;
-
-  commentEditFormModel: CommentEditFormModel;
-  isEditing: boolean;
-}
 
 /**
  * Comment row component to be used in a comment table
@@ -57,11 +33,11 @@ export interface CommentRowModel {
 })
 export class CommentRowComponent implements OnChanges {
   private simpleModalService = inject(SimpleModalService);
-  private commentService = inject(FeedbackResponseCommentService);
+  private commentService = inject(ResponseInstructorCommentService);
 
   // enum
-  CommentRowMode: typeof CommentRowMode = CommentRowMode;
-  CommentVisibilityControl: typeof CommentVisibilityControl = CommentVisibilityControl;
+  CommentRowMode!: typeof CommentRowMode;
+  CommentVisibilityControl!: typeof CommentVisibilityControl;
 
   @Input()
   mode: CommentRowMode = CommentRowMode.ADD;
@@ -95,10 +71,10 @@ export class CommentRowComponent implements OnChanges {
 
   @Input()
   model: CommentRowModel = {
+    commentType: 'new',
     commentEditFormModel: {
       commentText: '',
 
-      isUsingCustomVisibilities: false,
       showCommentTo: [],
       showGiverNameTo: [],
     },
@@ -118,22 +94,28 @@ export class CommentRowComponent implements OnChanges {
   visibilityStateMachine: CommentVisibilityStateMachine;
 
   constructor() {
+    this.CommentRowMode = CommentRowMode;
+    this.CommentVisibilityControl = CommentVisibilityControl;
     this.visibilityStateMachine = this.commentService.getNewVisibilityStateMachine(this.questionShowResponsesTo);
   }
 
+  get savedCommentModel(): SavedCommentRowModel | undefined {
+    return this.model.commentType === 'new' ? undefined : this.model;
+  }
+
+  get instructorCommentModel(): InstructorCommentRowModel | undefined {
+    return this.model.commentType === 'instructor' ? this.model : undefined;
+  }
+
   ngOnChanges(): void {
-    if (this.model.originalComment) {
+    const savedCommentModel: SavedCommentRowModel | undefined = this.savedCommentModel;
+    if (savedCommentModel) {
       this.visibilityStateMachine = this.commentService.getNewVisibilityStateMachine(this.questionShowResponsesTo);
-      if (this.model.originalComment.isVisibilityFollowingFeedbackQuestion) {
-        // follow the question's visibilities settings
-        this.visibilityStateMachine.allowAllApplicableTypesToSee();
-      } else {
-        const visibilitySetting: { [TKey in CommentVisibilityControl]: CommentVisibilityType[] } = {
-          SHOW_COMMENT: this.model.originalComment.showCommentTo,
-          SHOW_GIVER_NAME: this.model.originalComment.showCommentTo,
-        };
-        this.visibilityStateMachine.applyVisibilitySettings(visibilitySetting);
-      }
+      const visibilitySetting: { [TKey in CommentVisibilityControl]: CommentVisibilityType[] } = {
+        SHOW_COMMENT: savedCommentModel.originalCommentFormModel.showCommentTo,
+        SHOW_GIVER_NAME: savedCommentModel.originalCommentFormModel.showGiverNameTo,
+      };
+      this.visibilityStateMachine.applyVisibilitySettings(visibilitySetting);
     }
   }
 

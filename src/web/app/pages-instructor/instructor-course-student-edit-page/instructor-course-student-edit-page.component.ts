@@ -2,7 +2,7 @@ import { NgClass } from '@angular/common';
 import { Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
@@ -40,14 +40,14 @@ export class InstructorCourseStudentEditPageComponent implements OnInit, OnDestr
   private ngbModal = inject(NgbModal);
   private simpleModalService = inject(SimpleModalService);
 
-  readonly STUDENT_NAME_MAX_LENGTH = STUDENT_NAME_MAX_LENGTH;
-  readonly SECTION_NAME_MAX_LENGTH = SECTION_NAME_MAX_LENGTH;
-  readonly TEAM_NAME_MAX_LENGTH = TEAM_NAME_MAX_LENGTH;
-  readonly EMAIL_MAX_LENGTH = EMAIL_MAX_LENGTH;
+  readonly STUDENT_NAME_MAX_LENGTH!: number;
+  readonly SECTION_NAME_MAX_LENGTH!: number;
+  readonly TEAM_NAME_MAX_LENGTH!: number;
+  readonly EMAIL_MAX_LENGTH!: number;
 
   @Input() isEnabled = true;
   courseId = '';
-  studentEmail = '';
+  studentId = '';
   student!: Student;
 
   isTeamnameFieldChanged = false;
@@ -60,6 +60,13 @@ export class InstructorCourseStudentEditPageComponent implements OnInit, OnDestr
   teamFieldSubscription?: Subscription;
   emailFieldSubscription?: Subscription;
 
+  constructor() {
+    this.STUDENT_NAME_MAX_LENGTH = STUDENT_NAME_MAX_LENGTH;
+    this.SECTION_NAME_MAX_LENGTH = SECTION_NAME_MAX_LENGTH;
+    this.TEAM_NAME_MAX_LENGTH = TEAM_NAME_MAX_LENGTH;
+    this.EMAIL_MAX_LENGTH = EMAIL_MAX_LENGTH;
+  }
+
   ngOnInit(): void {
     if (!this.isEnabled) {
       this.student = {
@@ -68,7 +75,9 @@ export class InstructorCourseStudentEditPageComponent implements OnInit, OnDestr
         courseId: '',
         name: 'Alice Betsy',
         comments: 'Alice is a transfer student.',
+        teamId: 'team-a',
         teamName: 'Team A',
+        sectionId: 'section-a',
         sectionName: 'Section A',
         joinState: JoinState.JOINED,
         institute: 'NUS',
@@ -80,8 +89,8 @@ export class InstructorCourseStudentEditPageComponent implements OnInit, OnDestr
 
     this.route.queryParams.subscribe((queryParams: any) => {
       this.courseId = queryParams.courseid;
-      this.studentEmail = queryParams.studentemail;
-      this.loadStudentEditDetails(queryParams.courseid, queryParams.studentemail);
+      this.studentId = queryParams.userid;
+      this.loadStudentEditDetails(queryParams.courseid, queryParams.userid);
     });
   }
 
@@ -97,11 +106,11 @@ export class InstructorCourseStudentEditPageComponent implements OnInit, OnDestr
   /**
    * Loads student details required for this page.
    */
-  loadStudentEditDetails(courseId: string, studentEmail: string): void {
+  loadStudentEditDetails(courseId: string, studentId: string): void {
     this.hasStudentLoadingFailed = false;
     this.isStudentLoading = true;
     this.studentService
-      .getStudent(courseId, studentEmail)
+      .getStudent({ courseId, userId: studentId })
       .pipe(
         finalize(() => {
           this.isStudentLoading = false;
@@ -227,7 +236,7 @@ export class InstructorCourseStudentEditPageComponent implements OnInit, OnDestr
     this.studentService
       .updateStudent(
         {
-          studentId: this.student.userId,
+          userId: this.student.userId,
         },
         reqBody,
       )

@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import teammates.common.util.Const;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.Instructor;
-import teammates.storage.entity.Student;
 import teammates.ui.exception.EntityNotFoundException;
 import teammates.ui.exception.InvalidHttpParameterException;
 import teammates.ui.exception.UnauthorizedAccessException;
@@ -26,7 +25,7 @@ public class GetInstructorsAction extends Action {
 
     @Override
     void checkSpecificAccessControl() throws UnauthorizedAccessException {
-        if (userInfo.isAdmin) {
+        if (requestContext.isAdmin()) {
             return;
         }
 
@@ -43,13 +42,11 @@ public class GetInstructorsAction extends Action {
         if (intentStr == null) {
             // get partial details of instructors with information hiding
             // student should belong to the course
-            Student student = logic.getStudentByGoogleId(courseId, userInfo.getId());
-            gateKeeper.verifyAccessible(student, course);
+            gateKeeper.verifyStudentInCourse(requestContext, courseId);
         } else if (intentStr.equals(Intent.FULL_DETAIL.toString())) {
             // get all instructors of a course without information hiding
             // this need instructor privileges
-            Instructor instructor = logic.getInstructorByGoogleId(courseId, userInfo.getId());
-            gateKeeper.verifyAccessible(instructor, course);
+            gateKeeper.verifyInstructorInCourse(requestContext, courseId);
         } else {
             throw new InvalidHttpParameterException("unknown intent");
         }
@@ -80,14 +77,15 @@ public class GetInstructorsAction extends Action {
         } else if (intentStr.equals(Intent.FULL_DETAIL.toString())) {
             // get all instructors of a course without information hiding
             // adds googleId if caller is admin or has the appropriate privilege to modify instructor
-            if (userInfo.isAdmin || logic.getInstructorByGoogleId(courseId, userInfo.getId()).getPrivileges()
-                    .isAllowedForPrivilege(Const.InstructorPermissions.CAN_MODIFY_INSTRUCTOR)) {
+            if (requestContext.isAdmin()
+                    || logic.hasInstructorPermissions(getInstructorFromRequest(courseId),
+                            Const.InstructorPermissions.CAN_MODIFY_INSTRUCTOR)) {
                 data = new InstructorsData();
 
                 for (Instructor instructor : instructorsOfCourse) {
                     InstructorData instructorData = new InstructorData(instructor);
                     instructorData.setGoogleId(instructor.getGoogleId());
-                    if (userInfo.isAdmin) {
+                    if (requestContext.isAdmin()) {
                         instructorData.setKey(instructor.getRegKey());
                     }
                     data.getInstructors().add(instructorData);

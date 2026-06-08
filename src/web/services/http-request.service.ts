@@ -64,9 +64,10 @@ export class HttpRequestService {
       }
     }
 
-    if (this.masqueradeModeService.isInMasqueradingMode() && !params.keys().includes('user')) {
-      params = params.append('user', this.masqueradeModeService.getMasqueradeUser());
+    if (this.masqueradeModeService.isInMasqueradingMode()) {
+      params = params.set('masqueradeaccountid', this.masqueradeModeService.getMasqueradeAccountId());
     }
+
     return params;
   }
 

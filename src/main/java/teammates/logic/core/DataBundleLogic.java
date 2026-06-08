@@ -16,12 +16,14 @@ import teammates.storage.entity.Course;
 import teammates.storage.entity.DeadlineExtension;
 import teammates.storage.entity.FeedbackQuestion;
 import teammates.storage.entity.FeedbackResponse;
-import teammates.storage.entity.FeedbackResponseComment;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.FeedbackSessionLog;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Notification;
 import teammates.storage.entity.ReadNotification;
+import teammates.storage.entity.ResponseGiver;
+import teammates.storage.entity.ResponseInstructorComment;
+import teammates.storage.entity.ResponseRecipient;
 import teammates.storage.entity.Section;
 import teammates.storage.entity.Student;
 import teammates.storage.entity.Team;
@@ -84,7 +86,7 @@ public final class DataBundleLogic {
         Collection<FeedbackSessionLog> sessionLogs = dataBundle.feedbackSessionLogs.values();
         Collection<FeedbackQuestion> questions = dataBundle.feedbackQuestions.values();
         Collection<FeedbackResponse> responses = dataBundle.feedbackResponses.values();
-        Collection<FeedbackResponseComment> responseComments = dataBundle.feedbackResponseComments.values();
+        Collection<ResponseInstructorComment> responseComments = dataBundle.responseInstructorComments.values();
         Collection<DeadlineExtension> deadlineExtensions = dataBundle.deadlineExtensions.values();
         Collection<Notification> notifications = dataBundle.notifications.values();
         Collection<ReadNotification> readNotifications = dataBundle.readNotifications.values();
@@ -128,46 +130,6 @@ public final class DataBundleLogic {
             section.addTeam(team);
         }
 
-        for (FeedbackSession session : sessions) {
-            UUID placeholderId = session.getId();
-            session.setId(UUID.randomUUID());
-            sessionsMap.put(placeholderId, session);
-            Course course = coursesMap.get(session.getCourseId());
-            session.setCourse(course);
-            course.addFeedbackSession(session);
-        }
-
-        for (FeedbackQuestion question : questions) {
-            UUID placeholderId = question.getId();
-            question.setId(UUID.randomUUID());
-            questionMap.put(placeholderId, question);
-            FeedbackSession fs = sessionsMap.get(question.getSessionId());
-            fs.addFeedbackQuestion(question);
-        }
-
-        for (FeedbackResponse response : responses) {
-            UUID placeholderId = response.getId();
-            response.setId(UUID.randomUUID());
-            responseMap.put(placeholderId, response);
-            FeedbackQuestion fq = questionMap.get(response.getQuestionId());
-            Section giverSection = sectionsMap.get(response.getGiverSectionId());
-            Section recipientSection = response.getRecipientSectionId() != null
-                    ? sectionsMap.get(response.getRecipientSectionId()) : null;
-            response.setGiverSection(giverSection);
-            response.setRecipientSection(recipientSection);
-            fq.addFeedbackResponse(response);
-        }
-
-        for (FeedbackResponseComment responseComment : responseComments) {
-            responseComment.setId(UUID.randomUUID());
-            FeedbackResponse fr = responseMap.get(responseComment.getResponseId());
-            Section giverSection = sectionsMap.get(responseComment.getGiverSectionId());
-            Section recipientSection = sectionsMap.get(responseComment.getRecipientSectionId());
-            responseComment.setGiverSection(giverSection);
-            responseComment.setRecipientSection(recipientSection);
-            fr.addFeedbackResponseComment(responseComment);
-        }
-
         for (Account account : accounts) {
             UUID placeholderId = account.getId();
             account.setId(UUID.randomUUID());
@@ -187,6 +149,35 @@ public final class DataBundleLogic {
             instructor.generateNewRegistrationKey();
         }
 
+        for (FeedbackSession session : sessions) {
+            UUID placeholderId = session.getId();
+            session.setId(UUID.randomUUID());
+            sessionsMap.put(placeholderId, session);
+            Course course = coursesMap.get(session.getCourseId());
+            session.setCourse(course);
+            User creator = usersMap.get(session.getCreatorId());
+            if (creator instanceof Instructor instructor) {
+                session.setSessionCreator(instructor);
+            }
+            course.addFeedbackSession(session);
+        }
+
+        for (FeedbackQuestion question : questions) {
+            UUID placeholderId = question.getId();
+            question.setId(UUID.randomUUID());
+            questionMap.put(placeholderId, question);
+            FeedbackSession fs = sessionsMap.get(question.getSessionId());
+            fs.addFeedbackQuestion(question);
+        }
+
+        for (FeedbackResponse response : responses) {
+            UUID placeholderId = response.getId();
+            response.setId(UUID.randomUUID());
+            responseMap.put(placeholderId, response);
+            FeedbackQuestion fq = questionMap.get(response.getQuestionId());
+            fq.addFeedbackResponse(response);
+        }
+
         for (Student student : students) {
             UUID placeholderId = student.getId();
             student.setId(UUID.randomUUID());
@@ -202,14 +193,38 @@ public final class DataBundleLogic {
             student.generateNewRegistrationKey();
         }
 
+        for (FeedbackResponse response : responses) {
+            ResponseGiver giver = response.getGiver();
+            if (giver != null) {
+                if (giver.getGiverTeamId() != null) {
+                    Team team = teamsMap.get(giver.getGiverTeamId());
+                    response.setGiver(team == null ? giver : new ResponseGiver(team));
+                } else if (giver.getGiverUserId() != null) {
+                    User user = usersMap.get(giver.getGiverUserId());
+                    response.setGiver(user == null ? giver : new ResponseGiver(user));
+                }
+            }
+
+            ResponseRecipient recipient = response.getRecipient();
+            if (recipient != null) {
+                if (recipient.isRecipientTeam()) {
+                    Team team = teamsMap.get(recipient.getRecipientTeamId());
+                    response.setRecipient(team == null ? recipient : new ResponseRecipient(team));
+                } else if (recipient.isRecipientUser()) {
+                    User user = usersMap.get(recipient.getRecipientUserId());
+                    response.setRecipient(user == null ? recipient : new ResponseRecipient(user));
+                } else if (recipient.isNoSpecificRecipient()) {
+                    response.setRecipient(new ResponseRecipient());
+                }
+            }
+        }
+
         for (FeedbackSessionLog log : sessionLogs) {
             log.setId(UUID.randomUUID());
-            FeedbackSession fs = log.getSessionId() == null
-                    ? null : sessionsMap.get(log.getSessionId());
+            FeedbackSession fs = sessionsMap.get(log.getSessionId());
             log.setFeedbackSession(fs);
-            Student student = log.getStudentId() == null
-                    ? null : (Student) usersMap.get(log.getStudentId());
-            log.setStudent(student);
+            User user = usersMap.get(log.getUserId());
+            log.setUser(user);
         }
 
         for (Notification notification : notifications) {
@@ -232,6 +247,28 @@ public final class DataBundleLogic {
             session.addDeadlineExtension(deadlineExtension);
             User user = usersMap.get(deadlineExtension.getUserId());
             deadlineExtension.setUser(user);
+        }
+
+        for (ResponseInstructorComment responseComment : responseComments) {
+            responseComment.setId(UUID.randomUUID());
+            FeedbackResponse fr = responseMap.get(responseComment.getResponseId());
+            fr.addResponseInstructorComment(responseComment);
+
+            if (responseComment.getGiverId() != null) {
+                User userGiver = usersMap.get(responseComment.getGiverId());
+                if (!(userGiver instanceof Instructor)) {
+                    throw new IllegalArgumentException("ResponseInstructorComment giver must be an instructor");
+                }
+                responseComment.setGiver((Instructor) userGiver);
+            }
+
+            if (responseComment.getLastEditedById() != null) {
+                User userLastEditedBy = usersMap.get(responseComment.getLastEditedById());
+                if (!(userLastEditedBy instanceof Instructor)) {
+                    throw new IllegalArgumentException("ResponseInstructorComment last editor must be an instructor");
+                }
+                responseComment.setLastEditedBy((Instructor) userLastEditedBy);
+            }
         }
 
         return dataBundle;
@@ -259,7 +296,7 @@ public final class DataBundleLogic {
         Collection<FeedbackSessionLog> sessionLogs = dataBundle.feedbackSessionLogs.values();
         Collection<FeedbackQuestion> questions = dataBundle.feedbackQuestions.values();
         Collection<FeedbackResponse> responses = dataBundle.feedbackResponses.values();
-        Collection<FeedbackResponseComment> responseComments = dataBundle.feedbackResponseComments.values();
+        Collection<ResponseInstructorComment> responseComments = dataBundle.responseInstructorComments.values();
         Collection<DeadlineExtension> deadlineExtensions = dataBundle.deadlineExtensions.values();
         Collection<Notification> notifications = dataBundle.notifications.values();
         Collection<ReadNotification> readNotifications = dataBundle.readNotifications.values();
@@ -270,12 +307,12 @@ public final class DataBundleLogic {
         persistEntities(courses);
         persistEntities(sections);
         persistEntities(teams);
+        persistEntities(instructors);
+        persistEntities(students);
         persistEntities(sessions);
         persistEntities(questions);
         persistEntities(responses);
         persistEntities(responseComments);
-        persistEntities(instructors);
-        persistEntities(students);
         persistEntities(sessionLogs);
         persistEntities(deadlineExtensions);
         persistEntities(readNotifications);
@@ -292,7 +329,7 @@ public final class DataBundleLogic {
         }
 
         dataBundle.courses.values().forEach(course ->
-                coursesLogic.deleteCourseCascade(course.getId())
+                coursesLogic.deleteCourse(course.getId())
         );
         dataBundle.readNotifications.values().forEach(readNotification ->
                 notificationsLogic.deleteReadNotification(readNotification.getId())

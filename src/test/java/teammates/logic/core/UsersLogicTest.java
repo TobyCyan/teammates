@@ -1,5 +1,11 @@
 package teammates.logic.core;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -8,13 +14,15 @@ import static teammates.common.util.Const.ERROR_UPDATE_NON_EXISTENT;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import teammates.common.datatransfer.InstructorPermissionRole;
 import teammates.common.datatransfer.InstructorPrivileges;
+import teammates.common.datatransfer.Provider;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.util.Const;
 import teammates.common.util.Const.InstructorPermissions;
@@ -23,7 +31,9 @@ import teammates.storage.entity.Account;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Student;
+import teammates.storage.entity.User;
 import teammates.test.BaseTestCase;
+import teammates.ui.exception.InvalidOperationException;
 
 /**
  * SUT: {@link UsersLogic}.
@@ -32,109 +42,78 @@ public class UsersLogicTest extends BaseTestCase {
 
     private UsersLogic usersLogic = UsersLogic.inst();
 
-    private AccountsLogic accountsLogic;
-
     private UsersDb usersDb;
 
     private Instructor instructor;
 
     private Student student;
 
-    private Account account;
-
     private Course course;
 
     @BeforeMethod
     public void setUpMethod() {
         usersDb = mock(UsersDb.class);
-        accountsLogic = mock(AccountsLogic.class);
         FeedbackResponsesLogic feedbackResponsesLogic = mock(FeedbackResponsesLogic.class);
-        FeedbackResponseCommentsLogic feedbackResponseCommentsLogic = mock(FeedbackResponseCommentsLogic.class);
-        DeadlineExtensionsLogic deadlineExtensionsLogic = mock(DeadlineExtensionsLogic.class);
         CoursesLogic coursesLogic = mock(CoursesLogic.class);
-        usersLogic.initLogicDependencies(usersDb, accountsLogic, coursesLogic, feedbackResponsesLogic,
-                feedbackResponseCommentsLogic, deadlineExtensionsLogic);
+        InstructorPermissionsLogic instructorPermissionsLogic = mock(InstructorPermissionsLogic.class);
+        doAnswer(invocation -> {
+            Instructor instructor = invocation.getArgument(0);
+            String permissionName = invocation.getArgument(1);
+            InstructorPrivileges effectivePrivileges = instructor.getRole()
+                    == InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM
+                            ? instructor.getPrivileges()
+                            : new InstructorPrivileges(instructor.getRole().getRoleName());
+            return effectivePrivileges.isAllowedForPrivilege(permissionName);
+        }).when(instructorPermissionsLogic).hasPermissions(any(Instructor.class), any(String.class));
+        usersLogic.initLogicDependencies(usersDb, coursesLogic, feedbackResponsesLogic, instructorPermissionsLogic);
 
         course = new Course("course-id", "course-name", Const.DEFAULT_TIME_ZONE, "institute");
         instructor = getTypicalInstructor();
         student = getTypicalStudent();
-        account = getTypicalAccount();
+        Account account = getTypicalAccount();
 
         instructor.setAccount(account);
         student.setAccount(account);
     }
 
     @Test
-    public void testResetInstructorGoogleId_instructorExistsWithEmptyUsersListFromGoogleId_success()
+    public void testResetAccount_instructorExists_success()
             throws EntityDoesNotExistException {
-        String courseId = instructor.getCourseId();
-        String email = instructor.getEmail();
-        String googleId = account.getGoogleId();
+        when(usersDb.getUser(instructor.getId())).thenReturn(instructor);
 
-        when(usersLogic.getInstructorForEmail(courseId, email)).thenReturn(instructor);
-        when(usersDb.getAllUsersByGoogleId(googleId)).thenReturn(Collections.emptyList());
-        when(accountsLogic.getAccountForGoogleId(googleId)).thenReturn(account);
+        User resetUser = usersLogic.resetAccount(instructor.getId());
 
-        List<Instructor> instructorsList = new ArrayList<>();
-        instructorsList.add(instructor);
-        when(usersLogic.getInstructorsForCourse(courseId)).thenReturn(instructorsList);
-
-        usersLogic.resetInstructorGoogleId(email, courseId, googleId);
-
-        assertEquals(null, instructor.getAccount());
-        verify(accountsLogic, times(1)).deleteAccount(googleId);
+        assertEquals(instructor, resetUser);
+        assertNull(instructor.getAccount());
     }
 
     @Test
-    public void testResetInstructorGoogleId_instructorDoesNotExists_throwsEntityDoesNotExistException() {
-        String courseId = instructor.getCourseId();
-        String email = instructor.getEmail();
-        String googleId = account.getGoogleId();
+    public void testResetAccount_userDoesNotExist_throwsEntityDoesNotExistException() {
+        UUID userId = UUID.randomUUID();
 
-        when(usersLogic.getInstructorForEmail(courseId, email)).thenReturn(null);
+        when(usersDb.getUser(userId)).thenReturn(null);
 
         EntityDoesNotExistException exception = assertThrows(EntityDoesNotExistException.class,
-                () -> usersLogic.resetInstructorGoogleId(email, courseId, googleId));
+                () -> usersLogic.resetAccount(userId));
 
-        assertEquals(ERROR_UPDATE_NON_EXISTENT
-                + "Instructor [courseId=" + courseId + ", email=" + email + "]", exception.getMessage());
+        assertEquals(ERROR_UPDATE_NON_EXISTENT + "User [id=" + userId + "]", exception.getMessage());
     }
 
     @Test
-    public void testResetStudentGoogleId_studentExistsWithEmptyUsersListFromGoogleId_success()
+    public void testResetAccount_studentExists_success()
             throws EntityDoesNotExistException {
-        String courseId = student.getCourseId();
-        String email = student.getEmail();
-        String googleId = account.getGoogleId();
+        when(usersDb.getUser(student.getId())).thenReturn(student);
 
-        when(usersLogic.getStudentForEmail(courseId, email)).thenReturn(student);
-        when(usersDb.getAllUsersByGoogleId(googleId)).thenReturn(Collections.emptyList());
-        when(accountsLogic.getAccountForGoogleId(googleId)).thenReturn(account);
+        User resetUser = usersLogic.resetAccount(student.getId());
 
-        usersLogic.resetStudentGoogleId(email, courseId, googleId);
-
+        assertEquals(student, resetUser);
         assertNull(student.getAccount());
-        verify(accountsLogic, times(1)).deleteAccount(googleId);
-    }
-
-    @Test
-    public void testResetStudentGoogleId_entityDoesNotExists_throwsEntityDoesNotExistException() {
-        String courseId = student.getCourseId();
-        String email = student.getEmail();
-        String googleId = account.getGoogleId();
-
-        when(usersLogic.getStudentForEmail(courseId, email)).thenReturn(null);
-
-        EntityDoesNotExistException exception = assertThrows(EntityDoesNotExistException.class,
-                () -> usersLogic.resetStudentGoogleId(email, courseId, googleId));
-
-        assertEquals(ERROR_UPDATE_NON_EXISTENT
-                + "Student [courseId=" + courseId + ", email=" + email + "]", exception.getMessage());
     }
 
     @Test
     public void testGetUnregisteredStudentsForCourse_success() {
-        Account registeredAccount = new Account("valid-google-id", "student-name", "valid1-student@email.tmt");
+        Account registeredAccount = new Account("valid-google-id", Provider.TEAMMATES_DEV, "validStudentSubject",
+                "validTenantId", "student-name", "valid1-student@email.tmt");
         Student registeredStudent = new Student(course, "reg-student-name", "valid1-student@email.tmt", "comments");
         registeredStudent.setAccount(registeredAccount);
 
@@ -151,7 +130,72 @@ public class UsersLogicTest extends BaseTestCase {
         List<Student> unregisteredStudents = usersLogic.getUnregisteredStudentsForCourse(course.getId());
 
         assertEquals(1, unregisteredStudents.size());
-        assertTrue(unregisteredStudents.get(0).equals(unregisteredStudentNullAccount));
+        assertEquals(unregisteredStudentNullAccount, unregisteredStudents.get(0));
+    }
+
+    @Test
+    public void testDeleteStudentsInCourse_success() {
+        usersLogic.deleteStudentsInCourse(course.getId());
+
+        verify(usersDb, times(1)).deleteStudentsInCourse(course.getId());
+    }
+
+    @Test
+    public void testDeleteInstructorCascade_hasAlternativeInstructor_success() throws InvalidOperationException {
+        Instructor instructorToDelete = createRegisteredInstructor("to-delete@teammates.tmt", true);
+        Instructor alternativeInstructor = createRegisteredInstructor("alternative@teammates.tmt", true);
+
+        when(usersDb.getInstructor(instructorToDelete.getId())).thenReturn(instructorToDelete);
+        when(usersDb.getInstructorsForCourse(course.getId()))
+                .thenReturn(new ArrayList<>(List.of(instructorToDelete, alternativeInstructor)));
+
+        usersLogic.deleteInstructorCascade(instructorToDelete.getId());
+
+        verify(usersDb, times(1)).removeUser(instructorToDelete);
+    }
+
+    @Test
+    public void testDeleteInstructorCascade_instructorDoesNotExist_failSilently() throws InvalidOperationException {
+        UUID userId = UUID.randomUUID();
+        when(usersDb.getInstructor(userId)).thenReturn(null);
+
+        usersLogic.deleteInstructorCascade(userId);
+
+        verify(usersDb, times(0)).removeUser(instructor);
+    }
+
+    @Test
+    public void testDeleteInstructorCascade_noAlternativeModifyInstructor_throwsInvalidOperationException() {
+        Instructor instructorToDelete = createRegisteredInstructor("to-delete@teammates.tmt", true);
+        Instructor alternativeInstructor = createUnregisteredInstructor("alternative@teammates.tmt", true);
+
+        when(usersDb.getInstructor(instructorToDelete.getId())).thenReturn(instructorToDelete);
+        when(usersDb.getInstructorsForCourse(course.getId()))
+                .thenReturn(new ArrayList<>(List.of(instructorToDelete, alternativeInstructor)));
+
+        InvalidOperationException ioe = assertThrows(InvalidOperationException.class,
+                () -> usersLogic.deleteInstructorCascade(instructorToDelete.getId()));
+
+        assertEquals("The instructor you are trying to delete is the last instructor in the course. "
+                + "Deleting the last instructor from the course is not allowed.", ioe.getMessage());
+        verify(usersDb, times(0)).removeUser(instructorToDelete);
+    }
+
+    @Test
+    public void testDeleteInstructorCascade_noAlternativeVisibleInstructor_throwsInvalidOperationException() {
+        Instructor instructorToDelete = createRegisteredInstructor("to-delete@teammates.tmt", true);
+        Instructor alternativeInstructor = createRegisteredInstructor("alternative@teammates.tmt", false);
+
+        when(usersDb.getInstructor(instructorToDelete.getId())).thenReturn(instructorToDelete);
+        when(usersDb.getInstructorsForCourse(course.getId()))
+                .thenReturn(new ArrayList<>(List.of(instructorToDelete, alternativeInstructor)));
+
+        InvalidOperationException ioe = assertThrows(InvalidOperationException.class,
+                () -> usersLogic.deleteInstructorCascade(instructorToDelete.getId()));
+
+        assertEquals("The instructor you are trying to delete is the last instructor in the course. "
+                + "Deleting the last instructor from the course is not allowed.", ioe.getMessage());
+        verify(usersDb, times(0)).removeUser(instructorToDelete);
     }
 
     @Test
@@ -159,10 +203,30 @@ public class UsersLogicTest extends BaseTestCase {
         InstructorPrivileges privileges = instructor.getPrivileges();
         privileges.updatePrivilege(InstructorPermissions.CAN_MODIFY_INSTRUCTOR, false);
         instructor.setPrivileges(privileges);
-        usersLogic.updateToEnsureValidityOfInstructorsForTheCourse(course.getId(), instructor);
+        usersLogic.updateToEnsureValidityOfInstructorsForTheCourse(instructor);
 
         assertFalse(instructor.getPrivileges().isAllowedForPrivilege(
                 Const.InstructorPermissions.CAN_MODIFY_INSTRUCTOR));
+    }
+
+    private Instructor createRegisteredInstructor(String email, boolean isDisplayedToStudents) {
+        Instructor instructor = createInstructor(email, isDisplayedToStudents);
+        instructor.setAccount(getTypicalAccount());
+        return instructor;
+    }
+
+    private Instructor createUnregisteredInstructor(String email, boolean isDisplayedToStudents) {
+        Instructor instructor = createInstructor(email, isDisplayedToStudents);
+        instructor.setAccount(null);
+        return instructor;
+    }
+
+    private Instructor createInstructor(String email, boolean isDisplayedToStudents) {
+        Instructor instructor = getTypicalInstructor();
+        instructor.setCourse(course);
+        instructor.setEmail(email);
+        instructor.setDisplayedToStudents(isDisplayedToStudents);
+        return instructor;
     }
 
 }

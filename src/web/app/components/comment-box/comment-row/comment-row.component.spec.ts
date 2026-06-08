@@ -1,9 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CommentRowComponent } from './comment-row.component';
 import { CommentVisibilityStateMachine } from '../../../../services/comment-visibility-state-machine';
-import { FeedbackResponseCommentService } from '../../../../services/feedback-response-comment.service';
+import { ResponseInstructorCommentService } from '../../../../services/feedback-response-comment.service';
 import createSpyFromClass from '../../../../test-helpers/create-spy-from-class';
 import { CommentVisibilityType, FeedbackVisibilityType } from '../../../../types/api-output';
 
@@ -13,20 +13,18 @@ describe('CommentRowComponent', () => {
 
   const spyVisibilityStateMachine = createSpyFromClass(CommentVisibilityStateMachine);
 
-  const spyCommentService = createSpyFromClass(FeedbackResponseCommentService);
+  const spyCommentService = createSpyFromClass(ResponseInstructorCommentService);
   spyCommentService.getNewVisibilityStateMachine.mockReturnValue(spyVisibilityStateMachine);
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [
-        { provide: FeedbackResponseCommentService, useValue: spyCommentService },
+        { provide: ResponseInstructorCommentService, useValue: spyCommentService },
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(CommentRowComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -37,22 +35,22 @@ describe('CommentRowComponent', () => {
   });
 
   describe('ngOnChanges', () => {
-    it('should properly handle visibility settings if originalComment is defined', () => {
+    it('should properly handle visibility settings if comment text is defined', () => {
       component.model = {
-        originalComment: {
-          isVisibilityFollowingFeedbackQuestion: true,
-          commentGiver: 'mockCommentGiver',
-          lastEditorEmail: 'mockEditor@example.com',
-          feedbackResponseCommentId: '00000000-0000-4000-8000-000000000001',
+        commentType: 'instructor',
+        commentGiverName: 'Mock Giver Name',
+        lastEditorName: 'Mock Editor Name',
+        commentId: '00000000-0000-4000-8000-000000000001',
+        createdAt: Date.now(),
+        lastEditedAt: Date.now(),
+        timezone: 'UTC',
+        originalCommentFormModel: {
           commentText: 'Mock comment text',
           showCommentTo: [CommentVisibilityType.GIVER, CommentVisibilityType.INSTRUCTORS],
-          createdAt: new Date().getTime(),
-          lastEditedAt: new Date().getTime(),
           showGiverNameTo: [],
         },
         commentEditFormModel: {
           commentText: 'Mock comment text for form',
-          isUsingCustomVisibilities: false,
           showCommentTo: [CommentVisibilityType.GIVER],
           showGiverNameTo: [CommentVisibilityType.INSTRUCTORS],
         },
@@ -64,40 +62,46 @@ describe('CommentRowComponent', () => {
       expect(component.visibilityStateMachine).toBeDefined();
       expect(component.visibilityStateMachine.allowAllApplicableTypesToSee).toBeDefined();
 
-      expect(spyVisibilityStateMachine.allowAllApplicableTypesToSee).toHaveBeenCalled();
+      expect(spyVisibilityStateMachine.applyVisibilitySettings).toHaveBeenCalledWith({
+        SHOW_COMMENT: [CommentVisibilityType.GIVER, CommentVisibilityType.INSTRUCTORS],
+        SHOW_GIVER_NAME: [],
+      });
 
       expect(spyCommentService.getNewVisibilityStateMachine).toHaveBeenCalledWith(component.questionShowResponsesTo);
     });
 
-    it('should allow all applicable types to see when isVisibilityFollowingFeedbackQuestion is true', () => {
+    it('should apply empty visibility settings when no visibility type is selected', () => {
       component.model = {
-        originalComment: {
-          isVisibilityFollowingFeedbackQuestion: true,
-          commentGiver: 'mockCommentGiver',
-          lastEditorEmail: 'mockEditor@example.com',
-          feedbackResponseCommentId: '00000000-0000-4000-8000-000000000001',
+        commentType: 'instructor',
+        commentGiverName: 'Mock Giver Name',
+        lastEditorName: 'Mock Editor Name',
+        commentId: '00000000-0000-4000-8000-000000000001',
+        createdAt: Date.now(),
+        lastEditedAt: Date.now(),
+        timezone: 'UTC',
+        originalCommentFormModel: {
           commentText: 'Mock comment text',
           showCommentTo: [],
-          createdAt: new Date().getTime(),
-          lastEditedAt: new Date().getTime(),
           showGiverNameTo: [],
         },
         commentEditFormModel: {
           commentText: 'Mock comment text for form',
-          isUsingCustomVisibilities: false,
           showCommentTo: [CommentVisibilityType.GIVER],
           showGiverNameTo: [CommentVisibilityType.INSTRUCTORS],
         },
         isEditing: true,
       };
       component.ngOnChanges();
-      expect(spyVisibilityStateMachine.allowAllApplicableTypesToSee).toHaveBeenCalled();
+      expect(spyVisibilityStateMachine.applyVisibilitySettings).toHaveBeenCalledWith({
+        SHOW_COMMENT: [],
+        SHOW_GIVER_NAME: [],
+      });
     });
   });
 
   describe('triggerCloseEditing', () => {
     it('should emit closeEditing event', () => {
-      const emitSpy = jest.spyOn(component.closeEditingEvent, 'emit');
+      const emitSpy = vi.spyOn(component.closeEditingEvent, 'emit');
       component.triggerCloseEditing();
       expect(emitSpy).toHaveBeenCalled();
     });
@@ -105,7 +109,7 @@ describe('CommentRowComponent', () => {
 
   describe('triggerSaveCommentEvent', () => {
     it('should emit saveComment event', () => {
-      const spy = jest.spyOn(component.saveCommentEvent, 'emit');
+      const spy = vi.spyOn(component.saveCommentEvent, 'emit');
       component.triggerSaveCommentEvent();
       expect(spy).toHaveBeenCalled();
     });
@@ -114,29 +118,29 @@ describe('CommentRowComponent', () => {
   describe('triggerDeleteCommentEvent', () => {
     it('should emit deleteComment event after modal confirmation', async () => {
       const mockModalRef = { result: Promise.resolve(true) };
-      jest.spyOn((component as any).simpleModalService, 'openConfirmationModal').mockReturnValue(mockModalRef);
-      const emitSpy = jest.spyOn(component.deleteCommentEvent, 'emit');
+      vi.spyOn((component as any).simpleModalService, 'openConfirmationModal').mockReturnValue(mockModalRef);
+      const emitSpy = vi.spyOn(component.deleteCommentEvent, 'emit');
       component.triggerDeleteCommentEvent();
       await mockModalRef.result;
       expect(emitSpy).toHaveBeenCalled();
     });
 
-    it('should set visibility settings when originalComment is defined and not following feedback question', () => {
+    it('should set visibility settings when comment text is defined and not following feedback question', () => {
       component.model = {
-        originalComment: {
-          isVisibilityFollowingFeedbackQuestion: false,
-          commentGiver: 'mockCommentGiver',
-          lastEditorEmail: 'mockEditor@example.com',
-          feedbackResponseCommentId: '00000000-0000-4000-8000-000000000001',
+        commentType: 'instructor',
+        commentGiverName: 'Mock Giver Name',
+        lastEditorName: 'Mock Editor Name',
+        commentId: '00000000-0000-4000-8000-000000000001',
+        createdAt: Date.now(),
+        lastEditedAt: Date.now(),
+        timezone: 'UTC',
+        originalCommentFormModel: {
           commentText: 'Mock comment text',
           showCommentTo: [CommentVisibilityType.GIVER, CommentVisibilityType.INSTRUCTORS],
-          createdAt: new Date().getTime(),
-          lastEditedAt: new Date().getTime(),
-          showGiverNameTo: [],
+          showGiverNameTo: [CommentVisibilityType.GIVER, CommentVisibilityType.INSTRUCTORS],
         },
         commentEditFormModel: {
           commentText: 'Mock comment text for form',
-          isUsingCustomVisibilities: false,
           showCommentTo: [CommentVisibilityType.GIVER],
           showGiverNameTo: [CommentVisibilityType.INSTRUCTORS],
         },

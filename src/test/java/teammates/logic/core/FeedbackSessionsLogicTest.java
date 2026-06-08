@@ -1,5 +1,11 @@
 package teammates.logic.core;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -15,6 +21,8 @@ import java.util.UUID;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import teammates.common.datatransfer.SubmittedGiverSetBundle;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidFeedbackSessionStateException;
 import teammates.common.exception.InvalidParametersException;
@@ -26,7 +34,9 @@ import teammates.storage.entity.FeedbackQuestion;
 import teammates.storage.entity.FeedbackResponse;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Instructor;
+import teammates.storage.entity.ResponseGiver;
 import teammates.storage.entity.Student;
+import teammates.storage.entity.Team;
 import teammates.test.BaseTestCase;
 import teammates.ui.output.ResponseVisibleSetting;
 import teammates.ui.output.SessionVisibleSetting;
@@ -40,18 +50,16 @@ public class FeedbackSessionsLogicTest extends BaseTestCase {
     private final FeedbackSessionsLogic fsLogic = FeedbackSessionsLogic.inst();
 
     private FeedbackSessionsDb fsDb;
-    private CoursesLogic coursesLogic;
     private FeedbackQuestionsLogic fqLogic;
     private UsersLogic usersLogic;
 
     @BeforeMethod
     public void setUpMethod() {
         fsDb = mock(FeedbackSessionsDb.class);
-        coursesLogic = mock(CoursesLogic.class);
         FeedbackResponsesLogic frLogic = mock(FeedbackResponsesLogic.class);
         fqLogic = mock(FeedbackQuestionsLogic.class);
         usersLogic = mock(UsersLogic.class);
-        fsLogic.initLogicDependencies(fsDb, coursesLogic, frLogic, fqLogic, usersLogic);
+        fsLogic.initLogicDependencies(fsDb, frLogic, fqLogic, usersLogic);
     }
 
     @Test
@@ -105,7 +113,7 @@ public class FeedbackSessionsLogicTest extends BaseTestCase {
         FeedbackSession session2 = getTypicalFeedbackSessionForCourse(course);
         List<FeedbackSession> sessions = List.of(session1, session2);
 
-        when(fsDb.getFeedbackSessionEntitiesForCourse(course.getId())).thenReturn(sessions);
+        when(fsDb.getFeedbackSessionsForCourse(course.getId())).thenReturn(sessions);
 
         List<FeedbackSession> result = fsLogic.getFeedbackSessionsForCourse(course.getId());
 
@@ -119,35 +127,11 @@ public class FeedbackSessionsLogicTest extends BaseTestCase {
     public void testGetFeedbackSessionsForCourse_noSessions_returnsEmptyList() {
         String courseId = "non-existent-course";
 
-        when(fsDb.getFeedbackSessionEntitiesForCourse(courseId)).thenReturn(new ArrayList<>());
+        when(fsDb.getFeedbackSessionsForCourse(courseId)).thenReturn(new ArrayList<>());
 
         List<FeedbackSession> result = fsLogic.getFeedbackSessionsForCourse(courseId);
 
         assertTrue(result.isEmpty());
-    }
-
-    @Test
-    public void testGetFeedbackSessionFromRecycleBin_sessionInRecycleBin_success() {
-        Course course = getTypicalCourse();
-        FeedbackSession session = getTypicalFeedbackSessionForCourse(course);
-        session.setDeletedAt(Instant.now());
-
-        when(fsDb.getSoftDeletedFeedbackSession(session.getName(), course.getId())).thenReturn(session);
-
-        FeedbackSession result = fsLogic.getFeedbackSessionFromRecycleBin(session.getName(), course.getId());
-
-        assertNotNull(result);
-        assertEquals(session, result);
-        assertNotNull(result.getDeletedAt());
-    }
-
-    @Test
-    public void testGetFeedbackSessionFromRecycleBin_sessionNotInRecycleBin_returnsNull() {
-        when(fsDb.getSoftDeletedFeedbackSession("session", "course")).thenReturn(null);
-
-        FeedbackSession result = fsLogic.getFeedbackSessionFromRecycleBin("session", "course");
-
-        assertNull(result);
     }
 
     @Test
@@ -273,7 +257,7 @@ public class FeedbackSessionsLogicTest extends BaseTestCase {
         fsLogic.deleteFeedbackSessionCascade(session.getId());
 
         verify(fsDb, times(1)).getFeedbackSession(session.getId());
-        verify(fsDb, times(1)).deleteFeedbackSession(session);
+        verify(fsDb, times(1)).removeFeedbackSession(session);
     }
 
     @Test
@@ -374,15 +358,20 @@ public class FeedbackSessionsLogicTest extends BaseTestCase {
         FeedbackQuestion question2 = getTypicalFeedbackQuestionForSession(session);
         session.setFeedbackQuestions(Set.of(question1, question2));
 
+        Student student1 = getTypicalStudent();
+        student1.setEmail("student1@email.com");
+        Student student2 = getTypicalStudent();
+        student2.setEmail("student2@email.com");
+
         // Mock responses from different givers
         FeedbackResponse response1 = getTypicalFeedbackResponseForQuestion(question1);
-        response1.setGiver("student1@email.com");
+        response1.setGiver(new ResponseGiver(student1));
         question1.addFeedbackResponse(response1);
         FeedbackResponse response2 = getTypicalFeedbackResponseForQuestion(question1);
-        response2.setGiver("student2@email.com");
+        response2.setGiver(new ResponseGiver(student2));
         question1.addFeedbackResponse(response2);
         FeedbackResponse response3 = getTypicalFeedbackResponseForQuestion(question2);
-        response3.setGiver("student1@email.com"); // Same giver as response1
+        response3.setGiver(new ResponseGiver(student1)); // Same giver as response1
         question2.addFeedbackResponse(response3);
 
         int result = fsLogic.getActualTotalSubmission(session);
@@ -405,6 +394,84 @@ public class FeedbackSessionsLogicTest extends BaseTestCase {
     }
 
     @Test
+    public void testGetSubmittedGiverSet_hasIndividualAndTeamQuestions_ignoresTeamResponsesForStudentSubmissions()
+            throws EntityDoesNotExistException {
+        Course course = getTypicalCourse();
+        FeedbackSession session = getTypicalFeedbackSessionForCourse(course);
+        UUID sessionId = UUID.randomUUID();
+        session.setId(sessionId);
+
+        FeedbackQuestion studentQuestion = getTypicalFeedbackQuestionForSession(session);
+        studentQuestion.setGiverType(QuestionGiverType.STUDENTS);
+        FeedbackQuestion teamQuestion = getTypicalFeedbackQuestionForSession(session);
+        teamQuestion.setGiverType(QuestionGiverType.TEAMS);
+        session.setFeedbackQuestions(Set.of(studentQuestion, teamQuestion));
+
+        Team team = new Team("Team A");
+        Student student1 = getTypicalStudent();
+        student1.setId(UUID.randomUUID());
+        student1.setTeam(team);
+        Student student2 = getTypicalStudent();
+        student2.setId(UUID.randomUUID());
+        student2.setTeam(team);
+
+        FeedbackResponse teamResponse = getTypicalFeedbackResponseForQuestion(teamQuestion);
+        teamResponse.setGiver(new ResponseGiver(team));
+        teamQuestion.addFeedbackResponse(teamResponse);
+
+        when(fsDb.getFeedbackSession(sessionId)).thenReturn(session);
+        when(usersLogic.getStudentsForCourse(course.getId())).thenReturn(List.of(student1, student2));
+        when(usersLogic.getInstructorsForCourse(course.getId())).thenReturn(List.of());
+        when(fqLogic.hasFeedbackQuestionsForStudents(session.getFeedbackQuestions())).thenReturn(true);
+        when(fqLogic.hasFeedbackQuestionsForGiverType(session.getFeedbackQuestions(), QuestionGiverType.STUDENTS))
+                .thenReturn(true);
+        when(fqLogic.hasFeedbackQuestionsForInstructors(session.getFeedbackQuestions(), false)).thenReturn(false);
+
+        SubmittedGiverSetBundle submittedGiverSet = fsLogic.getSubmittedGiverSet(sessionId);
+
+        assertTrue(submittedGiverSet.studentGiverIds().isEmpty());
+        assertEquals(Set.of(student1.getId(), student2.getId()), submittedGiverSet.studentNonGiverIds());
+    }
+
+    @Test
+    public void testGetSubmittedGiverSet_teamOnlyQuestions_teamResponseMarksAllMembersSubmitted()
+            throws EntityDoesNotExistException {
+        Course course = getTypicalCourse();
+        FeedbackSession session = getTypicalFeedbackSessionForCourse(course);
+        UUID sessionId = UUID.randomUUID();
+        session.setId(sessionId);
+
+        FeedbackQuestion teamQuestion = getTypicalFeedbackQuestionForSession(session);
+        teamQuestion.setGiverType(QuestionGiverType.TEAMS);
+        session.setFeedbackQuestions(Set.of(teamQuestion));
+
+        Team team = new Team("Team A");
+        Student student1 = getTypicalStudent();
+        student1.setId(UUID.randomUUID());
+        student1.setTeam(team);
+        Student student2 = getTypicalStudent();
+        student2.setId(UUID.randomUUID());
+        student2.setTeam(team);
+
+        FeedbackResponse teamResponse = getTypicalFeedbackResponseForQuestion(teamQuestion);
+        teamResponse.setGiver(new ResponseGiver(team));
+        teamQuestion.addFeedbackResponse(teamResponse);
+
+        when(fsDb.getFeedbackSession(sessionId)).thenReturn(session);
+        when(usersLogic.getStudentsForCourse(course.getId())).thenReturn(List.of(student1, student2));
+        when(usersLogic.getInstructorsForCourse(course.getId())).thenReturn(List.of());
+        when(fqLogic.hasFeedbackQuestionsForStudents(session.getFeedbackQuestions())).thenReturn(true);
+        when(fqLogic.hasFeedbackQuestionsForGiverType(session.getFeedbackQuestions(), QuestionGiverType.STUDENTS))
+                .thenReturn(false);
+        when(fqLogic.hasFeedbackQuestionsForInstructors(session.getFeedbackQuestions(), false)).thenReturn(false);
+
+        SubmittedGiverSetBundle submittedGiverSet = fsLogic.getSubmittedGiverSet(sessionId);
+
+        assertEquals(Set.of(student1.getId(), student2.getId()), submittedGiverSet.studentGiverIds());
+        assertTrue(submittedGiverSet.studentNonGiverIds().isEmpty());
+    }
+
+    @Test
     public void testGetFeedbackSessionsForInstructors_instructorHasSessions_success() {
         Course course = getTypicalCourse();
         Instructor instructor = getTypicalInstructor();
@@ -412,8 +479,7 @@ public class FeedbackSessionsLogicTest extends BaseTestCase {
         FeedbackSession session = getTypicalFeedbackSessionForCourse(course);
         List<Instructor> instructors = List.of(instructor);
 
-        when(coursesLogic.getCourse(instructor.getCourseId())).thenReturn(course);
-        when(fsDb.getFeedbackSessionEntitiesForCourse(course.getId())).thenReturn(List.of(session));
+        when(fsDb.getFeedbackSessionsForCourses(List.of(course.getId()))).thenReturn(List.of(session));
 
         List<FeedbackSession> result = fsLogic.getFeedbackSessionsForInstructors(instructors);
 
@@ -432,8 +498,7 @@ public class FeedbackSessionsLogicTest extends BaseTestCase {
         session.setDeletedAt(Instant.now());
         List<Instructor> instructors = List.of(instructor);
 
-        when(coursesLogic.getCourse(instructor.getCourseId())).thenReturn(course);
-        when(fsDb.getSoftDeletedFeedbackSessionsForCourse(course.getId())).thenReturn(List.of(session));
+        when(fsDb.getSoftDeletedFeedbackSessionsForCourses(List.of(course.getId()))).thenReturn(List.of(session));
 
         List<FeedbackSession> result = fsLogic.getSoftDeletedFeedbackSessionsForInstructors(instructors);
 

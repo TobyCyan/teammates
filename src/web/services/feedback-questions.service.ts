@@ -7,16 +7,16 @@ import { ResourceEndpoints } from '../types/api-const';
 import {
   FeedbackMcqQuestionDetails,
   FeedbackMsqQuestionDetails,
-  FeedbackParticipantType,
   FeedbackQuestion,
   FeedbackQuestionDetails,
-  FeedbackQuestionRecipients,
   FeedbackQuestions,
   FeedbackQuestionType,
   FeedbackRankOptionsQuestionDetails,
   FeedbackRubricQuestionDetails,
   FeedbackVisibilityType,
   NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionGiverType,
+  QuestionRecipientType,
 } from '../types/api-output';
 import { FeedbackQuestionCreateRequest, FeedbackQuestionUpdateRequest, Intent } from '../types/api-request';
 import {
@@ -55,44 +55,42 @@ export class FeedbackQuestionsService {
    * Gets allowed feedback paths based on question type as some feedback paths does not make
    * sense under certain question.
    */
-  getAllowedFeedbackPaths(type: FeedbackQuestionType): Map<FeedbackParticipantType, FeedbackParticipantType[]> {
-    const paths: Map<FeedbackParticipantType, FeedbackParticipantType[]> = new Map();
+  getAllowedFeedbackPaths(type: FeedbackQuestionType): Map<QuestionGiverType, QuestionRecipientType[]> {
+    const paths: Map<QuestionGiverType, QuestionRecipientType[]> = new Map();
     switch (type) {
       case FeedbackQuestionType.CONTRIB:
-        paths.set(FeedbackParticipantType.STUDENTS, [FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF]);
+        paths.set(QuestionGiverType.STUDENTS, [QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF]);
         break;
       case FeedbackQuestionType.RANK_RECIPIENTS:
       case FeedbackQuestionType.CONSTSUM_RECIPIENTS:
-        paths.set(FeedbackParticipantType.SELF, [
-          FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
-          FeedbackParticipantType.STUDENTS_IN_SAME_SECTION,
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.TEAMS_EXCLUDING_SELF,
-          FeedbackParticipantType.TEAMS_IN_SAME_SECTION,
+        paths.set(QuestionGiverType.SESSION_CREATOR, [
+          QuestionRecipientType.STUDENTS,
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.TEAMS,
         ]);
-        paths.set(FeedbackParticipantType.STUDENTS, [
-          FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
-          FeedbackParticipantType.STUDENTS_IN_SAME_SECTION,
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.TEAMS_EXCLUDING_SELF,
-          FeedbackParticipantType.TEAMS_IN_SAME_SECTION,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+        paths.set(QuestionGiverType.STUDENTS, [
+          QuestionRecipientType.STUDENTS,
+          QuestionRecipientType.STUDENTS_EXCLUDING_SELF,
+          QuestionRecipientType.STUDENTS_IN_SAME_SECTION,
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.TEAMS,
+          QuestionRecipientType.TEAMS_EXCLUDING_SELF,
+          QuestionRecipientType.TEAMS_IN_SAME_SECTION,
+          QuestionRecipientType.OWN_TEAM_MEMBERS,
+          QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
         ]);
-        paths.set(FeedbackParticipantType.INSTRUCTORS, [
-          FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
-          FeedbackParticipantType.STUDENTS_IN_SAME_SECTION,
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.TEAMS_EXCLUDING_SELF,
-          FeedbackParticipantType.TEAMS_IN_SAME_SECTION,
+        paths.set(QuestionGiverType.INSTRUCTORS, [
+          QuestionRecipientType.STUDENTS,
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.TEAMS,
         ]);
-        paths.set(FeedbackParticipantType.TEAMS, [
-          FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
-          FeedbackParticipantType.STUDENTS_IN_SAME_SECTION,
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.TEAMS_EXCLUDING_SELF,
-          FeedbackParticipantType.TEAMS_IN_SAME_SECTION,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+        paths.set(QuestionGiverType.TEAMS, [
+          QuestionRecipientType.STUDENTS,
+          QuestionRecipientType.STUDENTS_IN_SAME_SECTION,
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.TEAMS,
+          QuestionRecipientType.TEAMS_EXCLUDING_SELF,
+          QuestionRecipientType.TEAMS_IN_SAME_SECTION,
         ]);
         break;
       case FeedbackQuestionType.TEXT:
@@ -102,56 +100,45 @@ export class FeedbackQuestionsService {
       case FeedbackQuestionType.RANK_OPTIONS:
       case FeedbackQuestionType.RUBRIC:
       case FeedbackQuestionType.CONSTSUM_OPTIONS:
-        paths.set(FeedbackParticipantType.SELF, [
-          FeedbackParticipantType.SELF,
-          FeedbackParticipantType.STUDENTS,
-          FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
-          FeedbackParticipantType.STUDENTS_IN_SAME_SECTION,
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.TEAMS,
-          FeedbackParticipantType.TEAMS_EXCLUDING_SELF,
-          FeedbackParticipantType.TEAMS_IN_SAME_SECTION,
-          FeedbackParticipantType.OWN_TEAM,
-          FeedbackParticipantType.NONE,
+        paths.set(QuestionGiverType.SESSION_CREATOR, [
+          QuestionRecipientType.SELF,
+          QuestionRecipientType.STUDENTS,
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.TEAMS,
+          QuestionRecipientType.NONE,
         ]);
 
-        paths.set(FeedbackParticipantType.STUDENTS, [
-          FeedbackParticipantType.SELF,
-          FeedbackParticipantType.STUDENTS,
-          FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
-          FeedbackParticipantType.STUDENTS_IN_SAME_SECTION,
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.TEAMS,
-          FeedbackParticipantType.TEAMS_EXCLUDING_SELF,
-          FeedbackParticipantType.TEAMS_IN_SAME_SECTION,
-          FeedbackParticipantType.OWN_TEAM,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
-          FeedbackParticipantType.NONE,
+        paths.set(QuestionGiverType.STUDENTS, [
+          QuestionRecipientType.SELF,
+          QuestionRecipientType.STUDENTS,
+          QuestionRecipientType.STUDENTS_EXCLUDING_SELF,
+          QuestionRecipientType.STUDENTS_IN_SAME_SECTION,
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.TEAMS,
+          QuestionRecipientType.TEAMS_EXCLUDING_SELF,
+          QuestionRecipientType.TEAMS_IN_SAME_SECTION,
+          QuestionRecipientType.OWN_TEAM,
+          QuestionRecipientType.OWN_TEAM_MEMBERS,
+          QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+          QuestionRecipientType.NONE,
         ]);
 
-        paths.set(FeedbackParticipantType.INSTRUCTORS, [
-          FeedbackParticipantType.SELF,
-          FeedbackParticipantType.STUDENTS,
-          FeedbackParticipantType.STUDENTS_IN_SAME_SECTION,
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.TEAMS,
-          FeedbackParticipantType.TEAMS_IN_SAME_SECTION,
-          FeedbackParticipantType.OWN_TEAM,
-          FeedbackParticipantType.NONE,
+        paths.set(QuestionGiverType.INSTRUCTORS, [
+          QuestionRecipientType.SELF,
+          QuestionRecipientType.STUDENTS,
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.TEAMS,
+          QuestionRecipientType.NONE,
         ]);
 
-        paths.set(FeedbackParticipantType.TEAMS, [
-          FeedbackParticipantType.SELF,
-          FeedbackParticipantType.STUDENTS,
-          FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
-          FeedbackParticipantType.STUDENTS_IN_SAME_SECTION,
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.TEAMS,
-          FeedbackParticipantType.TEAMS_EXCLUDING_SELF,
-          FeedbackParticipantType.TEAMS_IN_SAME_SECTION,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
-          FeedbackParticipantType.NONE,
+        paths.set(QuestionGiverType.TEAMS, [
+          QuestionRecipientType.SELF,
+          QuestionRecipientType.STUDENTS,
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.TEAMS,
+          QuestionRecipientType.TEAMS_EXCLUDING_SELF,
+          QuestionRecipientType.TEAMS_IN_SAME_SECTION,
+          QuestionRecipientType.NONE,
         ]);
         break;
       default:
@@ -162,21 +149,21 @@ export class FeedbackQuestionsService {
   /**
    * Gets common feedback paths based on question type.
    */
-  getCommonFeedbackPaths(type: FeedbackQuestionType): Map<FeedbackParticipantType, FeedbackParticipantType[]> {
-    const paths: Map<FeedbackParticipantType, FeedbackParticipantType[]> = new Map();
+  getCommonFeedbackPaths(type: FeedbackQuestionType): Map<QuestionGiverType, QuestionRecipientType[]> {
+    const paths: Map<QuestionGiverType, QuestionRecipientType[]> = new Map();
     switch (type) {
       case FeedbackQuestionType.CONTRIB:
-        paths.set(FeedbackParticipantType.STUDENTS, [FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF]);
+        paths.set(QuestionGiverType.STUDENTS, [QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF]);
         break;
       case FeedbackQuestionType.RANK_RECIPIENTS:
       case FeedbackQuestionType.CONSTSUM_RECIPIENTS:
-        paths.set(FeedbackParticipantType.SELF, [FeedbackParticipantType.INSTRUCTORS]);
-        paths.set(FeedbackParticipantType.STUDENTS, [
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+        paths.set(QuestionGiverType.SESSION_CREATOR, [QuestionRecipientType.INSTRUCTORS]);
+        paths.set(QuestionGiverType.STUDENTS, [
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.OWN_TEAM_MEMBERS,
+          QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
         ]);
-        paths.set(FeedbackParticipantType.INSTRUCTORS, [FeedbackParticipantType.INSTRUCTORS]);
+        paths.set(QuestionGiverType.INSTRUCTORS, [QuestionRecipientType.INSTRUCTORS]);
         break;
       case FeedbackQuestionType.TEXT:
       case FeedbackQuestionType.MCQ:
@@ -185,22 +172,22 @@ export class FeedbackQuestionsService {
       case FeedbackQuestionType.RANK_OPTIONS:
       case FeedbackQuestionType.RUBRIC:
       case FeedbackQuestionType.CONSTSUM_OPTIONS:
-        paths.set(FeedbackParticipantType.SELF, [
-          FeedbackParticipantType.NONE,
-          FeedbackParticipantType.SELF,
-          FeedbackParticipantType.INSTRUCTORS,
+        paths.set(QuestionGiverType.SESSION_CREATOR, [
+          QuestionRecipientType.NONE,
+          QuestionRecipientType.SELF,
+          QuestionRecipientType.INSTRUCTORS,
         ]);
-        paths.set(FeedbackParticipantType.STUDENTS, [
-          FeedbackParticipantType.NONE,
-          FeedbackParticipantType.SELF,
-          FeedbackParticipantType.INSTRUCTORS,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS,
-          FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+        paths.set(QuestionGiverType.STUDENTS, [
+          QuestionRecipientType.NONE,
+          QuestionRecipientType.SELF,
+          QuestionRecipientType.INSTRUCTORS,
+          QuestionRecipientType.OWN_TEAM_MEMBERS,
+          QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
         ]);
-        paths.set(FeedbackParticipantType.INSTRUCTORS, [
-          FeedbackParticipantType.NONE,
-          FeedbackParticipantType.SELF,
-          FeedbackParticipantType.INSTRUCTORS,
+        paths.set(QuestionGiverType.INSTRUCTORS, [
+          QuestionRecipientType.NONE,
+          QuestionRecipientType.SELF,
+          QuestionRecipientType.INSTRUCTORS,
         ]);
         break;
       default:
@@ -212,8 +199,8 @@ export class FeedbackQuestionsService {
    * Gets a state machine of visibility settings under {@code giverType} and {@code recipientType}.
    */
   getNewVisibilityStateMachine(
-    giverType: FeedbackParticipantType,
-    recipientType: FeedbackParticipantType,
+    giverType: QuestionGiverType,
+    recipientType: QuestionRecipientType,
   ): VisibilityStateMachine {
     return new VisibilityStateMachine(giverType, recipientType);
   }
@@ -374,8 +361,6 @@ export class FeedbackQuestionsService {
         return true;
       case FeedbackQuestionType.CONSTSUM_RECIPIENTS:
         return true;
-      default:
-        throw new Error(`Unsupported question type: ${type}`);
     }
   }
 
@@ -392,8 +377,8 @@ export class FeedbackQuestionsService {
           questionType: FeedbackQuestionType.TEXT,
           questionDetails: DEFAULT_TEXT_QUESTION_DETAILS(),
 
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -409,8 +394,8 @@ export class FeedbackQuestionsService {
           questionType: FeedbackQuestionType.CONTRIB,
           questionDetails: DEFAULT_CONTRIBUTION_QUESTION_DETAILS(),
 
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -430,8 +415,8 @@ export class FeedbackQuestionsService {
 
           questionType: FeedbackQuestionType.NUMSCALE,
           questionDetails: DEFAULT_NUMSCALE_QUESTION_DETAILS(),
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -450,8 +435,8 @@ export class FeedbackQuestionsService {
 
           questionType: FeedbackQuestionType.MCQ,
           questionDetails: mcqQuestionDetails,
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -478,8 +463,8 @@ export class FeedbackQuestionsService {
           questionType: FeedbackQuestionType.MSQ,
           questionDetails: msqQuestionDetails,
 
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -505,8 +490,8 @@ export class FeedbackQuestionsService {
 
           questionType: FeedbackQuestionType.RANK_OPTIONS,
           questionDetails: rankOptionsQuestionDetails,
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -527,8 +512,8 @@ export class FeedbackQuestionsService {
 
           questionType: FeedbackQuestionType.RANK_RECIPIENTS,
           questionDetails: DEFAULT_RANK_RECIPIENTS_QUESTION_DETAILS(),
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -565,8 +550,8 @@ export class FeedbackQuestionsService {
 
           questionType: FeedbackQuestionType.RUBRIC,
           questionDetails: rubricQuestionDetails,
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -583,8 +568,8 @@ export class FeedbackQuestionsService {
 
           questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
           questionDetails: DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS(),
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -600,8 +585,8 @@ export class FeedbackQuestionsService {
 
           questionType: FeedbackQuestionType.CONSTSUM_RECIPIENTS,
           questionDetails: DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS(),
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
 
@@ -609,9 +594,6 @@ export class FeedbackQuestionsService {
           showGiverNameTo: [FeedbackVisibilityType.INSTRUCTORS],
           showRecipientNameTo: [FeedbackVisibilityType.INSTRUCTORS, FeedbackVisibilityType.RECIPIENT],
         };
-
-      default:
-        throw new Error(`Unsupported question type ${type}`);
     }
   }
 
@@ -686,26 +668,6 @@ export class FeedbackQuestionsService {
 
     return this.httpRequestService.delete(ResourceEndpoints.QUESTION, paramMap);
   }
-
-  /**
-   * Get a list of feedback question recipients.
-   */
-  loadFeedbackQuestionRecipients(queryParams: {
-    questionId: string;
-    intent: Intent;
-    key: string;
-    moderatedPerson: string;
-    previewAs: string;
-  }): Observable<FeedbackQuestionRecipients> {
-    const paramMap: Record<string, string> = {
-      questionid: queryParams.questionId,
-      intent: queryParams.intent,
-      key: queryParams.key,
-      moderatedperson: queryParams.moderatedPerson,
-      previewas: queryParams.previewAs,
-    };
-    return this.httpRequestService.get(ResourceEndpoints.QUESTION_RECIPIENTS, paramMap);
-  }
 }
 
 /**
@@ -726,8 +688,8 @@ export interface NewQuestionModel {
   questionType: FeedbackQuestionType;
   questionDetails: FeedbackQuestionDetails;
 
-  giverType: FeedbackParticipantType;
-  recipientType: FeedbackParticipantType;
+  giverType: QuestionGiverType;
+  recipientType: QuestionRecipientType;
 
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting;
   customNumberOfEntitiesToGiveFeedbackTo?: number;

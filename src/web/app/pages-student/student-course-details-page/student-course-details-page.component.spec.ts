@@ -1,6 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { StudentCourseDetailsPageComponent } from './student-course-details-page.component';
 import { Course, Instructor, InstructorPermissionRole, JoinState, Student } from '../../../types/api-output';
@@ -8,18 +8,26 @@ import { SortBy } from '../../../types/sort-properties';
 
 const student: Student = {
   courseId: '1.1.c-demo2',
+  courseName: 'Test Course',
+  institute: 'Test Institute',
+  userId: 'test-user-id',
   email: '1@1.com',
   name: '1',
   comments: '',
   joinState: JoinState.NOT_JOINED,
   sectionName: 'Tutorial Group 2',
+  sectionId: 'tutorial-group-2',
   teamName: 'Team 2',
+  teamId: 'team-2',
 };
 
 const instructorDetails: Instructor[] = [
   {
     googleId: '',
     courseId: '1.1.c-demo2',
+    courseName: 'Test Course',
+    institute: 'Test Institute',
+    userId: 'instructor-1',
     displayedToStudentsAs: 'Instructor',
     isDisplayedToStudents: true,
     email: '1@1.com',
@@ -42,13 +50,11 @@ describe('StudentCourseDetailsPageComponent', () => {
   let component: StudentCourseDetailsPageComponent;
   let fixture: ComponentFixture<StudentCourseDetailsPageComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(StudentCourseDetailsPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -71,10 +77,15 @@ describe('StudentCourseDetailsPageComponent', () => {
     const teammateProfiles: Student[] = [
       {
         courseId: '1.1.c-demo2',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'test-user-id',
         email: 'iam2@hello.com',
         name: '2',
         sectionName: 'Tutorial Group 2',
+        sectionId: 'tutorial-group-2',
         teamName: 'Team 2',
+        teamId: 'team-2',
       },
     ];
 
@@ -105,24 +116,39 @@ describe('StudentCourseDetailsPageComponent', () => {
     const teammateProfiles: Student[] = [
       {
         courseId: '1.1.c-demo2',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'test-user-id',
         email: 'iam2@hello.com',
         name: 'billy',
         sectionName: 'Tutorial Group 2',
+        sectionId: 'tutorial-group-2',
         teamName: 'Team 2',
+        teamId: 'team-2',
       },
       {
         courseId: '1.1.c-demo2',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'test-user-id',
         email: 'iam3@hello.com',
         name: 'amy',
         sectionName: 'Tutorial Group 2',
+        sectionId: 'tutorial-group-2',
         teamName: 'Team 2',
+        teamId: 'team-2',
       },
       {
         courseId: '1.1.c-demo2',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'test-user-id',
         email: 'iam4@hello.com',
         name: 'dawson',
         sectionName: 'Tutorial Group 2',
+        sectionId: 'tutorial-group-2',
         teamName: 'Team 2',
+        teamId: 'team-2',
       },
     ];
 
@@ -145,24 +171,39 @@ describe('StudentCourseDetailsPageComponent', () => {
     const teammateProfiles: Student[] = [
       {
         courseId: '1.1.c-demo2',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'test-user-id',
         email: 'cam2@hello.com',
         name: 'billy',
         sectionName: 'Tutorial Group 2',
+        sectionId: 'tutorial-group-2',
         teamName: 'Team 2',
+        teamId: 'team-2',
       },
       {
         courseId: '1.1.c-demo2',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'test-user-id',
         email: 'bam3@hello.com',
         name: 'amy',
         sectionName: 'Tutorial Group 2',
+        sectionId: 'tutorial-group-2',
         teamName: 'Team 2',
+        teamId: 'team-2',
       },
       {
         courseId: '1.1.c-demo2',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'test-user-id',
         email: 'aam4@hello.com',
         name: 'dawson',
         sectionName: 'Tutorial Group 2',
+        sectionId: 'tutorial-group-2',
         teamName: 'Team 2',
+        teamId: 'team-2',
       },
     ];
 

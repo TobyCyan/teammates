@@ -8,18 +8,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.function.Executable;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
 import teammates.common.datatransfer.AccountRequestStatus;
 import teammates.common.datatransfer.DataBundle;
-import teammates.common.datatransfer.FeedbackParticipantType;
 import teammates.common.datatransfer.InstructorPermissionRole;
 import teammates.common.datatransfer.InstructorPrivileges;
 import teammates.common.datatransfer.NotificationStyle;
 import teammates.common.datatransfer.NotificationTargetUser;
+import teammates.common.datatransfer.Provider;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
+import teammates.common.datatransfer.participanttypes.ViewerType;
 import teammates.common.datatransfer.questions.FeedbackResponseDetails;
 import teammates.common.datatransfer.questions.FeedbackTextQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackTextResponseDetails;
@@ -30,13 +31,14 @@ import teammates.logic.core.DataBundleLogic;
 import teammates.storage.entity.Account;
 import teammates.storage.entity.AccountRequest;
 import teammates.storage.entity.Course;
-import teammates.storage.entity.DeadlineExtension;
 import teammates.storage.entity.FeedbackQuestion;
 import teammates.storage.entity.FeedbackResponse;
-import teammates.storage.entity.FeedbackResponseComment;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Notification;
+import teammates.storage.entity.ResponseGiver;
+import teammates.storage.entity.ResponseInstructorComment;
+import teammates.storage.entity.ResponseRecipient;
 import teammates.storage.entity.Section;
 import teammates.storage.entity.Student;
 import teammates.storage.entity.Team;
@@ -61,14 +63,14 @@ public class BaseTestCase {
     }
     // CHECKSTYLE.ON:AbbreviationAsWordInName|MethodName
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void printTestClassHeader() {
         System.out.println("[============================="
                 + getClass().getCanonicalName()
                 + "=============================]");
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     public void printTestClassFooter() {
         System.out.println(getClass().getCanonicalName() + " completed");
     }
@@ -96,6 +98,7 @@ public class BaseTestCase {
      * The entity fields can be changed using setter methods if needed.
      * New entity generator functions for tests should be added here, and follow the
      * same naming convention.
+     * Subject is randomly generated to avoid conflicts during account creation.
      *
      * <p>Example usage:
      * Account account = getTypicalAccount();
@@ -104,7 +107,8 @@ public class BaseTestCase {
      * student.setName("New Student Name");
      */
     protected Account getTypicalAccount() {
-        return new Account("google-id", "name", "email@teammates.com");
+        return new Account("google-id", Provider.TEAMMATES_DEV,
+                UUID.randomUUID().toString(), "tenant-id", "name", "email@teammates.com");
     }
 
     protected Notification getTypicalNotificationWithId() {
@@ -118,9 +122,9 @@ public class BaseTestCase {
     protected Instructor getTypicalInstructor() {
         Course course = getTypicalCourse();
         InstructorPrivileges instructorPrivileges =
-                new InstructorPrivileges(Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_COOWNER);
+                new InstructorPrivileges(Const.InstructorPermissionRoleNames.COOWNER);
         InstructorPermissionRole role = InstructorPermissionRole
-                .getEnum(Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_COOWNER);
+                .getEnum(Const.InstructorPermissionRoleNames.COOWNER);
 
         return new Instructor(course, "instructor-name", "valid@teammates.tmt",
                 false, Const.DEFAULT_DISPLAY_NAME_FOR_INSTRUCTOR, role, instructorPrivileges);
@@ -153,26 +157,26 @@ public class BaseTestCase {
         return team;
     }
 
-    protected FeedbackResponseComment getTypicalFeedbackResponseComment() {
+    protected ResponseInstructorComment getTypicalResponseInstructorComment() {
         FeedbackSession typicalFeedbackSession = getTypicalFeedbackSessionForCourse(getTypicalCourse());
         FeedbackQuestion typicalFeedbackQuestion = getTypicalFeedbackQuestionForSession(typicalFeedbackSession);
         FeedbackResponse typicalFeedbackResponse = getTypicalFeedbackResponseForQuestion(typicalFeedbackQuestion);
-        FeedbackResponseComment feedbackResponseComment = new FeedbackResponseComment(
-                "typical-giver", FeedbackParticipantType.RECEIVER, getTypicalSection(), getTypicalSection(),
-                "typical-comment", true, true, List.of(FeedbackParticipantType.GIVER, FeedbackParticipantType.INSTRUCTORS),
-                List.of(FeedbackParticipantType.RECEIVER, FeedbackParticipantType.INSTRUCTORS), "email");
-        typicalFeedbackResponse.addFeedbackResponseComment(feedbackResponseComment);
-        feedbackResponseComment.setId(UUID.fromString("00000000-0000-4000-8000-000000000010"));
-        feedbackResponseComment.setCreatedAt(Instant.now());
-        feedbackResponseComment.setUpdatedAt(Instant.now());
-        return feedbackResponseComment;
+        Instructor commentGiver = getTypicalInstructor();
+        ResponseInstructorComment responseInstructorComment = new ResponseInstructorComment(commentGiver,
+                "typical-comment", List.of(ViewerType.GIVER, ViewerType.INSTRUCTORS),
+                List.of(ViewerType.RECEIVER, ViewerType.INSTRUCTORS), commentGiver);
+        typicalFeedbackResponse.addResponseInstructorComment(responseInstructorComment);
+        responseInstructorComment.setId(UUID.fromString("00000000-0000-4000-8000-000000000010"));
+        responseInstructorComment.setCreatedAt(Instant.now());
+        responseInstructorComment.setUpdatedAt(Instant.now());
+        return responseInstructorComment;
     }
 
     protected FeedbackSession getTypicalFeedbackSessionForCourse(Course course) {
         Instant startTime = TimeHelperExtension.getInstantDaysOffsetFromNow(1);
         Instant endTime = TimeHelperExtension.getInstantDaysOffsetFromNow(7);
         FeedbackSession feedbackSession = new FeedbackSession("test-feedbacksession",
-                "test@teammates.tmt",
+                null,
                 "<p>test-instructions</p>",
                 startTime,
                 endTime,
@@ -187,7 +191,7 @@ public class BaseTestCase {
 
     protected FeedbackQuestion getTypicalFeedbackQuestionForSession(FeedbackSession session) {
         FeedbackQuestion fq = FeedbackQuestion.makeQuestion(1, "test-description",
-                FeedbackParticipantType.SELF, FeedbackParticipantType.SELF, 1, new ArrayList<>(),
+                QuestionGiverType.SESSION_CREATOR, QuestionRecipientType.SELF, 1, new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(),
                 new FeedbackTextQuestionDetails("test question text"));
         session.addFeedbackQuestion(fq);
@@ -195,9 +199,10 @@ public class BaseTestCase {
     }
 
     protected FeedbackResponse getTypicalFeedbackResponseForQuestion(FeedbackQuestion question) {
+        Student receiver = getTypicalStudent();
+        Student giver = getTypicalStudent();
         FeedbackResponse feedbackResponse = FeedbackResponse.makeResponse(
-                "test-giver", getTypicalSection(), "test-recipient",
-                getTypicalSection(), getTypicalFeedbackResponseDetails());
+                new ResponseGiver(giver), new ResponseRecipient(receiver), getTypicalFeedbackResponseDetails());
         question.addFeedbackResponse(feedbackResponse);
         return feedbackResponse;
     }
@@ -206,42 +211,13 @@ public class BaseTestCase {
         return new FeedbackTextResponseDetails();
     }
 
-    protected FeedbackResponseComment getTypicalResponseComment(UUID id) {
-        FeedbackResponseComment comment = new FeedbackResponseComment("",
-                FeedbackParticipantType.STUDENTS, null, null, "",
-                false, false,
-                null, null, null);
-        comment.setId(id);
-        return comment;
-    }
-
     protected AccountRequest getTypicalAccountRequest() {
         return new AccountRequest("valid@test.com", "Test Name", "TEAMMATES Test Institute 1, Test Country",
                 AccountRequestStatus.PENDING, "");
     }
 
-    protected UsageStatistics getTypicalUsageStatistics() {
-        return getTypicalUsageStatistics(Instant.parse("2011-01-01T00:00:00Z"));
-    }
-
     protected UsageStatistics getTypicalUsageStatistics(Instant startTime) {
         return new UsageStatistics(startTime, 60, 2, 2, 2, 2, 2, 0, 0);
-    }
-
-    protected DeadlineExtension getTypicalDeadlineExtensionStudent() {
-        DeadlineExtension de = new DeadlineExtension(
-                getTypicalStudent(),
-                Instant.now());
-        getTypicalFeedbackSessionForCourse(getTypicalCourse()).addDeadlineExtension(de);
-        return de;
-    }
-
-    protected DeadlineExtension getTypicalDeadlineExtensionInstructor() {
-        DeadlineExtension de = new DeadlineExtension(
-                getTypicalInstructor(),
-                Instant.now());
-        getTypicalFeedbackSessionForCourse(getTypicalCourse()).addDeadlineExtension(de);
-        return de;
     }
 
     /**
@@ -272,98 +248,6 @@ public class BaseTestCase {
         return (String) invokeMethod(FieldValidator.class, "getPopulatedErrorMessage",
                                      new Class<?>[] { String.class, String.class, String.class, String.class, int.class },
                                      null, new Object[] { messageTemplate, userInput, fieldName, errorReason, maxLength });
-    }
-
-    protected static String getPopulatedEmptyStringErrorMessage(String messageTemplate, String fieldName, int maxLength)
-            throws ReflectiveOperationException {
-        return (String) invokeMethod(FieldValidator.class, "getPopulatedEmptyStringErrorMessage",
-                new Class<?>[] { String.class, String.class, int.class },
-                null, new Object[] { messageTemplate, fieldName, maxLength });
-    }
-
-    /*
-     * Here are some of the most common assertion methods provided by JUnit.
-     * They are copied here to prevent repetitive importing in test classes.
-     */
-
-    protected static void assertTrue(boolean condition) {
-        Assertions.assertTrue(condition);
-    }
-
-    protected static void assertTrue(String message, boolean condition) {
-        Assertions.assertTrue(condition, message);
-    }
-
-    protected static void assertFalse(boolean condition) {
-        Assertions.assertFalse(condition);
-    }
-
-    protected static void assertFalse(String message, boolean condition) {
-        Assertions.assertFalse(condition, message);
-    }
-
-    protected static void assertEquals(int expected, int actual) {
-        Assertions.assertEquals(expected, actual);
-    }
-
-    protected static void assertEquals(String message, int expected, int actual) {
-        Assertions.assertEquals(expected, actual, message);
-    }
-
-    protected static void assertEquals(long expected, long actual) {
-        Assertions.assertEquals(expected, actual);
-    }
-
-    protected static void assertEquals(double expected, double actual, double delta) {
-        Assertions.assertEquals(expected, actual, delta);
-    }
-
-    protected static void assertEquals(Object expected, Object actual) {
-        Assertions.assertEquals(expected, actual);
-    }
-
-    protected static void assertEquals(String message, Object expected, Object actual) {
-        Assertions.assertEquals(expected, actual, message);
-    }
-
-    protected static void assertArrayEquals(byte[] expected, byte[] actual) {
-        Assertions.assertArrayEquals(expected, actual);
-    }
-
-    protected static void assertNotEquals(Object first, Object second) {
-        Assertions.assertNotEquals(first, second);
-    }
-
-    protected static void assertSame(Object expected, Object actual) {
-        Assertions.assertSame(expected, actual);
-    }
-
-    protected static void assertNotSame(Object unexpected, Object actual) {
-        Assertions.assertNotSame(unexpected, actual);
-    }
-
-    protected static void assertNull(Object object) {
-        Assertions.assertNull(object);
-    }
-
-    protected static void assertNull(String message, Object object) {
-        Assertions.assertNull(object, message);
-    }
-
-    protected static void assertNotNull(Object object) {
-        Assertions.assertNotNull(object);
-    }
-
-    protected static void assertNotNull(String message, Object object) {
-        Assertions.assertNotNull(object, message);
-    }
-
-    protected static void fail(String message) {
-        Assertions.fail(message);
-    }
-
-    protected static <T extends Throwable> T assertThrows(Class<T> expectedType, Executable executable) {
-        return Assertions.assertThrows(expectedType, executable);
     }
 
 }

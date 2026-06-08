@@ -1,7 +1,17 @@
 package teammates.logic.api;
 
+import java.util.UUID;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import teammates.common.datatransfer.AuthContext;
+import teammates.common.datatransfer.Provider;
 import teammates.common.datatransfer.UserInfo;
-import teammates.common.datatransfer.UserInfoCookie;
+import teammates.common.util.Const;
+import teammates.storage.entity.Account;
+import teammates.storage.entity.User;
+import teammates.ui.exception.UnauthorizedAccessException;
+import teammates.ui.webapi.AuthType;
 
 /**
  * Allows mocking of the {@link UserProvision} API used in production.
@@ -10,80 +20,72 @@ import teammates.common.datatransfer.UserInfoCookie;
  * the API will return pre-determined information instead.
  */
 public class MockUserProvision extends UserProvision {
-    private UserInfo mockUser = new UserInfo("user.id");
+    private static final AuthContext PUBLIC_AUTH_CONTEXT = new AuthContext(AuthType.PUBLIC, null, null, false, false);
+    private static final AuthContext AUTOMATED_SERVICE_AUTH_CONTEXT =
+            new AuthContext(AuthType.AUTOMATED_SERVICE, null, null, false, false);
+
+    private Logic logic = Logic.inst();
+    private String loggedInGoogleId;
+    private boolean createMissingAccounts;
     private boolean isLoggedIn;
+    private boolean loggedInUserIsAdmin;
+    private boolean isAutomatedServiceMode;
+    private boolean isMaintainer;
+    private boolean isAdmin;
 
-    private UserInfo loginUser(String userId, boolean isAdmin, boolean isInstructor, boolean isStudent,
-            boolean isMaintainer, boolean isAutomatedService) {
-        isLoggedIn = true;
-        mockUser.id = userId;
-        mockUser.isAdmin = isAdmin;
-        mockUser.isInstructor = isInstructor;
-        mockUser.isStudent = isStudent;
-        mockUser.isMaintainer = isMaintainer;
-        mockUser.isAutomatedService = isAutomatedService;
-        return mockUser;
+    public void setLogic(Logic logic) {
+        this.logic = logic;
+    }
+
+    public void setCreateMissingAccounts(boolean createMissingAccounts) {
+        this.createMissingAccounts = createMissingAccounts;
+    }
+
+    private AuthContext loginUser(String userId, boolean isAdmin, boolean isMaintainer) {
+        this.isLoggedIn = true;
+        this.loggedInGoogleId = userId;
+        this.loggedInUserIsAdmin = isAdmin;
+        this.isAdmin = isAdmin;
+        this.isMaintainer = isMaintainer;
+        return createAccountAuthContext(AuthType.LOGGED_IN, userId, isAdmin, isMaintainer);
     }
 
     /**
-     * Adds a logged-in user without admin rights.
+     * Login as a user without admin rights.
      *
-     * @return The user info after login process
+     * @return The auth context after login process
      */
-    public UserInfo loginUser(String userId) {
-        return loginUser(userId, false, false, false, false, false);
+    public AuthContext loginUser(String userId) {
+        return loginUser(userId, false, false);
     }
 
     /**
-     * Adds a logged-in user as an admin.
+     * Login as a user with admin rights.
      *
-     * @return The user info after login process
+     * @return The auth context after login process
      */
-    public UserInfo loginAsAdmin(String userId) {
-        return loginUser(userId, true, false, false, false, false);
+    public AuthContext loginAsAdmin(String userId) {
+        return loginUser(userId, true, false);
     }
 
     /**
-     * Adds a logged-in user as an instructor.
+     * Login as a user with maintainer rights.
      *
-     * @return The user info after login process
+     * @return The auth context after login process
      */
-    public UserInfo loginAsInstructor(String userId) {
-        return loginUser(userId, false, true, false, false, false);
+    public AuthContext loginAsMaintainer(String userId) {
+        return loginUser(userId, false, true);
     }
 
     /**
-     * Adds a logged-in user as a student.
-     *
-     * @return The user info after login process
+     * Logs in as an automated service (cron/worker).
      */
-    public UserInfo loginAsStudent(String userId) {
-        return loginUser(userId, false, false, true, false, false);
+    public void loginAsAutomatedService() {
+        isAutomatedServiceMode = true;
     }
 
-    /**
-     * Adds a logged-in user as a student instructor.
-     *
-     * @return The user info after login process
-     */
-    public UserInfo loginAsStudentInstructor(String userId) {
-        return loginUser(userId, false, true, true, false, false);
-    }
-
-    /**
-     * Adds a logged-in user as a maintainer.
-     *
-     * @return The user info after login process
-     */
-    public UserInfo loginAsMaintainer(String userId) {
-        return loginUser(userId, false, false, false, true, false);
-    }
-
-    /**
-     * Models a verified cron/worker principal ({@link UserInfo#isAutomatedService}), not a human app admin.
-     */
-    public UserInfo loginAsAutomatedService(String userId) {
-        return loginUser(userId, false, false, false, false, true);
+    public boolean isAutomatedServiceMode() {
+        return isAutomatedServiceMode;
     }
 
     /**
@@ -91,31 +93,65 @@ public class MockUserProvision extends UserProvision {
      */
     public void logoutUser() {
         isLoggedIn = false;
+        loggedInUserIsAdmin = false;
+        isAutomatedServiceMode = false;
+        loggedInGoogleId = null;
     }
 
     @Override
-    public UserInfo getCurrentUser(UserInfoCookie uic) {
-        return getCurrentLoggedInUser(uic);
+    public AuthContext getAuthContextFromRequest(HttpServletRequest req) throws UnauthorizedAccessException {
+        if (isAutomatedServiceMode) {
+            return AUTOMATED_SERVICE_AUTH_CONTEXT;
+        }
+
+        if (!isLoggedIn) {
+            String regKey = req.getParameter(Const.ParamsNames.REGKEY);
+            if (regKey != null) {
+                User regKeyUser = logic.getUserByRegistrationKey(regKey);
+                return new AuthContext(AuthType.REG_KEY, null, regKeyUser, false, false);
+            }
+            return PUBLIC_AUTH_CONTEXT;
+        }
+
+        if (isMasqueradeRequest(req)) {
+            if (!loggedInUserIsAdmin) {
+                throw new UnauthorizedAccessException(
+                        String.format("Masquerade failed: user %s does not have admin privilege", loggedInGoogleId));
+            }
+
+            UUID masqueradeAccountUuid = getValidMasqueradeAccountId(req);
+            Account masqueradeAccount = logic.getAccount(masqueradeAccountUuid);
+            if (masqueradeAccount == null) {
+                throw new UnauthorizedAccessException(
+                        String.format("Masquerade failed: no account found for account id %s", masqueradeAccountUuid));
+            }
+            return new AuthContext(AuthType.MASQUERADE, masqueradeAccount, null, isAdmin, isMaintainer);
+        }
+
+        return createAccountAuthContext(AuthType.LOGGED_IN, loggedInGoogleId, isAdmin, isMaintainer);
     }
 
     @Override
-    public UserInfo getCurrentLoggedInUser(UserInfoCookie uic) {
-        return isLoggedIn ? mockUser : null;
+    public UserInfo getUserInfo(AuthContext authContext) {
+        if (authContext == null || authContext.account() == null) {
+            return null;
+        }
+
+        Account account = authContext.account();
+        UserInfo userInfo = new UserInfo(account.getGoogleId(), account.getId());
+        userInfo.isAdmin = authContext.isAdmin();
+        userInfo.isMaintainer = authContext.isMaintainer();
+        return userInfo;
     }
 
-    public void setAdmin(boolean isAdmin) {
-        mockUser.isAdmin = isAdmin;
+    private AuthContext createAccountAuthContext(
+            AuthType authType, String googleId, boolean isAdmin, boolean isMaintainer) {
+        Account account = createMissingAccounts
+                ? new Account(
+                        googleId, Provider.TEAMMATES_DEV, googleId, "tenant-id",
+                        "Test User", googleId + "@example.com")
+                : logic.getAccountForGoogleId(googleId);
+        return new AuthContext(authType, account, null, isAdmin, isMaintainer);
     }
 
-    public void setInstructor(boolean isInstructor) {
-        mockUser.isInstructor = isInstructor;
-    }
-
-    public void setStudent(boolean isStudent) {
-        mockUser.isStudent = isStudent;
-    }
-
-    public void setMaintainer(boolean isMaintainer) {
-        mockUser.isMaintainer = isMaintainer;
-    }
 }

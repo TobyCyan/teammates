@@ -1,5 +1,6 @@
 package teammates.storage.entity.responses;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Converter;
@@ -8,7 +9,8 @@ import jakarta.persistence.Entity;
 import teammates.common.datatransfer.questions.FeedbackRankOptionsResponseDetails;
 import teammates.common.datatransfer.questions.FeedbackResponseDetails;
 import teammates.storage.entity.FeedbackResponse;
-import teammates.storage.entity.Section;
+import teammates.storage.entity.ResponseGiver;
+import teammates.storage.entity.ResponseRecipient;
 
 /**
  * Represents a feedback rank options response.
@@ -25,10 +27,10 @@ public class FeedbackRankOptionsResponse extends FeedbackResponse {
     }
 
     public FeedbackRankOptionsResponse(
-            String giver, Section giverSection, String recipient, Section recipientSection,
-            FeedbackResponseDetails responseDetails
+            ResponseGiver giver, ResponseRecipient recipient,
+            FeedbackResponseDetails responseDetails, @Nullable String giverComment
     ) {
-        super(giver, giverSection, recipient, recipientSection);
+        super(giver, recipient, giverComment);
         this.setAnswer((FeedbackRankOptionsResponseDetails) responseDetails);
     }
 
@@ -43,6 +45,11 @@ public class FeedbackRankOptionsResponse extends FeedbackResponse {
     @Override
     public FeedbackResponseDetails getFeedbackResponseDetailsCopy() {
         return answer.getDeepCopy();
+    }
+
+    @Override
+    public void setFeedbackResponseDetails(FeedbackResponseDetails responseDetails) {
+        setAnswer(castResponseDetails(responseDetails, FeedbackRankOptionsResponseDetails.class));
     }
 
     @Override

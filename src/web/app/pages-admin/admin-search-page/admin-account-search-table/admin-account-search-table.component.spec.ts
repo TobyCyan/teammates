@@ -1,8 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap/modal';
 import { of, throwError } from 'rxjs';
 import { AccountRequestSearchResult } from '../../../../services/search.service';
 import { AdminAccountSearchTableComponent } from './admin-account-search-table.component';
@@ -25,7 +24,7 @@ describe('AdminAccountSearchTableComponent', () => {
   let ngbModal: NgbModal;
 
   const accountRequestDetailsBuilder = createBuilder<AccountRequestSearchResult>({
-    id: '',
+    accountRequestId: '',
     email: '',
     name: '',
     institute: '',
@@ -45,24 +44,16 @@ describe('AdminAccountSearchTableComponent', () => {
     .createdAtText('Tue, 08 Feb 2022, 08:23 AM +00:00')
     .comments('comment');
 
-  const resetModalContent = `Are you sure you want to reset the account request for
-        <strong>name</strong> with email <strong>email</strong> from
-        <strong>institute</strong>?
-        An email with the account registration link will also be sent to the instructor.`;
-  const resetModalTitle = 'Reset account request for <strong>name</strong>?';
   const deleteModalContent = `Are you sure you want to <strong>delete</strong> the account request for
         <strong>name</strong> with email <strong>email</strong> from
         <strong>institute</strong>?`;
   const deleteModalTitle = 'Delete account request for <strong>name</strong>?';
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [BrowserAnimationsModule],
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(AdminAccountSearchTableComponent);
     component = fixture.componentInstance;
     accountService = TestBed.inject(AccountService);
@@ -99,9 +90,9 @@ describe('AdminAccountSearchTableComponent', () => {
 
   it('should display account requests with no reset or expand links button', () => {
     const first: AccountRequestSearchResult = DEFAULT_ACCOUNT_REQUEST.build();
-    first.id = 'id-1';
+    first.accountRequestId = 'id-1';
     const second: AccountRequestSearchResult = DEFAULT_ACCOUNT_REQUEST.build();
-    second.id = 'id-2';
+    second.accountRequestId = 'id-2';
     const accountRequestResults: AccountRequestSearchResult[] = [first, second];
 
     component.accountRequests = accountRequestResults;
@@ -111,12 +102,12 @@ describe('AdminAccountSearchTableComponent', () => {
 
   it('should display account requests with reset button and expandable links buttons', () => {
     const approvedAccountRequestResult: AccountRequestSearchResult = DEFAULT_ACCOUNT_REQUEST.build();
-    approvedAccountRequestResult.id = 'approved-id';
+    approvedAccountRequestResult.accountRequestId = 'approved-id';
     approvedAccountRequestResult.status = AccountRequestStatus.APPROVED;
     approvedAccountRequestResult.registrationLink = 'registrationLink';
 
     const registeredAccountRequestResult: AccountRequestSearchResult = DEFAULT_ACCOUNT_REQUEST.build();
-    registeredAccountRequestResult.id = 'registered-id';
+    registeredAccountRequestResult.accountRequestId = 'registered-id';
     registeredAccountRequestResult.status = AccountRequestStatus.REGISTERED;
     registeredAccountRequestResult.registrationLink = 'registrationLink';
 
@@ -135,17 +126,17 @@ describe('AdminAccountSearchTableComponent', () => {
     component.accountRequests = [DEFAULT_ACCOUNT_REQUEST.build()];
     fixture.detectChanges();
 
-    const modalSpy = jest.spyOn(simpleModalService, 'openConfirmationModal').mockImplementation(() => {
+    const modalSpy = vi.spyOn(simpleModalService, 'openConfirmationModal').mockImplementation(() => {
       return createMockNgbModalRef({});
     });
 
-    jest.spyOn(accountService, 'deleteAccountRequest').mockReturnValue(
+    vi.spyOn(accountService, 'deleteAccountRequest').mockReturnValue(
       of({
         message: 'Account request successfully deleted.',
       }),
     );
 
-    const spyStatusMessageService: any = jest
+    const spyStatusMessageService: any = vi
       .spyOn(statusMessageService, 'showSuccessToast')
       .mockImplementation((args: string) => {
         expect(args).toEqual('Account request successfully deleted.');
@@ -164,11 +155,11 @@ describe('AdminAccountSearchTableComponent', () => {
 
     fixture.detectChanges();
 
-    const modalSpy = jest.spyOn(simpleModalService, 'openConfirmationModal').mockImplementation(() => {
+    const modalSpy = vi.spyOn(simpleModalService, 'openConfirmationModal').mockImplementation(() => {
       return createMockNgbModalRef({});
     });
 
-    jest.spyOn(accountService, 'deleteAccountRequest').mockReturnValue(
+    vi.spyOn(accountService, 'deleteAccountRequest').mockReturnValue(
       throwError(() => ({
         error: {
           message: 'This is the error message.',
@@ -176,7 +167,7 @@ describe('AdminAccountSearchTableComponent', () => {
       })),
     );
 
-    const spyStatusMessageService: any = jest
+    const spyStatusMessageService: any = vi
       .spyOn(statusMessageService, 'showErrorToast')
       .mockImplementation((args: string) => {
         expect(args).toEqual('This is the error message.');
@@ -190,95 +181,13 @@ describe('AdminAccountSearchTableComponent', () => {
     expect(modalSpy).toHaveBeenCalledWith(deleteModalTitle, SimpleModalType.DANGER, deleteModalContent);
   });
 
-  it('should show success message when resetting account request is successful', () => {
-    const registeredAccountRequestResult: AccountRequestSearchResult = DEFAULT_ACCOUNT_REQUEST.build();
-    registeredAccountRequestResult.status = AccountRequestStatus.REGISTERED;
-    registeredAccountRequestResult.registrationLink = 'registrationLink';
-    registeredAccountRequestResult.registeredAtText = 'registeredTime';
-    component.accountRequests = [registeredAccountRequestResult];
-
-    component.searchString = 'test';
-    fixture.detectChanges();
-
-    const mockModalRef = {
-      componentInstance: {},
-      result: Promise.resolve({}),
-      dismissed: {
-        subscribe: jest.fn(),
-      },
-    };
-
-    const modalSpy = jest.spyOn(simpleModalService, 'openConfirmationModal').mockReturnValue(mockModalRef as any);
-
-    jest.spyOn(accountService, 'resetAccountRequest').mockReturnValue(
-      of({
-        joinLink: 'joinlink',
-      }),
-    );
-
-    const spyStatusMessageService = jest
-      .spyOn(statusMessageService, 'showSuccessToast')
-      .mockImplementation((args: string) => {
-        expect(args).toEqual('Reset successful. An email has been sent to email.');
-      });
-
-    const resetButton = fixture.debugElement.nativeElement.querySelector('#reset-account-request-0');
-    resetButton.click();
-
-    expect(spyStatusMessageService).toHaveBeenCalled();
-    expect(modalSpy).toHaveBeenCalledTimes(1);
-    expect(modalSpy).toHaveBeenCalledWith(resetModalTitle, SimpleModalType.WARNING, resetModalContent);
-  });
-
-  it('should show error message when resetting account request is unsuccessful', () => {
-    const registeredAccountRequestResult: AccountRequestSearchResult = DEFAULT_ACCOUNT_REQUEST.build();
-    registeredAccountRequestResult.status = AccountRequestStatus.REGISTERED;
-    registeredAccountRequestResult.registrationLink = 'registrationLink';
-    registeredAccountRequestResult.registeredAtText = 'registeredTime';
-    component.accountRequests = [registeredAccountRequestResult];
-
-    component.searchString = 'test';
-    fixture.detectChanges();
-
-    const mockModalRef = {
-      componentInstance: {},
-      result: Promise.resolve({}),
-      dismissed: {
-        subscribe: jest.fn(),
-      },
-    };
-
-    const modalSpy = jest.spyOn(simpleModalService, 'openConfirmationModal').mockReturnValue(mockModalRef as any);
-
-    jest.spyOn(accountService, 'resetAccountRequest').mockReturnValue(
-      throwError(() => ({
-        error: {
-          message: 'This is the error message.',
-        },
-      })),
-    );
-
-    const spyStatusMessageService = jest
-      .spyOn(statusMessageService, 'showErrorToast')
-      .mockImplementation((args: string) => {
-        expect(args).toEqual('This is the error message.');
-      });
-
-    const resetButton = fixture.debugElement.nativeElement.querySelector('#reset-account-request-0');
-    resetButton.click();
-
-    expect(spyStatusMessageService).toHaveBeenCalled();
-    expect(modalSpy).toHaveBeenCalledTimes(1);
-    expect(modalSpy).toHaveBeenCalledWith(resetModalTitle, SimpleModalType.WARNING, resetModalContent);
-  });
-
   it('should display comment modal', () => {
     const accountRequestResults: AccountRequestSearchResult[] = [DEFAULT_ACCOUNT_REQUEST.build()];
 
     component.accountRequests = accountRequestResults;
     fixture.detectChanges();
 
-    const modalSpy = jest.spyOn(simpleModalService, 'openInformationModal').mockReturnValue(createMockNgbModalRef());
+    const modalSpy = vi.spyOn(simpleModalService, 'openInformationModal').mockReturnValue(createMockNgbModalRef());
 
     const viewCommentButton: any = fixture.debugElement.nativeElement.querySelector('#view-account-request-0');
     viewCommentButton.click();
@@ -301,7 +210,7 @@ describe('AdminAccountSearchTableComponent', () => {
       result: Promise.resolve({}),
     };
 
-    const modalSpy = jest.spyOn(ngbModal, 'open').mockReturnValue(mockModalRef as any);
+    const modalSpy = vi.spyOn(ngbModal, 'open').mockReturnValue(mockModalRef as any);
 
     const editButton: any = fixture.debugElement.nativeElement.querySelector('#edit-account-request-0');
     editButton.click();
@@ -319,11 +228,11 @@ describe('AdminAccountSearchTableComponent', () => {
       componentInstance: {},
       result: Promise.resolve({}),
       dismissed: {
-        subscribe: jest.fn(),
+        subscribe: vi.fn(),
       },
     };
 
-    const modalSpy = jest.spyOn(ngbModal, 'open').mockReturnValue(mockModalRef as any);
+    const modalSpy = vi.spyOn(ngbModal, 'open').mockReturnValue(mockModalRef as any);
 
     const rejectButton: any = fixture.debugElement.nativeElement.querySelector('#reject-request-with-reason-0');
     rejectButton.click();
@@ -338,7 +247,7 @@ describe('AdminAccountSearchTableComponent', () => {
     component.accountRequests = accountRequestResults;
     fixture.detectChanges();
 
-    jest.spyOn(accountService, 'rejectAccountRequest').mockReturnValue(
+    vi.spyOn(accountService, 'rejectAccountRequest').mockReturnValue(
       throwError(() => ({
         error: {
           message: 'This is the error message.',
@@ -346,7 +255,7 @@ describe('AdminAccountSearchTableComponent', () => {
       })),
     );
 
-    const spyStatusMessageService = jest
+    const spyStatusMessageService = vi
       .spyOn(statusMessageService, 'showErrorToast')
       .mockImplementation((args: string) => {
         expect(args).toEqual('This is the error message.');
@@ -364,7 +273,7 @@ describe('AdminAccountSearchTableComponent', () => {
     component.accountRequests = accountRequestResults;
     fixture.detectChanges();
 
-    jest.spyOn(accountService, 'approveAccountRequest').mockReturnValue(
+    vi.spyOn(accountService, 'approveAccountRequest').mockReturnValue(
       throwError(() => ({
         error: {
           message: 'This is the error message.',
@@ -372,7 +281,7 @@ describe('AdminAccountSearchTableComponent', () => {
       })),
     );
 
-    const spyStatusMessageService: any = jest
+    const spyStatusMessageService: any = vi
       .spyOn(statusMessageService, 'showErrorToast')
       .mockImplementation((args: string) => {
         expect(args).toEqual('This is the error message.');
@@ -395,9 +304,9 @@ describe('AdminAccountSearchTableComponent', () => {
       result: Promise.resolve({}),
     };
 
-    jest.spyOn(ngbModal, 'open').mockReturnValue(mockModalRef as any);
+    vi.spyOn(ngbModal, 'open').mockReturnValue(mockModalRef as any);
 
-    jest.spyOn(accountService, 'editAccountRequest').mockReturnValue(
+    vi.spyOn(accountService, 'editAccountRequest').mockReturnValue(
       throwError(() => ({
         error: {
           message: 'This is the error message.',
@@ -405,7 +314,7 @@ describe('AdminAccountSearchTableComponent', () => {
       })),
     );
 
-    const spyStatusMessageService = jest
+    const spyStatusMessageService = vi
       .spyOn(statusMessageService, 'showErrorToast')
       .mockImplementation((args: string) => {
         expect(args).toEqual('This is the error message.');
@@ -428,10 +337,10 @@ describe('AdminAccountSearchTableComponent', () => {
       result: Promise.resolve({}),
     };
 
-    const modalSpy = jest.spyOn(ngbModal, 'open').mockReturnValue(mockModalRef as any);
+    const modalSpy = vi.spyOn(ngbModal, 'open').mockReturnValue(mockModalRef as any);
 
     const editedAccountRequest: AccountRequest = {
-      id: 'id',
+      accountRequestId: 'id',
       comments: 'new comment',
       email: 'new email',
       institute: 'new institute',
@@ -441,7 +350,7 @@ describe('AdminAccountSearchTableComponent', () => {
       status: AccountRequestStatus.PENDING,
     };
 
-    jest.spyOn(accountService, 'editAccountRequest').mockReturnValue(of(editedAccountRequest));
+    vi.spyOn(accountService, 'editAccountRequest').mockReturnValue(of(editedAccountRequest));
 
     const editButton: any = fixture.debugElement.nativeElement.querySelector('#edit-account-request-0');
     editButton.click();
@@ -462,7 +371,7 @@ describe('AdminAccountSearchTableComponent', () => {
     fixture.detectChanges();
 
     const approvedRequest: AccountRequest = {
-      id: component.accountRequests[0].id,
+      accountRequestId: component.accountRequests[0].accountRequestId,
       comments: component.accountRequests[0].comments,
       email: component.accountRequests[0].email,
       institute: component.accountRequests[0].institute,
@@ -472,7 +381,7 @@ describe('AdminAccountSearchTableComponent', () => {
       status: AccountRequestStatus.APPROVED,
     };
 
-    jest.spyOn(accountService, 'approveAccountRequest').mockReturnValue(of(approvedRequest));
+    vi.spyOn(accountService, 'approveAccountRequest').mockReturnValue(of(approvedRequest));
 
     const approveButton: any = fixture.debugElement.nativeElement.querySelector('#approve-account-request-0');
     approveButton.click();
@@ -488,7 +397,7 @@ describe('AdminAccountSearchTableComponent', () => {
     fixture.detectChanges();
 
     const rejectedRequest: AccountRequest = {
-      id: component.accountRequests[0].id,
+      accountRequestId: component.accountRequests[0].accountRequestId,
       comments: component.accountRequests[0].comments,
       email: component.accountRequests[0].email,
       institute: component.accountRequests[0].institute,
@@ -498,7 +407,7 @@ describe('AdminAccountSearchTableComponent', () => {
       status: AccountRequestStatus.REJECTED,
     };
 
-    jest.spyOn(accountService, 'rejectAccountRequest').mockReturnValue(of(rejectedRequest));
+    vi.spyOn(accountService, 'rejectAccountRequest').mockReturnValue(of(rejectedRequest));
 
     const rejectButton: any = fixture.debugElement.nativeElement.querySelector('#reject-request-0');
     rejectButton.click();

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit, inject } from '@angular/core';
-import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
 import { CellWithActionsComponent } from './cell-with-actions.component';
 import { CourseService } from '../../../services/course.service';
 import { SimpleModalService } from '../../../services/simple-modal.service';
@@ -16,6 +16,7 @@ import {
   SortableTableHeaderColorScheme,
   SortableTableComponent,
 } from '../sortable-table/sortable-table.component';
+import { textToHighlighting } from '../../utils/highlighter.util';
 
 /**
  * Model of row of student data containing details about a student and their section.
@@ -40,7 +41,6 @@ export class StudentListComponent implements OnInit {
   private statusMessageService = inject(StatusMessageService);
   private courseService = inject(CourseService);
   private simpleModalService = inject(SimpleModalService);
-  private searchTermsHighlighterPipe = inject(SearchTermsHighlighterPipe);
 
   @Input() courseId = '';
   @Input() useGrayHeading = true;
@@ -66,17 +66,24 @@ export class StudentListComponent implements OnInit {
     this.setRowData();
   }
 
-  @Output() removeStudentFromCourseEvent: EventEmitter<string> = new EventEmitter();
+  @Output() removeStudentFromCourseEvent: EventEmitter<StudentListRowModel> = new EventEmitter();
   @Output() sortStudentListEvent: EventEmitter<SortableEvent> = new EventEmitter();
 
   rowsData: SortableTableCellData[][] = [];
   columnsData: ColumnData[] = [];
 
   // enum
-  SortBy: typeof SortBy = SortBy;
-  SortOrder: typeof SortOrder = SortOrder;
-  JoinState: typeof JoinState = JoinState;
-  SortableTableHeaderColorScheme: typeof SortableTableHeaderColorScheme = SortableTableHeaderColorScheme;
+  SortBy!: typeof SortBy;
+  SortOrder!: typeof SortOrder;
+  JoinState!: typeof JoinState;
+  SortableTableHeaderColorScheme!: typeof SortableTableHeaderColorScheme;
+
+  constructor() {
+    this.SortBy = SortBy;
+    this.SortOrder = SortOrder;
+    this.JoinState = JoinState;
+    this.SortableTableHeaderColorScheme = SortableTableHeaderColorScheme;
+  }
 
   /**
    * Returns whether this course are divided into sections
@@ -136,7 +143,7 @@ export class StudentListComponent implements OnInit {
         const rowData: SortableTableCellData[] = [
           {
             value: studentModel.student.sectionName,
-            displayValue: this.searchTermsHighlighterPipe.transform(
+            displayValue: textToHighlighting(
               studentModel.student.sectionName,
               this.searchString,
               this.isPartialMatchHighlightingEnabled,
@@ -144,7 +151,7 @@ export class StudentListComponent implements OnInit {
           },
           {
             value: studentModel.student.teamName,
-            displayValue: this.searchTermsHighlighterPipe.transform(
+            displayValue: textToHighlighting(
               studentModel.student.teamName,
               this.searchString,
               this.isPartialMatchHighlightingEnabled,
@@ -152,7 +159,7 @@ export class StudentListComponent implements OnInit {
           },
           {
             value: studentModel.student.name,
-            displayValue: this.searchTermsHighlighterPipe.transform(
+            displayValue: textToHighlighting(
               studentModel.student.name,
               this.searchString,
               this.isPartialMatchHighlightingEnabled,
@@ -163,7 +170,7 @@ export class StudentListComponent implements OnInit {
           },
           {
             value: studentModel.student.email,
-            displayValue: this.searchTermsHighlighterPipe.transform(
+            displayValue: textToHighlighting(
               studentModel.student.email,
               this.searchString,
               this.isPartialMatchHighlightingEnabled,
@@ -183,7 +190,7 @@ export class StudentListComponent implements OnInit {
         componentData: (idx: number) => ({
           idx,
           courseId: this.courseId,
-          email: studentModel.student.email,
+          userId: studentModel.student.userId,
           enableRemindButton: studentModel.student.joinState === JoinState.NOT_JOINED,
           instructorPrivileges: {
             canModifyStudent: studentModel.isAllowedToModifyStudent,
@@ -200,13 +207,6 @@ export class StudentListComponent implements OnInit {
   }
 
   /**
-   * Function to be passed to ngFor, so that students in the list is tracked by email
-   */
-  trackByFn(_index: number, item: StudentListRowModel): any {
-    return item.student.email;
-  }
-
-  /**
    * Open the student email reminder modal.
    */
   openRemindModal(studentModel: StudentListRowModel): void {
@@ -220,7 +220,7 @@ export class StudentListComponent implements OnInit {
     );
     modalRef.result.then(
       () => {
-        this.remindStudentFromCourse(studentModel.student.email);
+        this.remindStudentFromCourse(studentModel.student.userId);
       },
       () => {},
     );
@@ -240,9 +240,9 @@ export class StudentListComponent implements OnInit {
     );
     modalRef.result.then(
       () => {
-        this.removeStudentFromCourse(studentModel.student.email);
+        this.removeStudentFromCourse(studentModel);
         this.students = this.students.filter(
-          (student: StudentListRowModel) => student.student.email !== studentModel.student.email,
+          (student: StudentListRowModel) => student.student.userId !== studentModel.student.userId,
         );
         this.setRowData();
       },
@@ -253,8 +253,8 @@ export class StudentListComponent implements OnInit {
   /**
    * Remind the student from course.
    */
-  remindStudentFromCourse(studentEmail: string): void {
-    this.courseService.remindStudentForJoin(this.courseId, studentEmail).subscribe({
+  remindStudentFromCourse(studentId: string): void {
+    this.courseService.remindUserForJoin(studentId).subscribe({
       next: (resp: MessageOutput) => {
         this.statusMessageService.showSuccessToast(resp.message);
       },
@@ -267,8 +267,8 @@ export class StudentListComponent implements OnInit {
   /**
    * Removes the student from course.
    */
-  removeStudentFromCourse(studentEmail: string): void {
-    this.removeStudentFromCourseEvent.emit(studentEmail);
+  removeStudentFromCourse(studentModel: StudentListRowModel): void {
+    this.removeStudentFromCourseEvent.emit(studentModel);
   }
 
   /**

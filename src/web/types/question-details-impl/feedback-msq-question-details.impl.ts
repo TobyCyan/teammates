@@ -1,12 +1,14 @@
 import { AbstractFeedbackMcqMsqQuestionDetails } from './abstract-feedback-mcq-msq-question-details';
-import { MsqQuestionStatisticsCalculation } from '../../app/components/question-types/question-statistics/question-statistics-calculation/msq-question-statistics-calculation';
 import {
   FeedbackMsqQuestionDetails,
-  FeedbackParticipantType,
+  FeedbackMsqResponseDetails,
   FeedbackQuestionType,
   QuestionOutput,
+  QuestionRecipientType,
 } from '../api-output';
 import { NO_VALUE } from '../feedback-response-details';
+import { Response } from '../question-statistics.model';
+import { calculateMsqQuestionStatistics } from '../../app/utils/question-statistics.util';
 
 /**
  * Concrete implementation of {@link FeedbackMsqQuestionDetails}.
@@ -17,7 +19,7 @@ export class FeedbackMsqQuestionDetailsImpl
 {
   msqChoices: string[] = [];
   otherEnabled = false;
-  generateOptionsFor: FeedbackParticipantType = FeedbackParticipantType.NONE;
+  generateOptionsFor: QuestionRecipientType = QuestionRecipientType.NONE;
   maxSelectableChoices: number = NO_VALUE;
   minSelectableChoices: number = NO_VALUE;
   hasAssignedWeights = false;
@@ -46,15 +48,18 @@ export class FeedbackMsqQuestionDetailsImpl
   getQuestionCsvStats(question: QuestionOutput): string[][] {
     const statsRows: string[][] = [];
 
-    const statsCalculation: MsqQuestionStatisticsCalculation = new MsqQuestionStatisticsCalculation(this);
-    this.populateQuestionStatistics(statsCalculation, question);
-    statsCalculation.calculateStatistics();
-    if (statsCalculation.responses.length === 0 || !statsCalculation.hasAnswers) {
+    const questionDetails = question.feedbackQuestion.questionDetails as FeedbackMsqQuestionDetails;
+    const responses = question.allResponses
+      // Missing response is meaningless for statistics
+      .filter((response) => !response.isMissingResponse) as unknown as Response<FeedbackMsqResponseDetails>[];
+
+    const statsCalculation = calculateMsqQuestionStatistics(questionDetails, responses);
+    if (responses.length === 0 || !statsCalculation.hasAnswers) {
       // skip stats for no response
       return [];
     }
 
-    statsRows.push(...this.getQuestionCsvStatsFrom(statsCalculation, statsCalculation.question.hasAssignedWeights));
+    statsRows.push(...this.getQuestionCsvStatsFrom(statsCalculation, questionDetails.hasAssignedWeights));
 
     return statsRows;
   }

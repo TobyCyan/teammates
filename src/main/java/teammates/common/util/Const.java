@@ -22,6 +22,9 @@ public final class Const {
 
     public static final int SECTION_SIZE_LIMIT = 100;
 
+    public static final String UNKNOWN_USER = "Unknown User";
+    public static final String UNKNOWN_TEAM = "Unknown Team";
+    public static final String UNKNOWN_SECTION = "Unknown Section";
     public static final String DEFAULT_SECTION = "None";
 
     public static final String UNKNOWN_INSTITUTION = "Unknown Institution";
@@ -30,6 +33,8 @@ public final class Const {
     public static final Charset ENCODING = StandardCharsets.UTF_8;
 
     public static final Duration FEEDBACK_SESSIONS_SEARCH_WINDOW = Duration.ofDays(30);
+    public static final Duration FEEDBACK_SESSION_REMINDER_EMAIL_REDUNDANCY_WINDOW = Duration.ofHours(2);
+    public static final Duration FEEDBACK_SESSION_EVENT_EMAIL_LOOKBACK_WINDOW = Duration.ofDays(2);
     public static final Duration LOGS_RETENTION_PERIOD = Duration.ofDays(30);
     public static final Duration STUDENT_ACTIVITY_LOGS_RETENTION_PERIOD = Duration.ofDays(90);
     public static final Duration COOKIE_VALIDITY_PERIOD = Duration.ofDays(7);
@@ -80,11 +85,11 @@ public final class Const {
      * Represents role names for instructors based on their permission settings.
      */
     public static class InstructorPermissionRoleNames {
-        public static final String INSTRUCTOR_PERMISSION_ROLE_COOWNER = "Co-owner";
-        public static final String INSTRUCTOR_PERMISSION_ROLE_MANAGER = "Manager";
-        public static final String INSTRUCTOR_PERMISSION_ROLE_OBSERVER = "Observer";
-        public static final String INSTRUCTOR_PERMISSION_ROLE_TUTOR = "Tutor";
-        public static final String INSTRUCTOR_PERMISSION_ROLE_CUSTOM = "Custom";
+        public static final String COOWNER = "Co-owner";
+        public static final String MANAGER = "Manager";
+        public static final String OBSERVER = "Observer";
+        public static final String TUTOR = "Tutor";
+        public static final String CUSTOM = "Custom";
     }
 
     /**
@@ -108,23 +113,17 @@ public final class Const {
 
         public static final String IS_IN_RECYCLE_BIN = "isinrecyclebin";
 
-        public static final String IS_STUDENT_REJOINING = "isstudentrejoining";
-        public static final String IS_INSTRUCTOR_REJOINING = "isinstructorrejoining";
-
         public static final String COURSE_ID = "courseid";
         public static final String COURSE_STATUS = "coursestatus";
         public static final String INSTRUCTOR_ID = "instructorid";
-        public static final String INSTRUCTOR_EMAIL = "instructoremail";
         public static final String INSTRUCTOR_INSTITUTION = "instructorinstitution";
         public static final String IS_CREATING_ACCOUNT = "iscreatingaccount";
-        public static final String IS_INSTRUCTOR = "isinstructor";
 
         public static final String FEEDBACK_SESSION_ID = "fsid";
 
         public static final String ACCOUNT_REQUEST_ID = "id";
         public static final String ACCOUNT_REQUEST_STATUS = "status";
 
-        public static final String FEEDBACK_SESSION_NAME = "fsname";
         public static final String FEEDBACK_SESSION_STARTTIME = "starttime";
         public static final String FEEDBACK_SESSION_ENDTIME = "endtime";
         public static final String FEEDBACK_SESSION_MODERATED_PERSON = "moderatedperson";
@@ -133,21 +132,20 @@ public final class Const {
         public static final String FEEDBACK_SESSION_LOG_ENDTIME = "fslendtime";
 
         public static final String FEEDBACK_QUESTION_ID = "questionid";
-        public static final String SINGLE_RECIPIENT_ID_FOR_SUBMISSION = "singlerecipientidforsubmission";
 
         public static final String FEEDBACK_RESPONSE_ID = "responseid";
 
         public static final String FEEDBACK_RESPONSE_COMMENT_ID = "responsecommentid";
 
         public static final String FEEDBACK_RESULTS_GROUPBYSECTION = "frgroupbysection";
-
-        public static final String FEEDBACK_RESULTS_SECTION_BY_GIVER_RECEIVER = "frsessionbygiverreceiver";
+        public static final String IS_DEFAULT_SECTION = "isdefaultsection";
 
         public static final String PREVIEWAS = "previewas";
 
-        public static final String STUDENT_SQL_ID = "studentid";
+        public static final String USER_ID = "userid";
         public static final String STUDENT_ID = "googleid";
-        public static final String INVITER_ID = "invitergoogleid";
+        public static final String ACCOUNT_ID = "accountid";
+        public static final String MASQUERADE_ACCOUNT_ID = "masqueradeaccountid";
 
         public static final String REGKEY = "key";
         public static final String STUDENT_EMAIL = "studentemail";
@@ -157,14 +155,12 @@ public final class Const {
         public static final String TEAM_NAME = "teamname";
 
         public static final String ERROR = "error";
-        public static final String USER_ID = "user";
 
         public static final String SEARCH_KEY = "searchkey";
 
         public static final String USER_CAPTCHA_RESPONSE = "captcharesponse";
 
         public static final String EMAIL_TYPE = "emailtype";
-        public static final String USER_EMAIL = "useremail";
 
         public static final String ENTITY_TYPE = "entitytype";
 
@@ -176,28 +172,10 @@ public final class Const {
 
         public static final String QUERY_LOGS_STARTTIME = "starttime";
         public static final String QUERY_LOGS_ENDTIME = "endtime";
-        public static final String QUERY_LOGS_SEVERITY = "severity";
-        public static final String QUERY_LOGS_MIN_SEVERITY = "minseverity";
-        public static final String QUERY_LOGS_TRACE = "traceid";
-        public static final String QUERY_LOGS_ACTION_CLASS = "actionclass";
-        public static final String QUERY_LOGS_EMAIL = "email";
-        public static final String QUERY_LOGS_EVENT = "logevent";
-        public static final String QUERY_LOGS_SOURCE_LOCATION_FILE = "sourcelocationfile";
-        public static final String QUERY_LOGS_SOURCE_LOCATION_FUNCTION = "sourcelocationfunction";
-        public static final String QUERY_LOGS_EXCEPTION_CLASS = "exceptionclass";
-        public static final String QUERY_LOGS_LATENCY = "latency";
-        public static final String QUERY_LOGS_STATUS = "status";
-        public static final String QUERY_LOGS_VERSION = "version";
-        public static final String QUERY_LOGS_EXTRA_FILTERS = "extrafilters";
-        public static final String QUERY_LOGS_ORDER = "order";
-
-        public static final String LIMIT = "limit";
 
         public static final String NOTIFICATION_ID = "notificationid";
         public static final String NOTIFICATION_TARGET_USER = "usertype";
-        public static final String NOTIFICATION_IS_FETCHING_ALL = "isfetchingall";
-        public static final String NOTFICATION_END_TIME = "endtime";
-        public static final String CONTINUE_URL = "continueurl";
+        public static final String NOTIFICATION_IS_FETCHING_ACTIVE = "isfetchingactive";
     }
 
     /**
@@ -210,6 +188,7 @@ public final class Const {
         public static final String WEB_VERSION = "X-WEB-VERSION";
         public static final String CSRF_TOKEN = "X-CSRF-TOKEN";
         public static final String AUTHORIZATION_KEY = "Authorization";
+        public static final String REQUEST_ID = "X-Request-Id";
     }
 
     /**
@@ -323,22 +302,23 @@ public final class Const {
         public static final String ACCOUNT_RESET = URI_PREFIX + "/account/reset";
         public static final String ACCOUNT_REQUEST = URI_PREFIX + "/account/request";
         public static final String ACCOUNT_REQUESTS = URI_PREFIX + "/account/requests";
-        public static final String ACCOUNT_REQUEST_RESET = ACCOUNT_REQUEST + "/reset";
         public static final String ACCOUNT_REQUEST_REJECTION = ACCOUNT_REQUEST + "/rejection";
         public static final String ACCOUNT_REQUEST_APPROVAL = ACCOUNT_REQUEST + "/approval";
         public static final String RESPONSE_COMMENT = URI_PREFIX + "/responsecomment";
+        public static final String RESPONSE_GIVER_COMMENT = URI_PREFIX + "/response/givercomment";
         public static final String COURSE = URI_PREFIX + "/course";
         public static final String BIN_COURSE = URI_PREFIX + "/bin/course";
+        public static final String DEMO_COURSE = URI_PREFIX + "/demo/course";
         public static final String COURSE_SECTIONS = URI_PREFIX + "/course/sections";
         public static final String COURSES = URI_PREFIX + "/courses";
         public static final String INSTRUCTORS = URI_PREFIX + "/instructors";
         public static final String INSTRUCTOR = URI_PREFIX + "/instructor";
         public static final String INSTRUCTOR_PRIVILEGE = URI_PREFIX + "/instructor/privilege";
-        public static final String INSTRUCTOR_KEY = URI_PREFIX + "/instructor/key";
-        public static final String RESULT = URI_PREFIX + "/result";
+        public static final String COURSE_SESSION_RESULTS = URI_PREFIX + "/session/results/course";
+        public static final String USER_SESSION_RESULTS = URI_PREFIX + "/session/results/user";
         public static final String STUDENTS = URI_PREFIX + "/students";
         public static final String STUDENT = URI_PREFIX + "/student";
-        public static final String STUDENT_KEY = URI_PREFIX + "/student/key";
+        public static final String USER_KEY = URI_PREFIX + "/user/key";
         public static final String NOTIFICATION = URI_PREFIX + "/notification";
         public static final String NOTIFICATIONS = URI_PREFIX + "/notifications";
         public static final String NOTIFICATION_READ = URI_PREFIX + "/notification/read";
@@ -349,6 +329,7 @@ public final class Const {
         public static final String SESSION_REMIND_SUBMISSION = URI_PREFIX + "/session/remind/submission";
         public static final String SESSION_REMIND_RESULT = URI_PREFIX + "/session/remind/result";
         public static final String SESSION_STATS = URI_PREFIX + "/session/stats";
+        public static final String SESSION_SUBMISSION = URI_PREFIX + "/session/submission";
         public static final String SESSION_SUBMITTED_GIVER_SET = URI_PREFIX + "/session/submitted/giverset";
         public static final String SESSIONS = URI_PREFIX + "/sessions";
         public static final String SEARCH_ACCOUNT_REQUESTS = URI_PREFIX + "/search/accountrequests";
@@ -357,7 +338,6 @@ public final class Const {
         public static final String BIN_SESSION = URI_PREFIX + "/bin/session";
         public static final String QUESTIONS = URI_PREFIX + "/questions";
         public static final String QUESTION = URI_PREFIX + "/question";
-        public static final String QUESTION_RECIPIENTS = URI_PREFIX + "/question/recipients";
         public static final String RESPONSES = URI_PREFIX + "/responses";
         public static final String USAGE_STATISTICS = URI_PREFIX + "/usagestats";
         public static final String HAS_RESPONSES = URI_PREFIX + "/hasResponses";
@@ -369,14 +349,6 @@ public final class Const {
         public static final String SESSION_LOGS = URI_PREFIX + "/logs/session";
         public static final String ACTION_CLASS = URI_PREFIX + "/actionclass";
         public static final String USER_COOKIE = URI_PREFIX + "/cookie";
-    }
-
-    /**
-     * User principal identifiers for verified automated cron/worker API callers.
-     */
-    public static class AutomatedService {
-        public static final String CRON_SERVICE_USER_ID = "Cron-Service";
-        public static final String WORKER_SERVICE_USER_ID = "Worker-Service";
     }
 
     /**

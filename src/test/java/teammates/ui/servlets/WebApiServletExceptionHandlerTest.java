@@ -1,5 +1,7 @@
 package teammates.ui.servlets;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.IOException;
 
 import org.apache.http.HttpStatus;
@@ -12,9 +14,10 @@ import teammates.test.MockHttpServletResponse;
 import teammates.ui.exception.ActionMappingException;
 import teammates.ui.exception.EntityNotFoundException;
 import teammates.ui.exception.InvalidHttpParameterException;
+import teammates.ui.exception.InvalidHttpRequestBodyException;
 import teammates.ui.exception.InvalidOperationException;
 import teammates.ui.exception.UnauthorizedAccessException;
-import teammates.ui.request.InvalidHttpRequestBodyException;
+import teammates.ui.exception.UnexpectedServerException;
 
 /**
  * SUT: {@link WebApiServletExceptionHandler}.
@@ -129,4 +132,12 @@ public class WebApiServletExceptionHandlerTest extends BaseTestCase {
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, resp.getStatus());
     }
 
+    @Test
+    public void testUnexpectedServerException_internalServerError() throws Exception {
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                handleException(resp, new UnexpectedServerException("unexpected")));
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, resp.getStatus());
+    }
 }

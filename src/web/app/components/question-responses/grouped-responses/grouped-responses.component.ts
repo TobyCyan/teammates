@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import {
   FeedbackSession,
   FeedbackSessionPublishStatus,
@@ -14,7 +14,7 @@ import { CommentRowComponent } from '../../comment-box/comment-row/comment-row.c
 import { CommentRowMode } from '../../comment-box/comment-row/comment-row.mode';
 import { CommentTableComponent } from '../../comment-box/comment-table/comment-table.component';
 import { CommentTableModel } from '../../comment-box/comment-table/comment-table.model';
-import { CommentToCommentRowModelPipe } from '../../comment-box/comment-to-comment-row-model.pipe';
+import { GiverCommentToCommentRowModelPipe } from '../../comment-box/giver-comment-to-comment-row-model.pipe';
 import { QuestionTextWithInfoComponent } from '../../question-text-with-info/question-text-with-info.component';
 import { InstructorResponsesViewBase } from '../instructor-responses-view-base';
 import { SingleResponseComponent } from '../single-response/single-response.component';
@@ -33,12 +33,12 @@ import { SingleResponseComponent } from '../single-response/single-response.comp
     NgbTooltip,
     CommentRowComponent,
     CommentTableComponent,
-    CommentToCommentRowModelPipe,
+    GiverCommentToCommentRowModelPipe,
   ],
 })
 export class GroupedResponsesComponent extends InstructorResponsesViewBase implements OnInit {
   // enum
-  CommentRowMode: typeof CommentRowMode = CommentRowMode;
+  CommentRowMode!: typeof CommentRowMode;
 
   @Input() responses: QuestionOutput[] = [];
   @Input() userToEmail: Record<string, string> = {};
@@ -64,6 +64,11 @@ export class GroupedResponsesComponent extends InstructorResponsesViewBase imple
   };
 
   hasRealResponses = false;
+
+  constructor() {
+    super();
+    this.CommentRowMode = CommentRowMode;
+  }
 
   ngOnInit(): void {
     this.hasRealResponses = this.responses.some((question: QuestionOutput) =>

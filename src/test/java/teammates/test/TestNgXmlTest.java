@@ -1,5 +1,7 @@
 package teammates.test;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,7 +73,7 @@ public class TestNgXmlTest extends BaseTestCase {
                 testFiles.put(name.replace(".java", ""), packageName);
 
             } else if (file.isDirectory() && !name.endsWith("browsertests") && !name.endsWith("pageobjects")
-                    && !name.endsWith("architecture")) {
+                    && !name.endsWith("architecture") && !name.endsWith("scenariobuilder")) {
                 // If the package name is in TestNG in the form of <package name="teammates.package.name" />
                 // then files in the current directory are excluded because the whole package would be tested by TestNG.
 

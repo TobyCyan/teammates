@@ -1,5 +1,9 @@
 package teammates.e2e.cases;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -20,6 +24,7 @@ import teammates.e2e.util.EntityCopyUtil;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Instructor;
+import teammates.storage.entity.ResponseGiver;
 import teammates.storage.entity.Student;
 import teammates.test.ThreadHelper;
 import teammates.ui.output.FeedbackSessionData;
@@ -192,8 +197,7 @@ public class InstructorHomePageE2ETest extends BaseE2ETestCase {
         otherCourseIndex = 1;
         FeedbackSession[] otherCourseSessionsWithCopyTwo = { copiedSession, otherCourseSession };
         homePage.verifyCourseTabDetails(otherCourseIndex, otherCourse, otherCourseSessionsWithCopyTwo);
-        assertNotNull(getSoftDeletedSession(copiedSession2.getName(),
-                instructor.getGoogleId()));
+        assertNotNull(getSoftDeletedSession(copiedSession2.getName(), instructor.getAccountId()));
 
         ______TS("delete course");
         otherCourseIndex = 1;
@@ -220,7 +224,7 @@ public class InstructorHomePageE2ETest extends BaseE2ETestCase {
                 .filter(s -> s.getCourseId().equals(session.getCourseId()))
                 .count();
 
-        Set<String> uniqueGivers = new HashSet<>();
+        Set<ResponseGiver> uniqueGivers = new HashSet<>();
         testData.feedbackResponses.values()
                 .stream()
                 .filter(r -> r.getFeedbackQuestion().getFeedbackSessionName().equals(sessionName))

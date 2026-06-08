@@ -2,6 +2,8 @@ package teammates.ui.request;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+import teammates.ui.exception.InvalidHttpRequestBodyException;
+
 /**
  * The request of marking a notification as read in account.
  */
@@ -19,6 +21,6 @@ public class MarkNotificationAsReadRequest extends BasicRequest {
 
     @Override
     public void validate() throws InvalidHttpRequestBodyException {
-        assertTrue(notificationId != null, "Notification id should not be null.");
+        validateTrue(notificationId != null, "Notification id should not be null.");
     }
 }

@@ -1,15 +1,20 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbModalRef, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
+import { from, Observable, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { QuestionEditFormMode, QuestionEditFormModel } from './question-edit-form-model';
 import { CommonVisibilitySetting, FeedbackQuestionsService } from '../../../services/feedback-questions.service';
 import { SimpleModalService } from '../../../services/simple-modal.service';
 import { VisibilityStateMachine } from '../../../services/visibility-state-machine';
 import {
-  FeedbackParticipantType,
   FeedbackQuestionType,
+  FeedbackSessionSubmissionStatus,
   FeedbackVisibilityType,
   NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionGiverType,
+  QuestionRecipientType,
 } from '../../../types/api-output';
 import { VisibilityControl } from '../../../types/visibility-control';
 import { AjaxLoadingComponent } from '../ajax-loading/ajax-loading.component';
@@ -27,9 +32,10 @@ import { RankRecipientsQuestionEditDetailsFormComponent } from '../question-type
 import { RubricQuestionEditDetailsFormComponent } from '../question-types/question-edit-details-form/rubric-question-edit-details-form.component';
 import { TextQuestionEditDetailsFormComponent } from '../question-types/question-edit-details-form/text-question-edit-details-form.component';
 import { SimpleModalType } from '../simple-modal/simple-modal-type';
-import { collapseAnim } from '../teammates-common/collapse-anim';
 import { QuestionTypeNamePipe } from '../teammates-common/question-type-name.pipe';
 import { VisibilityPanelComponent } from '../visibility-panel/visibility-panel.component';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
+import { FeedbackSessionsService } from '../../../services/feedback-sessions.service';
 
 const FEEDBACK_PATH_PROPERTIES: Set<string> = new Set<string>([
   'giverType',
@@ -59,12 +65,12 @@ const QUESTION_DETAIL_PROPERTIES: Set<string> = new Set<string>([
   selector: 'tm-question-edit-form',
   templateUrl: './question-edit-form.component.html',
   styleUrls: ['./question-edit-form.component.scss'],
-  animations: [collapseAnim],
   imports: [
     PanelChevronComponent,
     FormsModule,
     AjaxLoadingComponent,
     NgbTooltip,
+    NgbCollapse,
     QuestionEditBriefDescriptionFormComponent,
     TextQuestionEditDetailsFormComponent,
     ContributionQuestionEditDetailsFormComponent,
@@ -82,17 +88,16 @@ const QUESTION_DETAIL_PROPERTIES: Set<string> = new Set<string>([
   ],
 })
 export class QuestionEditFormComponent {
-  private feedbackQuestionsService = inject(FeedbackQuestionsService);
-  private simpleModalService = inject(SimpleModalService);
+  private readonly feedbackQuestionsService = inject(FeedbackQuestionsService);
+  private readonly simpleModalService = inject(SimpleModalService);
+  private readonly feedbackSessionsService = inject(FeedbackSessionsService);
 
   // enum
-  FeedbackQuestionType: typeof FeedbackQuestionType = FeedbackQuestionType;
-  QuestionEditFormMode: typeof QuestionEditFormMode = QuestionEditFormMode;
-  FeedbackParticipantType: typeof FeedbackParticipantType = FeedbackParticipantType;
-  NumberOfEntitiesToGiveFeedbackToSetting: typeof NumberOfEntitiesToGiveFeedbackToSetting =
-    NumberOfEntitiesToGiveFeedbackToSetting;
-  VisibilityControl: typeof VisibilityControl = VisibilityControl;
-  FeedbackVisibilityType: typeof FeedbackVisibilityType = FeedbackVisibilityType;
+  FeedbackQuestionType!: typeof FeedbackQuestionType;
+  QuestionEditFormMode!: typeof QuestionEditFormMode;
+  NumberOfEntitiesToGiveFeedbackToSetting!: typeof NumberOfEntitiesToGiveFeedbackToSetting;
+  VisibilityControl!: typeof VisibilityControl;
+  FeedbackVisibilityType!: typeof FeedbackVisibilityType;
 
   @Input()
   set formModel(model: QuestionEditFormModel) {
@@ -168,7 +173,7 @@ export class QuestionEditFormComponent {
   isDisplayOnly = false;
 
   @Input()
-  isQuestionPublished = false;
+  questionSubmissionStatus: FeedbackSessionSubmissionStatus = FeedbackSessionSubmissionStatus.NOT_VISIBLE;
 
   model: QuestionEditFormModel = {
     feedbackQuestionId: '',
@@ -177,16 +182,14 @@ export class QuestionEditFormComponent {
     questionBrief: '',
     questionDescription: '',
 
-    isQuestionHasResponses: false,
-
     questionType: FeedbackQuestionType.TEXT,
     questionDetails: {
       questionType: FeedbackQuestionType.TEXT,
       questionText: '',
     },
 
-    giverType: FeedbackParticipantType.STUDENTS,
-    recipientType: FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
+    giverType: QuestionGiverType.STUDENTS,
+    recipientType: QuestionRecipientType.STUDENTS_EXCLUDING_SELF,
 
     numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
     customNumberOfEntitiesToGiveFeedbackTo: 1,
@@ -230,15 +233,20 @@ export class QuestionEditFormComponent {
   @Output()
   createNewQuestionEvent: EventEmitter<void> = new EventEmitter();
 
-  commonFeedbackPaths: Map<FeedbackParticipantType, FeedbackParticipantType[]> = new Map();
+  commonFeedbackPaths: Map<QuestionGiverType, QuestionRecipientType[]> = new Map();
 
-  allowedFeedbackPaths: Map<FeedbackParticipantType, FeedbackParticipantType[]> = new Map();
+  allowedFeedbackPaths: Map<QuestionGiverType, QuestionRecipientType[]> = new Map();
 
   commonFeedbackVisibilitySettings: CommonVisibilitySetting[] = [];
 
   visibilityStateMachine: VisibilityStateMachine;
 
   constructor() {
+    this.FeedbackQuestionType = FeedbackQuestionType;
+    this.QuestionEditFormMode = QuestionEditFormMode;
+    this.NumberOfEntitiesToGiveFeedbackToSetting = NumberOfEntitiesToGiveFeedbackToSetting;
+    this.VisibilityControl = VisibilityControl;
+    this.FeedbackVisibilityType = FeedbackVisibilityType;
     this.visibilityStateMachine = this.feedbackQuestionsService.getNewVisibilityStateMachine(
       this.model.giverType,
       this.model.recipientType,
@@ -330,68 +338,77 @@ export class QuestionEditFormComponent {
    * Saves the question.
    */
   saveQuestionHandler(): void {
-    if (this.formMode === QuestionEditFormMode.EDIT) {
-      const doChangesNeedWarning: boolean =
-        this.model.isQuestionDetailsChanged || this.model.isVisibilityChanged || this.model.isFeedbackPathChanged;
-      if (!this.isQuestionPublished && (!this.model.isQuestionHasResponses || !doChangesNeedWarning)) {
-        this.saveExistingQuestionEvent.emit();
-      } else if (this.model.isFeedbackPathChanged) {
-        // warn user that editing feedback path will delete all messages
-        const modalContent = `
+    if (this.formMode === QuestionEditFormMode.ADD) {
+      this.createNewQuestionEvent.emit();
+      return;
+    }
+
+    this.feedbackSessionsService
+      .hasResponsesForQuestion(this.model.feedbackQuestionId)
+      .pipe(
+        map((response) => response.hasResponses),
+        catchError(() => of(false)),
+        switchMap((hasResponses: boolean) => {
+          if (!hasResponses) {
+            return of(true);
+          }
+
+          if (this.model.isFeedbackPathChanged) {
+            return this.openSaveConfirmationModal$(
+              'Save the question?',
+              SimpleModalType.DANGER,
+              `
             <p>You seem to have changed the feedback path settings of this question. Please note that changing the
             feedback path will cause <b>all existing responses to be deleted.</b> Proceed?</p>
-        `;
-        const modalRef: NgbModalRef = this.simpleModalService.openConfirmationModal(
-          'Save the question?',
-          SimpleModalType.DANGER,
-          modalContent,
-        );
-        modalRef.result.then(
-          () => {
-            this.saveExistingQuestionEvent.emit();
-          },
-          () => {},
-        );
-      } else if (this.model.isQuestionDetailsChanged) {
-        // alert user that editing question may result in deletion of responses
-        const modalContent = `
+        `,
+            );
+          }
+
+          if (this.model.isQuestionDetailsChanged) {
+            return this.openSaveConfirmationModal$(
+              'Save the question?',
+              SimpleModalType.DANGER,
+              `
             <p>Editing question settings in a way that potentially affects the validity of existing responses <b> may
             cause all the existing responses for this question to be deleted.</b> Proceed?</p>
-        `;
-        const modalRef: NgbModalRef = this.simpleModalService.openConfirmationModal(
-          'Save the question?',
-          SimpleModalType.DANGER,
-          modalContent,
-        );
-        modalRef.result.then(
-          () => {
-            this.saveExistingQuestionEvent.emit();
-          },
-          () => {},
-        );
-      } else if (this.model.isVisibilityChanged) {
-        // alert user that editing visibility options will not delete responses
-        const modalContent = `
+        `,
+            );
+          }
+
+          if (this.model.isVisibilityChanged) {
+            return this.openSaveConfirmationModal$(
+              'Save the question?',
+              SimpleModalType.WARNING,
+              `
             <p>You seem to have changed the visibility settings of this question. Please note that <b>the existing
             responses will remain but their visibility will be changed as per the new visibility settings.</b>
             Proceed?</p>
-        `;
-        const modalRef: NgbModalRef = this.simpleModalService.openConfirmationModal(
-          'Save the question?',
-          SimpleModalType.WARNING,
-          modalContent,
-        );
-        modalRef.result.then(
-          () => {
+        `,
+            );
+          }
+
+          return of(true);
+        }),
+      )
+      .subscribe({
+        next: (shouldSave) => {
+          if (shouldSave) {
             this.saveExistingQuestionEvent.emit();
-          },
-          () => {},
-        );
-      }
-    }
-    if (this.formMode === QuestionEditFormMode.ADD) {
-      this.createNewQuestionEvent.emit();
-    }
+          }
+        },
+      });
+  }
+
+  private openSaveConfirmationModal$(
+    title: string,
+    modalType: SimpleModalType,
+    modalContent: string,
+  ): Observable<boolean> {
+    const modalRef: NgbModalRef = this.simpleModalService.openConfirmationModal(title, modalType, modalContent);
+    return from(modalRef.result).pipe(
+      map(() => true),
+      catchError(() => of(false)),
+    );
   }
 
   /**

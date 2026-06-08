@@ -6,6 +6,8 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+import teammates.ui.exception.InvalidHttpRequestBodyException;
+
 /**
  * The request for enrolling a list of students.
  */
@@ -30,7 +32,7 @@ public class StudentsEnrollRequest extends BasicRequest {
 
     @Override
     public void validate() throws InvalidHttpRequestBodyException {
-        assertTrue(!studentEnrollRequests.isEmpty(), ERROR_MESSAGE_EMPTY_ENROLLMENT);
+        validateTrue(!studentEnrollRequests.isEmpty(), ERROR_MESSAGE_EMPTY_ENROLLMENT);
         for (StudentEnrollRequest request : studentEnrollRequests) {
             request.validate();
         }
@@ -38,7 +40,7 @@ public class StudentsEnrollRequest extends BasicRequest {
         Set<String> emails = new HashSet<>();
         for (StudentEnrollRequest request : studentEnrollRequests) {
             String normalizedEmail = request.getEmail();
-            assertTrue(!emails.contains(normalizedEmail),
+            validateTrue(!emails.contains(normalizedEmail),
                     String.format(ERROR_MESSAGE_DUPLICATE_EMAIL, request.getEmail()));
             emails.add(normalizedEmail);
         }

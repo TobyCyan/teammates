@@ -1,9 +1,9 @@
 import { Component, Input, OnChanges, OnInit, inject } from '@angular/core';
 import { FeedbackResponsesService } from '../../../../services/feedback-responses.service';
 import {
-  FeedbackParticipantType,
   FeedbackQuestionDetails,
   FeedbackQuestionType,
+  QuestionRecipientType,
   ResponseOutput,
 } from '../../../../types/api-output';
 import { QuestionDetailsTypeChecker } from '../../../../types/question-details-impl/question-details-caster';
@@ -18,7 +18,6 @@ import { NumScaleQuestionStatisticsComponent } from '../../question-types/questi
 import { RankOptionsQuestionStatisticsComponent } from '../../question-types/question-statistics/rank-options-question-statistics.component';
 import { RankRecipientsQuestionStatisticsComponent } from '../../question-types/question-statistics/rank-recipients-question-statistics.component';
 import { RubricQuestionStatisticsComponent } from '../../question-types/question-statistics/rubric-question-statistics.component';
-import { TextQuestionStatisticsComponent } from '../../question-types/question-statistics/text-question-statistics.component';
 
 /**
  * The component that will map a generic response statistics to its specialized view component.
@@ -28,7 +27,6 @@ import { TextQuestionStatisticsComponent } from '../../question-types/question-s
   templateUrl: './single-statistics.component.html',
   imports: [
     ContributionQuestionStatisticsComponent,
-    TextQuestionStatisticsComponent,
     ConstsumOptionsQuestionStatisticsComponent,
     ConstsumRecipientsQuestionStatisticsComponent,
     NumScaleQuestionStatisticsComponent,
@@ -42,15 +40,15 @@ import { TextQuestionStatisticsComponent } from '../../question-types/question-s
 export class SingleStatisticsComponent implements OnInit, OnChanges {
   private feedbackResponsesService = inject(FeedbackResponsesService);
 
-  readonly QuestionDetailsTypeChecker = QuestionDetailsTypeChecker;
-  readonly ResponseOutputCaster = ResponseOutputCaster;
+  readonly QuestionDetailsTypeChecker: typeof QuestionDetailsTypeChecker;
+  readonly ResponseOutputCaster: typeof ResponseOutputCaster;
 
   @Input() responses: ResponseOutput[] = [];
   @Input() question: FeedbackQuestionDetails = {
     questionType: FeedbackQuestionType.TEXT,
     questionText: '',
   };
-  @Input() recipientType: FeedbackParticipantType = FeedbackParticipantType.NONE;
+  @Input() recipientType: QuestionRecipientType = QuestionRecipientType.NONE;
   @Input() isStudent = false;
   @Input() statistics = '';
   @Input() displayContributionStats = true;
@@ -58,6 +56,11 @@ export class SingleStatisticsComponent implements OnInit, OnChanges {
   @Input() sectionType: InstructorSessionResultSectionType = InstructorSessionResultSectionType.EITHER;
 
   responsesToUse: ResponseOutput[] = [];
+
+  constructor() {
+    this.QuestionDetailsTypeChecker = QuestionDetailsTypeChecker;
+    this.ResponseOutputCaster = ResponseOutputCaster;
+  }
 
   ngOnInit(): void {
     this.filterResponses();

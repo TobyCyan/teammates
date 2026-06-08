@@ -1,5 +1,5 @@
-import { TemplateRef } from '@angular/core';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { inject, TemplateRef } from '@angular/core';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
 import moment from 'moment-timezone';
 import { Observable, of } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
@@ -20,6 +20,7 @@ import {
   FeedbackSessionPublishStatus,
   FeedbackSessionStats,
   FeedbackSessionSubmissionStatus,
+  FeedbackSessionView,
   ResponseVisibleSetting,
   SessionVisibleSetting,
 } from '../../types/api-output';
@@ -38,13 +39,25 @@ import {
 } from '../components/sessions-table/sessions-table-model';
 import { SimpleModalType } from '../components/simple-modal/simple-modal-type';
 import { ColumnData, SortableTableCellData } from '../components/sortable-table/sortable-table.component';
-import { PublishStatusNamePipe } from '../components/teammates-common/publish-status-name.pipe';
 import { ErrorMessageOutput } from '../error-message-output';
+import { publishStatusNameToString } from '../utils/publish-status-name.util';
 
 /**
  * The base page for session related page.
  */
 export abstract class InstructorSessionBasePageComponent {
+  protected instructorService = inject(InstructorService);
+  protected statusMessageService = inject(StatusMessageService);
+  protected navigationService = inject(NavigationService);
+  protected feedbackSessionsService = inject(FeedbackSessionsService);
+  protected feedbackQuestionsService = inject(FeedbackQuestionsService);
+  protected tableComparatorService = inject(TableComparatorService);
+  protected ngbModal = inject(NgbModal);
+  protected simpleModalService = inject(SimpleModalService);
+  protected progressBarService = inject(ProgressBarService);
+  protected feedbackSessionActionsService = inject(FeedbackSessionActionsService);
+  protected timezoneService = inject(TimezoneService);
+
   isResultActionLoading = false;
 
   protected failedToCopySessions: Record<string, string> = {}; // Map of failed session copy to error message
@@ -52,8 +65,6 @@ export abstract class InstructorSessionBasePageComponent {
   modifiedSession: Record<string, TweakedTimestampData> = {};
 
   private publishUnpublishRetryAttempts: number = DEFAULT_NUMBER_OF_RETRY_ATTEMPTS;
-
-  private publishStatusName: PublishStatusNamePipe = new PublishStatusNamePipe();
 
   sessionEditFormModel: SessionEditFormModel = {
     feedbackSessionId: '',
@@ -92,20 +103,6 @@ export abstract class InstructorSessionBasePageComponent {
     hasVisibleSettingsPanelExpanded: false,
     hasEmailSettingsPanelExpanded: false,
   };
-
-  protected constructor(
-    protected instructorService: InstructorService,
-    protected statusMessageService: StatusMessageService,
-    protected navigationService: NavigationService,
-    protected feedbackSessionsService: FeedbackSessionsService,
-    protected feedbackQuestionsService: FeedbackQuestionsService,
-    protected tableComparatorService: TableComparatorService,
-    protected ngbModal: NgbModal,
-    protected simpleModalService: SimpleModalService,
-    protected progressBarService: ProgressBarService,
-    protected feedbackSessionActionsService: FeedbackSessionActionsService,
-    protected timezoneService: TimezoneService,
-  ) {}
 
   /**
    * Copies a feedback session.
@@ -409,9 +406,9 @@ export abstract class InstructorSessionBasePageComponent {
             intent: Intent.FULL_DETAIL,
           })
           .pipe(
-            switchMap((feedbackSession: FeedbackSession) =>
+            switchMap((feedbackSessionView: FeedbackSessionView) =>
               this.copyFeedbackSession(
-                feedbackSession,
+                feedbackSessionView.feedbackSession,
                 result.newFeedbackSessionName,
                 copyToCourseId,
                 result.sessionToCopyCourseId,
@@ -443,8 +440,6 @@ export abstract class InstructorSessionBasePageComponent {
             {
               onClosed: () =>
                 this.navigationService.navigateByURLWithParamEncoding('/web/instructor/sessions/edit', {
-                  courseid: createdSession.courseId,
-                  fsname: createdSession.feedbackSessionName,
                   fsid: createdSession.feedbackSessionId,
                 }),
             },
@@ -454,8 +449,6 @@ export abstract class InstructorSessionBasePageComponent {
             '/web/instructor/sessions/edit',
             'The feedback session has been copied. Please modify settings/questions as necessary.',
             {
-              courseid: createdSession.courseId,
-              fsname: createdSession.feedbackSessionName,
               fsid: createdSession.feedbackSessionId,
             },
           );
@@ -496,8 +489,6 @@ export abstract class InstructorSessionBasePageComponent {
    */
   submitSessionAsInstructor(model: SessionsTableRowModel): void {
     this.navigationService.navigateByURLWithParamEncoding('/web/instructor/sessions/submission', {
-      courseid: model.feedbackSession.courseId,
-      fsname: model.feedbackSession.feedbackSessionName,
       fsid: model.feedbackSession.feedbackSessionId,
     });
   }
@@ -509,7 +500,7 @@ export abstract class InstructorSessionBasePageComponent {
     this.feedbackQuestionsService
       .getFeedbackQuestions({
         feedbackSessionId: model.feedbackSession.feedbackSessionId,
-        intent: Intent.INSTRUCTOR_RESULT,
+        intent: Intent.FULL_DETAIL,
       })
       .pipe(
         switchMap((feedbackQuestions: FeedbackQuestions) => {
@@ -520,7 +511,6 @@ export abstract class InstructorSessionBasePageComponent {
               model.feedbackSession.courseId,
               model.feedbackSession.feedbackSessionName,
               model.feedbackSession.feedbackSessionId,
-              Intent.FULL_DETAIL,
               true,
               true,
               questions,
@@ -563,7 +553,7 @@ export abstract class InstructorSessionBasePageComponent {
           rowData[colIdx].customComponent!.componentData = () => {
             return {
               ...rowData[colIdx].customComponent!.componentData,
-              value: this.publishStatusName.transform(FeedbackSessionPublishStatus.PUBLISHED),
+              value: publishStatusNameToString(FeedbackSessionPublishStatus.PUBLISHED),
             };
           };
 
@@ -619,7 +609,7 @@ export abstract class InstructorSessionBasePageComponent {
           rowData[responseColIdx].customComponent!.componentData = () => {
             return {
               ...rowData[responseColIdx].customComponent!.componentData,
-              value: this.publishStatusName.transform(FeedbackSessionPublishStatus.NOT_PUBLISHED),
+              value: publishStatusNameToString(FeedbackSessionPublishStatus.NOT_PUBLISHED),
             };
           };
 
@@ -645,7 +635,7 @@ export abstract class InstructorSessionBasePageComponent {
 
   openErrorReportModal(resp: ErrorMessageOutput): void {
     const modal: NgbModalRef = this.ngbModal.open(ErrorReportComponent);
-    modal.componentInstance.requestId = resp.error.requestId;
+    modal.componentInstance.requestId = resp.headers?.get('X-Request-Id');
     modal.componentInstance.errorMessage = resp.error.message;
   }
 

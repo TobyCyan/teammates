@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NumScaleQuestionEditDetailsFormComponent } from './num-scale-question-edit-details-form.component';
+import { DEFAULT_NUMSCALE_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 
 describe('NumScaleQuestionEditDetailsFormComponent', () => {
   let component: NumScaleQuestionEditDetailsFormComponent;
@@ -9,6 +10,7 @@ describe('NumScaleQuestionEditDetailsFormComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(NumScaleQuestionEditDetailsFormComponent);
     component = fixture.componentInstance;
+    component.model = DEFAULT_NUMSCALE_QUESTION_DETAILS();
     fixture.detectChanges();
   });
 
@@ -21,7 +23,7 @@ describe('NumScaleQuestionEditDetailsFormComponent', () => {
       key: 'e',
     });
 
-    const eventSpy = jest.spyOn(event, 'preventDefault');
+    const eventSpy = vi.spyOn(event, 'preventDefault');
     component.onIntegerInput(event);
     expect(eventSpy).toHaveBeenCalled();
   });
@@ -31,7 +33,7 @@ describe('NumScaleQuestionEditDetailsFormComponent', () => {
       key: '.',
     });
 
-    const eventSpy = jest.spyOn(event, 'preventDefault');
+    const eventSpy = vi.spyOn(event, 'preventDefault');
     component.onIntegerInput(event);
     expect(eventSpy).toHaveBeenCalled();
   });
@@ -41,7 +43,7 @@ describe('NumScaleQuestionEditDetailsFormComponent', () => {
       key: '3',
     });
 
-    const eventSpy = jest.spyOn(event, 'preventDefault');
+    const eventSpy = vi.spyOn(event, 'preventDefault');
     component.onIntegerInput(event);
     expect(eventSpy).not.toHaveBeenCalled();
   });
@@ -51,7 +53,7 @@ describe('NumScaleQuestionEditDetailsFormComponent', () => {
       key: 'e',
     });
 
-    const eventSpy = jest.spyOn(event, 'preventDefault');
+    const eventSpy = vi.spyOn(event, 'preventDefault');
     component.onFloatInput(event);
     expect(eventSpy).toHaveBeenCalled();
   });
@@ -61,7 +63,7 @@ describe('NumScaleQuestionEditDetailsFormComponent', () => {
       key: '.',
     });
 
-    const eventSpy = jest.spyOn(event, 'preventDefault');
+    const eventSpy = vi.spyOn(event, 'preventDefault');
     component.onFloatInput(event);
     expect(eventSpy).not.toHaveBeenCalled();
   });
@@ -71,46 +73,38 @@ describe('NumScaleQuestionEditDetailsFormComponent', () => {
       key: '3',
     });
 
-    const eventSpy = jest.spyOn(event, 'preventDefault');
+    const eventSpy = vi.spyOn(event, 'preventDefault');
     component.onFloatInput(event);
     expect(eventSpy).not.toHaveBeenCalled();
   });
 
   it('should allow number inputs with less than or equal to 9 digits in restrictIntegerInputLength', () => {
     const inputElement = fixture.debugElement.query(By.css('#max-value')).nativeElement as HTMLInputElement;
-    const inputEvent = new InputEvent('input');
-    inputElement.dispatchEvent(inputEvent);
-    (inputEvent.target as HTMLInputElement).value = '12345';
-    component.restrictIntegerInputLength(inputEvent, 'minScale');
-    expect((inputEvent.target as HTMLInputElement).value).toEqual('12345');
+    inputElement.value = '12345';
+    component.restrictIntegerInputLength(inputElement, 'minScale');
+    expect(inputElement.value).toEqual('12345');
   });
 
   it('should restrict number inputs with more than 9 digits to 9 digits in restrictIntegerInputLength', () => {
     const inputElement = fixture.debugElement.query(By.css('#max-value')).nativeElement as HTMLInputElement;
-    const inputEvent = new InputEvent('input');
-    inputElement.dispatchEvent(inputEvent);
-    (inputEvent.target as HTMLInputElement).value = '123456789012345';
-    component.restrictIntegerInputLength(inputEvent, 'minScale');
-    expect((inputEvent.target as HTMLInputElement).value).toEqual('123456789');
+    inputElement.value = '123456789012345';
+    component.restrictIntegerInputLength(inputElement, 'minScale');
+    expect(inputElement.value).toEqual('123456789');
   });
 
   it(`should allow number inputs with less than or equal to 9 digits, inclusive of decimal
   point in restrictFloatInputLength`, () => {
     const inputElement = fixture.debugElement.query(By.css('#increment-value')).nativeElement as HTMLInputElement;
-    const inputEvent = new InputEvent('input');
-    inputElement.dispatchEvent(inputEvent);
-    (inputEvent.target as HTMLInputElement).value = '12.34567';
-    component.restrictFloatInputLength(inputEvent, 'step');
-    expect((inputEvent.target as HTMLInputElement).value).toEqual('12.34567');
+    inputElement.value = '12.34567';
+    component.restrictFloatInputLength(inputElement, 'step');
+    expect(inputElement.value).toEqual('12.34567');
   });
 
   it(`should restrict number inputs with more than 9 digits, inclusive of decimal
   point to 9 digits in restrictFloatInputLength`, () => {
     const inputElement = fixture.debugElement.query(By.css('#increment-value')).nativeElement as HTMLInputElement;
-    const inputEvent = new InputEvent('input');
-    inputElement.dispatchEvent(inputEvent);
-    (inputEvent.target as HTMLInputElement).value = '1234567.891';
-    component.restrictFloatInputLength(inputEvent, 'step');
-    expect((inputEvent.target as HTMLInputElement).value).toEqual('1234567.8');
+    inputElement.value = '1234567.891';
+    component.restrictFloatInputLength(inputElement, 'step');
+    expect(inputElement.value).toEqual('1234567.8');
   });
 });

@@ -1,5 +1,7 @@
 package teammates.logic.core;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -12,8 +14,8 @@ import java.util.UUID;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import teammates.common.datatransfer.CourseRoster;
-import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
 import teammates.common.datatransfer.questions.FeedbackMcqQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackMsqQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackQuestionDetails;
@@ -47,7 +49,9 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
         usersLogic = mock(UsersLogic.class);
         FeedbackResponsesLogic frLogic = mock(FeedbackResponsesLogic.class);
         FeedbackSessionsLogic feedbackSessionsLogic = mock(FeedbackSessionsLogic.class);
-        fqLogic.initLogicDependencies(fqDb, coursesLogic, frLogic, usersLogic, feedbackSessionsLogic);
+        InstructorPermissionsLogic instructorPermissionsLogic = mock(InstructorPermissionsLogic.class);
+        fqLogic.initLogicDependencies(fqDb, coursesLogic, frLogic, usersLogic, feedbackSessionsLogic,
+                instructorPermissionsLogic);
     }
 
     @Test
@@ -103,7 +107,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
 
         fs.setId(UUID.randomUUID());
         when(fqDb.getFeedbackQuestionsForSession(fs.getId())).thenReturn(questionsBefore);
-        when(fqDb.createFeedbackQuestion(newQuestion)).thenReturn(newQuestion);
+        when(fqDb.persistFeedbackQuestion(newQuestion)).thenReturn(newQuestion);
 
         FeedbackQuestion createdQuestion = fqLogic.createFeedbackQuestion(newQuestion);
         assertEquals(newQuestion, createdQuestion);
@@ -127,7 +131,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
         List<FeedbackQuestion> questionsBefore = new ArrayList<>(List.of(fq1, fq2, fq3, fq4));
         fs.setId(UUID.randomUUID());
         when(fqDb.getFeedbackQuestionsForSession(fs.getId())).thenReturn(questionsBefore);
-        when(fqDb.createFeedbackQuestion(fq5)).thenReturn(fq5);
+        when(fqDb.persistFeedbackQuestion(fq5)).thenReturn(fq5);
 
         FeedbackQuestion createdQuestion = fqLogic.createFeedbackQuestion(fq5);
 
@@ -153,7 +157,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
         List<FeedbackQuestion> questionsBefore = new ArrayList<>(List.of(fq1, fq2, fq3, fq4));
         fs.setId(UUID.randomUUID());
         when(fqDb.getFeedbackQuestionsForSession(fs.getId())).thenReturn(questionsBefore);
-        when(fqDb.createFeedbackQuestion(fq5)).thenReturn(fq5);
+        when(fqDb.persistFeedbackQuestion(fq5)).thenReturn(fq5);
 
         fqLogic.createFeedbackQuestion(fq5);
 
@@ -181,7 +185,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
         List<FeedbackQuestion> questionsBefore = new ArrayList<>(List.of(fq1, fq2, fq3, fq4));
         fs.setId(UUID.randomUUID());
         when(fqDb.getFeedbackQuestionsForSession(fs.getId())).thenReturn(questionsBefore);
-        when(fqDb.createFeedbackQuestion(fq5)).thenReturn(fq5);
+        when(fqDb.persistFeedbackQuestion(fq5)).thenReturn(fq5);
 
         fqLogic.createFeedbackQuestion(fq5);
 
@@ -205,8 +209,8 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
 
         List<FeedbackQuestion> expectedQuestions = List.of(fq1, fq2, fq3, fq4);
 
-        when(fqDb.getFeedbackQuestionsForGiverType(fs, FeedbackParticipantType.TEAMS)).thenReturn(questionsTeam);
-        when(fqDb.getFeedbackQuestionsForGiverType(fs, FeedbackParticipantType.STUDENTS)).thenReturn(questionsStudent);
+        when(fqDb.getFeedbackQuestionsForGiverType(fs, QuestionGiverType.TEAMS)).thenReturn(questionsTeam);
+        when(fqDb.getFeedbackQuestionsForGiverType(fs, QuestionGiverType.STUDENTS)).thenReturn(questionsStudent);
 
         List<FeedbackQuestion> actualQuestions = fqLogic.getFeedbackQuestionsForStudents(fs);
 
@@ -218,7 +222,8 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     public void testGetFeedbackQuestionsForInstructors_instructorIsCreator_success() {
         Course c = getTypicalCourse();
         FeedbackSession fs = getTypicalFeedbackSessionForCourse(c);
-        fs.setCreatorEmail("instr1@teammates.tmt");
+        Instructor instructor = mock(Instructor.class);
+        fs.setSessionCreator(instructor);
         FeedbackQuestion fq1 = getTypicalFeedbackQuestionForSession(fs);
         FeedbackQuestion fq2 = getTypicalFeedbackQuestionForSession(fs);
         FeedbackQuestion fq3 = getTypicalFeedbackQuestionForSession(fs);
@@ -227,22 +232,24 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
         List<FeedbackQuestion> questionsInstructors = List.of(fq1, fq2);
         List<FeedbackQuestion> questionsSelf = List.of(fq3, fq4);
 
-        when(fqDb.getFeedbackQuestionsForGiverType(fs, FeedbackParticipantType.INSTRUCTORS))
+        when(fqDb.getFeedbackQuestionsForGiverType(fs, QuestionGiverType.INSTRUCTORS))
                 .thenReturn(questionsInstructors);
-        when(fqDb.getFeedbackQuestionsForGiverType(fs, FeedbackParticipantType.SELF)).thenReturn(questionsSelf);
+        when(fqDb.getFeedbackQuestionsForGiverType(fs, QuestionGiverType.SESSION_CREATOR)).thenReturn(questionsSelf);
 
         List<FeedbackQuestion> expectedQuestions = List.of(fq1, fq2, fq3, fq4);
-        List<FeedbackQuestion> actualQuestions = fqLogic.getFeedbackQuestionsForInstructors(fs, "instr1@teammates.tmt");
+        List<FeedbackQuestion> actualQuestions = fqLogic.getFeedbackQuestionsForInstructors(fs, instructor);
 
         assertEquals(expectedQuestions.size(), actualQuestions.size());
-        assertTrue(actualQuestions.containsAll(actualQuestions));
+        assertTrue(actualQuestions.containsAll(expectedQuestions));
     }
 
     @Test
     public void testGetFeedbackQuestionsForInstructors_instructorIsNotCreator_success() {
         Course c = getTypicalCourse();
         FeedbackSession fs = getTypicalFeedbackSessionForCourse(c);
-        fs.setCreatorEmail("instr1@teammates.tmt");
+        Instructor creator = mock(Instructor.class);
+        fs.setSessionCreator(creator);
+        Instructor instructor = mock(Instructor.class);
         FeedbackQuestion fq1 = getTypicalFeedbackQuestionForSession(fs);
         FeedbackQuestion fq2 = getTypicalFeedbackQuestionForSession(fs);
         FeedbackQuestion fq3 = getTypicalFeedbackQuestionForSession(fs);
@@ -251,35 +258,15 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
         List<FeedbackQuestion> questionsInstructors = List.of(fq1, fq2);
         List<FeedbackQuestion> questionsSelf = List.of(fq3, fq4);
 
-        when(fqDb.getFeedbackQuestionsForGiverType(fs, FeedbackParticipantType.INSTRUCTORS))
+        when(fqDb.getFeedbackQuestionsForGiverType(fs, QuestionGiverType.INSTRUCTORS))
                 .thenReturn(questionsInstructors);
-        when(fqDb.getFeedbackQuestionsForGiverType(fs, FeedbackParticipantType.SELF)).thenReturn(questionsSelf);
+        when(fqDb.getFeedbackQuestionsForGiverType(fs, QuestionGiverType.SESSION_CREATOR)).thenReturn(questionsSelf);
 
         List<FeedbackQuestion> expectedQuestions = List.of(fq1, fq2);
-        List<FeedbackQuestion> actualQuestions = fqLogic.getFeedbackQuestionsForInstructors(fs, "instr2@teammates.tmt");
+        List<FeedbackQuestion> actualQuestions = fqLogic.getFeedbackQuestionsForInstructors(fs, instructor);
 
         assertEquals(expectedQuestions.size(), actualQuestions.size());
-        assertTrue(actualQuestions.containsAll(actualQuestions));
-    }
-
-    @Test(enabled = false)
-    public void testGetRecipientsOfQuestion_giverTypeStudents() {
-        Course c = getTypicalCourse();
-        FeedbackSession fs = getTypicalFeedbackSessionForCourse(c);
-        FeedbackQuestion fq = getTypicalFeedbackQuestionForSession(fs);
-
-        Student s1 = getTypicalStudent();
-        Student s2 = getTypicalStudent();
-        List<Student> studentsInCourse = List.of(s1, s2);
-
-        CourseRoster courseRoster = new CourseRoster(studentsInCourse, null);
-
-        when(usersLogic.getStudentsForCourse("course-1")).thenReturn(studentsInCourse);
-
-        ______TS("response to students except self");
-        assertEquals(fqLogic.getRecipientsOfQuestion(fq, null, s2, null).size(), studentsInCourse.size() - 1);
-        assertEquals(fqLogic.getRecipientsOfQuestion(fq, null, s2, courseRoster).size(), studentsInCourse.size() - 1);
-
+        assertTrue(actualQuestions.containsAll(expectedQuestions));
     }
 
     private List<FeedbackQuestion> createQuestionList(FeedbackSession fs, int numOfQuestions) {
@@ -295,7 +282,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     @Test
     public void testGetDynamicallyGeneratedOptions_mcqStudents_returnsSortedStudentOptions() {
         FeedbackMcqQuestionDetails mcqDetails =
-                getMockMcqQuestionDetails(FeedbackParticipantType.STUDENTS);
+                getMockMcqQuestionDetails(QuestionRecipientType.STUDENTS);
         FeedbackQuestion question = getMockFeedbackQuestionWithDetails(mcqDetails, "course-1");
         when(question.getQuestionType()).thenReturn(FeedbackQuestionType.MCQ);
 
@@ -315,7 +302,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     @Test
     public void testGetDynamicallyGeneratedOptions_mcqStudentsExcludingSelf_excludesCurrentStudent() {
         FeedbackMcqQuestionDetails mcqDetails =
-                getMockMcqQuestionDetails(FeedbackParticipantType.STUDENTS_EXCLUDING_SELF);
+                getMockMcqQuestionDetails(QuestionRecipientType.STUDENTS_EXCLUDING_SELF);
         FeedbackQuestion question = getMockFeedbackQuestionWithDetails(mcqDetails, "course-1");
         when(question.getQuestionType()).thenReturn(FeedbackQuestionType.MCQ);
 
@@ -335,7 +322,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     @Test
     public void testGetDynamicallyGeneratedOptions_msqStudentsInSameSection_returnsSortedSectionStudentOptions() {
         FeedbackMsqQuestionDetails msqDetails =
-                getMockMsqQuestionDetails(FeedbackParticipantType.STUDENTS_IN_SAME_SECTION);
+                getMockMsqQuestionDetails(QuestionRecipientType.STUDENTS_IN_SAME_SECTION);
         FeedbackQuestion question = getMockFeedbackQuestionWithDetails(msqDetails, "course-1");
         when(question.getQuestionType()).thenReturn(FeedbackQuestionType.MSQ);
 
@@ -357,7 +344,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     @Test
     public void testGetDynamicallyGeneratedOptions_mcqOwnTeamMembersIncludingSelf_returnsAllTeamMemberNames() {
         FeedbackMcqQuestionDetails mcqDetails =
-                getMockMcqQuestionDetails(FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF);
+                getMockMcqQuestionDetails(QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF);
         FeedbackQuestion question = getMockFeedbackQuestionWithDetails(mcqDetails, "course-1");
         when(question.getQuestionType()).thenReturn(FeedbackQuestionType.MCQ);
 
@@ -378,7 +365,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     @Test
     public void testGetDynamicallyGeneratedOptions_mcqOwnTeamMembers_excludesCurrentStudent() {
         FeedbackMcqQuestionDetails mcqDetails =
-                getMockMcqQuestionDetails(FeedbackParticipantType.OWN_TEAM_MEMBERS);
+                getMockMcqQuestionDetails(QuestionRecipientType.OWN_TEAM_MEMBERS);
         FeedbackQuestion question = getMockFeedbackQuestionWithDetails(mcqDetails, "course-1");
         when(question.getQuestionType()).thenReturn(FeedbackQuestionType.MCQ);
 
@@ -401,7 +388,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     @Test
     public void testGetDynamicallyGeneratedOptions_msqInstructors_returnsSortedInstructorNames() {
         FeedbackMsqQuestionDetails msqDetails =
-                getMockMsqQuestionDetails(FeedbackParticipantType.INSTRUCTORS);
+                getMockMsqQuestionDetails(QuestionRecipientType.INSTRUCTORS);
         FeedbackQuestion question = getMockFeedbackQuestionWithDetails(msqDetails, "course-1");
         when(question.getQuestionType()).thenReturn(FeedbackQuestionType.MSQ);
 
@@ -421,7 +408,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     @Test
     public void testGetDynamicallyGeneratedOptions_mcqNone_returnsEmptyOptional() {
         FeedbackMcqQuestionDetails mcqDetails =
-                getMockMcqQuestionDetails(FeedbackParticipantType.NONE);
+                getMockMcqQuestionDetails(QuestionRecipientType.NONE);
         FeedbackQuestion question = getMockFeedbackQuestionWithDetails(mcqDetails, "course-1");
         when(question.getQuestionType()).thenReturn(FeedbackQuestionType.MCQ);
 
@@ -452,7 +439,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     }
 
     private FeedbackMcqQuestionDetails getMockMcqQuestionDetails(
-            FeedbackParticipantType generateOptionsFor) {
+            QuestionRecipientType generateOptionsFor) {
         FeedbackMcqQuestionDetails mcqDetails =
                 mock(FeedbackMcqQuestionDetails.class);
         when(mcqDetails.getGenerateOptionsFor()).thenReturn(generateOptionsFor);
@@ -460,7 +447,7 @@ public class FeedbackQuestionsLogicTest extends BaseTestCase {
     }
 
     private FeedbackMsqQuestionDetails getMockMsqQuestionDetails(
-            FeedbackParticipantType generateOptionsFor) {
+            QuestionRecipientType generateOptionsFor) {
         FeedbackMsqQuestionDetails msqDetails =
                 mock(FeedbackMsqQuestionDetails.class);
         when(msqDetails.getGenerateOptionsFor()).thenReturn(generateOptionsFor);

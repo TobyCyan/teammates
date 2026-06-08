@@ -13,26 +13,27 @@ import teammates.storage.entity.FeedbackSession;
 /**
  * The API output format of a list of {@link FeedbackSession}.
  */
-public class FeedbackSessionsData extends ApiOutput {
-    private final List<FeedbackSessionData> feedbackSessions;
+public class FeedbackSessionsData implements ApiOutput {
+    private final List<FeedbackSessionViewData> feedbackSessions;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    private FeedbackSessionsData(FeedbackSessionData[] feedbackSessions) {
+    private FeedbackSessionsData(FeedbackSessionViewData[] feedbackSessions) {
         this.feedbackSessions = Arrays.asList(feedbackSessions);
     }
 
     public FeedbackSessionsData(List<FeedbackSession> feedbackSessionList) {
-        this.feedbackSessions =
-                feedbackSessionList.stream().map(FeedbackSessionData::new).collect(Collectors.toList());
+        this.feedbackSessions = feedbackSessionList.stream()
+                .map(session -> new FeedbackSessionViewData(new FeedbackSessionData(session)))
+                .collect(Collectors.toList());
     }
 
     public FeedbackSessionsData(Map<FeedbackSession, Instant> feedbackSessionToDeadline) {
         this.feedbackSessions = feedbackSessionToDeadline.entrySet().stream()
-                .map(e -> new FeedbackSessionData(e.getKey(), e.getValue()))
+                .map(e -> new FeedbackSessionViewData(new FeedbackSessionData(e.getKey(), e.getValue())))
                 .collect(Collectors.toList());
     }
 
-    public List<FeedbackSessionData> getFeedbackSessions() {
+    public List<FeedbackSessionViewData> getFeedbackSessions() {
         return feedbackSessions;
     }
 

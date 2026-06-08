@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
 import { concat } from 'rxjs';
 import { finalize, takeWhile } from 'rxjs/operators';
 import { FeedbackSessionsService } from './feedback-sessions.service';
@@ -11,7 +11,6 @@ import { SimpleModalType } from '../app/components/simple-modal/simple-modal-typ
 import { ErrorMessageOutput } from '../app/error-message-output';
 import { InstructorSessionResultSectionType } from '../app/pages-instructor/instructor-session-result-page/instructor-session-result-section-type.enum';
 import { FeedbackQuestion } from '../types/api-output';
-import { Intent } from '../types/api-request';
 
 /**
  * Handles sessions related actions.
@@ -33,12 +32,14 @@ export class FeedbackSessionActionsService {
     courseId: string,
     feedbackSessionName: string,
     feedbackSessionId: string,
-    intent: Intent,
     indicateMissingResponses: boolean,
     showStatistics: boolean,
     questions: FeedbackQuestion[],
-    groupBySection?: string,
-    sectionDetail?: InstructorSessionResultSectionType,
+    sectionOptions?: {
+      groupBySectionId?: string;
+      sectionDetail?: InstructorSessionResultSectionType;
+      sectionNameForCsv?: string;
+    },
   ): void {
     const filename = `${courseId}_${feedbackSessionName}_result.csv`;
     let blob: any;
@@ -60,12 +61,10 @@ export class FeedbackSessionActionsService {
       ...questions.map((question: FeedbackQuestion) =>
         this.feedbackSessionsService.downloadSessionResults(
           feedbackSessionId,
-          intent,
           indicateMissingResponses,
           showStatistics,
           question.feedbackQuestionId,
-          groupBySection,
-          sectionDetail,
+          sectionOptions,
         ),
       ),
       this.feedbackSessionsService.downloadFeedbackSessionNonSubmitterList(courseId, feedbackSessionId),

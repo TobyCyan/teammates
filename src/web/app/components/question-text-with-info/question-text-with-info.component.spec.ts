@@ -1,26 +1,24 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { QuestionTextWithInfoComponent } from './question-text-with-info.component';
 import {
   FeedbackMcqQuestionDetails,
-  FeedbackParticipantType,
   FeedbackQuestionType,
   FeedbackTextQuestionDetails,
+  QuestionRecipientType,
 } from '../../../types/api-output';
 
 describe('QuestionTextWithInfoComponent', () => {
   let component: QuestionTextWithInfoComponent;
   let fixture: ComponentFixture<QuestionTextWithInfoComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [provideRouter([])],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(QuestionTextWithInfoComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -42,7 +40,7 @@ describe('QuestionTextWithInfoComponent', () => {
     mcqChoices: ['a', 'b'],
     otherEnabled: false,
     questionDropdownEnabled: false,
-    generateOptionsFor: FeedbackParticipantType.NONE,
+    generateOptionsFor: QuestionRecipientType.NONE,
   };
 
   it('should create', () => {

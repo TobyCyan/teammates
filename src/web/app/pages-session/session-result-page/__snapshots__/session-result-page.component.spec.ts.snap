@@ -1,44 +1,43 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SessionResultPageComponent should snap when previewing results 1`] = `
+exports[`SessionResultPageComponent > should snap when previewing results 1`] = `
 <tm-session-result-page
   Intent={[Function Object]}
-  authService={[Function AuthService]}
+  authService={[Function _AuthService]}
   backendUrl={[Function String]}
-  courseId={[Function String]}
+  courseId=""
   courseInstitute=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   entityType={[Function String]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionName={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionId={[Function String]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   formattedSessionClosingTime=""
   formattedSessionOpeningTime=""
   hasFeedbackSessionResultsLoadingFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   intent={[Function String]}
   isCourseLoading="false"
   isFeedbackSessionDetailsLoading="false"
   isFeedbackSessionResultsLoading="false"
   isPreviewHintExpanded="false"
-  logService={[Function LogService]}
+  logService={[Function _LogService]}
   loggedInUser=""
-  navigationService={[Function NavigationService]}
-  ngbModal={[Function _NgbModal]}
+  navigationService={[Function _NavigationService]}
+  ngbModal={[Function NgbModal]}
   personEmail={[Function String]}
   personName={[Function String]}
   previewAsPerson={[Function String]}
   questions={[Function Array]}
   regKey=""
-  retryAttempts={[Function Number]}
+  retryAttempts="undefined"
   route={[Function Object]}
   session={[Function Object]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentId=""
-  studentService={[Function StudentService]}
-  timezoneService={[Function TimezoneService]}
+  studentService={[Function _StudentService]}
+  timezoneService={[Function _TimezoneService]}
   visibilityRecipient={[Function String]}
 >
   <h1>
@@ -81,7 +80,6 @@ exports[`SessionResultPageComponent should snap when previewing results 1`] = `
           class="col-md-7 text-md-start"
           id="course-id"
         >
-          CS3281
         </div>
       </div>
       <div
@@ -96,7 +94,6 @@ exports[`SessionResultPageComponent should snap when previewing results 1`] = `
           class="col-md-7 text-md-start"
           id="session-name"
         >
-          Peer Feedback
         </div>
       </div>
       <div
@@ -141,7 +138,7 @@ exports[`SessionResultPageComponent should snap when previewing results 1`] = `
           role="alert"
           style="background-color: #d1ecf1;"
         >
-           Nothing to show. The responses are either not configured to be visible or there are no responses. 
+           Nothing to show. There are no questions relevant to you to view in this session. 
         </div>
       </div>
       <tm-question-response-panel>
@@ -151,45 +148,44 @@ exports[`SessionResultPageComponent should snap when previewing results 1`] = `
 </tm-session-result-page>
 `;
 
-exports[`SessionResultPageComponent should snap when session results failed to load 1`] = `
+exports[`SessionResultPageComponent > should snap when session results failed to load 1`] = `
 <tm-session-result-page
   Intent={[Function Object]}
-  authService={[Function AuthService]}
+  authService={[Function _AuthService]}
   backendUrl={[Function String]}
-  courseId={[Function String]}
+  courseId=""
   courseInstitute=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   entityType={[Function String]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionName={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionId={[Function String]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   formattedSessionClosingTime=""
   formattedSessionOpeningTime=""
   hasFeedbackSessionResultsLoadingFailed={[Function Boolean]}
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   intent={[Function String]}
   isCourseLoading="false"
   isFeedbackSessionDetailsLoading="false"
   isFeedbackSessionResultsLoading="false"
   isPreviewHintExpanded="false"
-  logService={[Function LogService]}
+  logService={[Function _LogService]}
   loggedInUser=""
-  navigationService={[Function NavigationService]}
-  ngbModal={[Function _NgbModal]}
+  navigationService={[Function _NavigationService]}
+  ngbModal={[Function NgbModal]}
   personEmail=""
   personName=""
   previewAsPerson=""
   questions={[Function Array]}
   regKey={[Function String]}
-  retryAttempts={[Function Number]}
+  retryAttempts="undefined"
   route={[Function Object]}
   session={[Function Object]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentId=""
-  studentService={[Function StudentService]}
-  timezoneService={[Function TimezoneService]}
+  studentService={[Function _StudentService]}
+  timezoneService={[Function _TimezoneService]}
   visibilityRecipient={[Function String]}
 >
   <h1>
@@ -233,7 +229,6 @@ exports[`SessionResultPageComponent should snap when session results failed to l
           class="col-md-7 text-md-start"
           id="course-id"
         >
-          CS3281
         </div>
       </div>
       <div
@@ -248,7 +243,6 @@ exports[`SessionResultPageComponent should snap when session results failed to l
           class="col-md-7 text-md-start"
           id="session-name"
         >
-          Peer Feedback
         </div>
       </div>
       <div
@@ -306,45 +300,44 @@ exports[`SessionResultPageComponent should snap when session results failed to l
 </tm-session-result-page>
 `;
 
-exports[`SessionResultPageComponent should snap with an open feedback session with no questions 1`] = `
+exports[`SessionResultPageComponent > should snap with an open feedback session with no questions 1`] = `
 <tm-session-result-page
   Intent={[Function Object]}
-  authService={[Function AuthService]}
+  authService={[Function _AuthService]}
   backendUrl={[Function String]}
-  courseId={[Function String]}
+  courseId=""
   courseInstitute=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   entityType={[Function String]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionName={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionId={[Function String]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   formattedSessionClosingTime=""
   formattedSessionOpeningTime=""
   hasFeedbackSessionResultsLoadingFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   intent={[Function String]}
   isCourseLoading="false"
   isFeedbackSessionDetailsLoading="false"
   isFeedbackSessionResultsLoading="false"
   isPreviewHintExpanded="false"
-  logService={[Function LogService]}
+  logService={[Function _LogService]}
   loggedInUser=""
-  navigationService={[Function NavigationService]}
-  ngbModal={[Function _NgbModal]}
+  navigationService={[Function _NavigationService]}
+  ngbModal={[Function NgbModal]}
   personEmail=""
   personName=""
   previewAsPerson=""
   questions={[Function Array]}
   regKey={[Function String]}
-  retryAttempts={[Function Number]}
+  retryAttempts="undefined"
   route={[Function Object]}
   session={[Function Object]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentId=""
-  studentService={[Function StudentService]}
-  timezoneService={[Function TimezoneService]}
+  studentService={[Function _StudentService]}
+  timezoneService={[Function _TimezoneService]}
   visibilityRecipient={[Function String]}
 >
   <h1>
@@ -388,7 +381,6 @@ exports[`SessionResultPageComponent should snap with an open feedback session wi
           class="col-md-7 text-md-start"
           id="course-id"
         >
-          CS3281
         </div>
       </div>
       <div
@@ -403,7 +395,6 @@ exports[`SessionResultPageComponent should snap with an open feedback session wi
           class="col-md-7 text-md-start"
           id="session-name"
         >
-          Peer Feedback
         </div>
       </div>
       <div
@@ -448,7 +439,7 @@ exports[`SessionResultPageComponent should snap with an open feedback session wi
           role="alert"
           style="background-color: #d1ecf1;"
         >
-           Nothing to show. The responses are either not configured to be visible or there are no responses. 
+           Nothing to show. There are no questions relevant to you to view in this session. 
         </div>
       </div>
       <tm-question-response-panel>
@@ -458,45 +449,44 @@ exports[`SessionResultPageComponent should snap with an open feedback session wi
 </tm-session-result-page>
 `;
 
-exports[`SessionResultPageComponent should snap with default fields 1`] = `
+exports[`SessionResultPageComponent > should snap with default fields 1`] = `
 <tm-session-result-page
   Intent={[Function Object]}
-  authService={[Function AuthService]}
+  authService={[Function _AuthService]}
   backendUrl={[Function String]}
-  courseId={[Function String]}
+  courseId=""
   courseInstitute=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   entityType={[Function String]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionName={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionId={[Function String]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   formattedSessionClosingTime=""
   formattedSessionOpeningTime=""
   hasFeedbackSessionResultsLoadingFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   intent={[Function String]}
   isCourseLoading="false"
   isFeedbackSessionDetailsLoading="false"
   isFeedbackSessionResultsLoading="false"
   isPreviewHintExpanded="false"
-  logService={[Function LogService]}
+  logService={[Function _LogService]}
   loggedInUser=""
-  navigationService={[Function NavigationService]}
-  ngbModal={[Function _NgbModal]}
+  navigationService={[Function _NavigationService]}
+  ngbModal={[Function NgbModal]}
   personEmail=""
   personName=""
   previewAsPerson=""
   questions={[Function Array]}
   regKey={[Function String]}
-  retryAttempts={[Function Number]}
+  retryAttempts="undefined"
   route={[Function Object]}
   session={[Function Object]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentId=""
-  studentService={[Function StudentService]}
-  timezoneService={[Function TimezoneService]}
+  studentService={[Function _StudentService]}
+  timezoneService={[Function _TimezoneService]}
   visibilityRecipient={[Function String]}
 >
   <h1>
@@ -540,7 +530,6 @@ exports[`SessionResultPageComponent should snap with default fields 1`] = `
           class="col-md-7 text-md-start"
           id="course-id"
         >
-          CS3281
         </div>
       </div>
       <div
@@ -555,7 +544,6 @@ exports[`SessionResultPageComponent should snap with default fields 1`] = `
           class="col-md-7 text-md-start"
           id="session-name"
         >
-          Peer Feedback
         </div>
       </div>
       <div
@@ -600,7 +588,7 @@ exports[`SessionResultPageComponent should snap with default fields 1`] = `
           role="alert"
           style="background-color: #d1ecf1;"
         >
-           Nothing to show. The responses are either not configured to be visible or there are no responses. 
+           Nothing to show. There are no questions relevant to you to view in this session. 
         </div>
       </div>
       <tm-question-response-panel>
@@ -610,45 +598,44 @@ exports[`SessionResultPageComponent should snap with default fields 1`] = `
 </tm-session-result-page>
 `;
 
-exports[`SessionResultPageComponent should snap with session details and results are loading 1`] = `
+exports[`SessionResultPageComponent > should snap with session details and results are loading 1`] = `
 <tm-session-result-page
   Intent={[Function Object]}
-  authService={[Function AuthService]}
+  authService={[Function _AuthService]}
   backendUrl={[Function String]}
-  courseId={[Function String]}
+  courseId=""
   courseInstitute=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   entityType={[Function String]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionName={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionId={[Function String]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   formattedSessionClosingTime=""
   formattedSessionOpeningTime=""
   hasFeedbackSessionResultsLoadingFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   intent={[Function String]}
   isCourseLoading={[Function Boolean]}
   isFeedbackSessionDetailsLoading={[Function Boolean]}
   isFeedbackSessionResultsLoading={[Function Boolean]}
   isPreviewHintExpanded="false"
-  logService={[Function LogService]}
+  logService={[Function _LogService]}
   loggedInUser=""
-  navigationService={[Function NavigationService]}
-  ngbModal={[Function _NgbModal]}
+  navigationService={[Function _NavigationService]}
+  ngbModal={[Function NgbModal]}
   personEmail=""
   personName=""
   previewAsPerson=""
   questions={[Function Array]}
   regKey={[Function String]}
-  retryAttempts={[Function Number]}
+  retryAttempts="undefined"
   route={[Function Object]}
   session={[Function Object]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentId=""
-  studentService={[Function StudentService]}
-  timezoneService={[Function TimezoneService]}
+  studentService={[Function _StudentService]}
+  timezoneService={[Function _TimezoneService]}
   visibilityRecipient={[Function String]}
 >
   <h1>
@@ -692,45 +679,44 @@ exports[`SessionResultPageComponent should snap with session details and results
 </tm-session-result-page>
 `;
 
-exports[`SessionResultPageComponent should snap with session details loaded and results are loading 1`] = `
+exports[`SessionResultPageComponent > should snap with session details loaded and results are loading 1`] = `
 <tm-session-result-page
   Intent={[Function Object]}
-  authService={[Function AuthService]}
+  authService={[Function _AuthService]}
   backendUrl={[Function String]}
-  courseId={[Function String]}
+  courseId=""
   courseInstitute=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   entityType={[Function String]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionName={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionId={[Function String]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   formattedSessionClosingTime=""
   formattedSessionOpeningTime=""
   hasFeedbackSessionResultsLoadingFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   intent={[Function String]}
   isCourseLoading="false"
   isFeedbackSessionDetailsLoading="false"
   isFeedbackSessionResultsLoading={[Function Boolean]}
   isPreviewHintExpanded="false"
-  logService={[Function LogService]}
+  logService={[Function _LogService]}
   loggedInUser=""
-  navigationService={[Function NavigationService]}
-  ngbModal={[Function _NgbModal]}
+  navigationService={[Function _NavigationService]}
+  ngbModal={[Function NgbModal]}
   personEmail=""
   personName=""
   previewAsPerson=""
   questions={[Function Array]}
   regKey={[Function String]}
-  retryAttempts={[Function Number]}
+  retryAttempts="undefined"
   route={[Function Object]}
   session={[Function Object]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentId=""
-  studentService={[Function StudentService]}
-  timezoneService={[Function TimezoneService]}
+  studentService={[Function _StudentService]}
+  timezoneService={[Function _TimezoneService]}
   visibilityRecipient={[Function String]}
 >
   <h1>
@@ -774,7 +760,6 @@ exports[`SessionResultPageComponent should snap with session details loaded and 
           class="col-md-7 text-md-start"
           id="course-id"
         >
-          CS3281
         </div>
       </div>
       <div
@@ -789,7 +774,6 @@ exports[`SessionResultPageComponent should snap with session details loaded and 
           class="col-md-7 text-md-start"
           id="session-name"
         >
-          Peer Feedback
         </div>
       </div>
       <div
@@ -844,45 +828,44 @@ exports[`SessionResultPageComponent should snap with session details loaded and 
 </tm-session-result-page>
 `;
 
-exports[`SessionResultPageComponent should snap with user that is logged in and using session link 1`] = `
+exports[`SessionResultPageComponent > should snap with user that is logged in and using session link 1`] = `
 <tm-session-result-page
   Intent={[Function Object]}
-  authService={[Function AuthService]}
+  authService={[Function _AuthService]}
   backendUrl={[Function String]}
-  courseId={[Function String]}
+  courseId=""
   courseInstitute=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   entityType={[Function String]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionName={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionId={[Function String]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   formattedSessionClosingTime=""
   formattedSessionOpeningTime=""
   hasFeedbackSessionResultsLoadingFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   intent={[Function String]}
   isCourseLoading="false"
   isFeedbackSessionDetailsLoading="false"
   isFeedbackSessionResultsLoading="false"
   isPreviewHintExpanded="false"
-  logService={[Function LogService]}
+  logService={[Function _LogService]}
   loggedInUser={[Function String]}
-  navigationService={[Function NavigationService]}
-  ngbModal={[Function _NgbModal]}
+  navigationService={[Function _NavigationService]}
+  ngbModal={[Function NgbModal]}
   personEmail=""
   personName={[Function String]}
   previewAsPerson=""
   questions={[Function Array]}
   regKey={[Function String]}
-  retryAttempts={[Function Number]}
+  retryAttempts="undefined"
   route={[Function Object]}
   session={[Function Object]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentId=""
-  studentService={[Function StudentService]}
-  timezoneService={[Function TimezoneService]}
+  studentService={[Function _StudentService]}
+  timezoneService={[Function _TimezoneService]}
   visibilityRecipient={[Function String]}
 >
   <h1>
@@ -927,7 +910,6 @@ exports[`SessionResultPageComponent should snap with user that is logged in and 
           class="col-md-7 text-md-start"
           id="course-id"
         >
-          CS3281
         </div>
       </div>
       <div
@@ -942,7 +924,6 @@ exports[`SessionResultPageComponent should snap with user that is logged in and 
           class="col-md-7 text-md-start"
           id="session-name"
         >
-          Peer Feedback
         </div>
       </div>
       <div
@@ -987,7 +968,7 @@ exports[`SessionResultPageComponent should snap with user that is logged in and 
           role="alert"
           style="background-color: #d1ecf1;"
         >
-           Nothing to show. The responses are either not configured to be visible or there are no responses. 
+           Nothing to show. There are no questions relevant to you to view in this session. 
         </div>
       </div>
       <tm-question-response-panel>
@@ -997,45 +978,44 @@ exports[`SessionResultPageComponent should snap with user that is logged in and 
 </tm-session-result-page>
 `;
 
-exports[`SessionResultPageComponent should snap with user that is not logged in and using session link 1`] = `
+exports[`SessionResultPageComponent > should snap with user that is not logged in and using session link 1`] = `
 <tm-session-result-page
   Intent={[Function Object]}
-  authService={[Function AuthService]}
+  authService={[Function _AuthService]}
   backendUrl={[Function String]}
-  courseId={[Function String]}
+  courseId=""
   courseInstitute=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   entityType={[Function String]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionName={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionId={[Function String]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   formattedSessionClosingTime=""
   formattedSessionOpeningTime=""
   hasFeedbackSessionResultsLoadingFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   intent={[Function String]}
   isCourseLoading="false"
   isFeedbackSessionDetailsLoading="false"
   isFeedbackSessionResultsLoading="false"
   isPreviewHintExpanded="false"
-  logService={[Function LogService]}
+  logService={[Function _LogService]}
   loggedInUser=""
-  navigationService={[Function NavigationService]}
-  ngbModal={[Function _NgbModal]}
+  navigationService={[Function _NavigationService]}
+  ngbModal={[Function NgbModal]}
   personEmail=""
   personName={[Function String]}
   previewAsPerson=""
   questions={[Function Array]}
   regKey={[Function String]}
-  retryAttempts={[Function Number]}
+  retryAttempts="undefined"
   route={[Function Object]}
   session={[Function Object]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentId=""
-  studentService={[Function StudentService]}
-  timezoneService={[Function TimezoneService]}
+  studentService={[Function _StudentService]}
+  timezoneService={[Function _TimezoneService]}
   visibilityRecipient={[Function String]}
 >
   <h1>
@@ -1079,7 +1059,6 @@ exports[`SessionResultPageComponent should snap with user that is not logged in 
           class="col-md-7 text-md-start"
           id="course-id"
         >
-          CS3281
         </div>
       </div>
       <div
@@ -1094,7 +1073,6 @@ exports[`SessionResultPageComponent should snap with user that is not logged in 
           class="col-md-7 text-md-start"
           id="session-name"
         >
-          Peer Feedback
         </div>
       </div>
       <div
@@ -1139,7 +1117,7 @@ exports[`SessionResultPageComponent should snap with user that is not logged in 
           role="alert"
           style="background-color: #d1ecf1;"
         >
-           Nothing to show. The responses are either not configured to be visible or there are no responses. 
+           Nothing to show. There are no questions relevant to you to view in this session. 
         </div>
       </div>
       <tm-question-response-panel>

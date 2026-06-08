@@ -1,7 +1,7 @@
 import { KeyValuePipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap/modal';
 import moment from 'moment-timezone';
 import { SimpleModalService } from '../../../../services/simple-modal.service';
 import { TimezoneService } from '../../../../services/timezone.service';
@@ -17,6 +17,7 @@ import { DatepickerComponent } from '../../../components/datepicker/datepicker.c
 import { SimpleModalType } from '../../../components/simple-modal/simple-modal-type';
 import { FormatDateDetailPipe } from '../../../components/teammates-common/format-date-detail.pipe';
 import { TimepickerComponent } from '../../../components/timepicker/timepicker.component';
+import { DateFormatService } from '../../../../services/date-format.service';
 
 export enum RadioOptions {
   EXTEND_TO = 1,
@@ -37,7 +38,7 @@ enum DateTime {
 export class IndividualExtensionDateModalComponent {
   activeModal = inject(NgbActiveModal);
   private simpleModalService = inject(SimpleModalService);
-  private dateDetailPipe = inject(FormatDateDetailPipe);
+  private dateFormatService = inject(DateFormatService);
   private readonly timeZoneService = inject(TimezoneService);
 
   @Input()
@@ -55,9 +56,9 @@ export class IndividualExtensionDateModalComponent {
   @Output()
   confirmCallbackEvent: EventEmitter<number> = new EventEmitter();
 
-  RadioOptions: typeof RadioOptions = RadioOptions;
+  RadioOptions!: typeof RadioOptions;
   radioOption: RadioOptions = RadioOptions.EXTEND_BY;
-  DateTime: typeof DateTime = DateTime;
+  DateTime!: typeof DateTime;
 
   extendByDeadlineKey = '';
   extendByDeadlineOptions: Map<string, number> = new Map([
@@ -75,6 +76,11 @@ export class IndividualExtensionDateModalComponent {
   extendToTimePicker: TimeFormat = getLatestTimeFormat();
 
   sortMapByOriginalOrder = (): number => 0;
+
+  constructor() {
+    this.RadioOptions = RadioOptions;
+    this.DateTime = DateTime;
+  }
 
   onConfirm(): void {
     if (this.getExtensionTimestamp() >= Date.now()) {
@@ -157,7 +163,7 @@ export class IndividualExtensionDateModalComponent {
   }
 
   private adjustToFeedbackSessionTimeZone(time: number): string {
-    return this.dateDetailPipe.transform(time, this.feedbackSessionTimeZone);
+    return this.dateFormatService.formatDateDetailed(time, this.feedbackSessionTimeZone);
   }
 
   isValidForm(): boolean {

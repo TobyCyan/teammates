@@ -1,5 +1,7 @@
 package teammates.e2e.util;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -119,21 +121,16 @@ public class TestDataValidityTest extends BaseTestCase {
                         errors.computeIfAbsent(pathString, k -> new ArrayList<>())
                                 .add("Invalid session course ID: " + session.getCourseId());
                     }
-
-                    if (!isValidTestEmail(session.getCreatorEmail())) {
-                        errors.computeIfAbsent(pathString, k -> new ArrayList<>())
-                                .add("Invalid session creator email: " + session.getCreatorEmail());
-                    }
                 });
 
                 dataBundle.feedbackResponses.forEach((id, response) -> {
-                    String giver = response.getGiver();
+                    String giver = response.getGiver().getIdentifier();
                     if (giver != null && giver.contains("@") && !isValidTestEmail(giver)) {
                         errors.computeIfAbsent(pathString, k -> new ArrayList<>())
                                 .add("Invalid response giver email: " + giver);
                     }
 
-                    String recipient = response.getRecipient();
+                    String recipient = response.getRecipient().getIdentifier();
                     if (recipient != null && recipient.contains("@") && !isValidTestEmail(recipient)) {
                         errors.computeIfAbsent(pathString, k -> new ArrayList<>())
                                 .add("Invalid response recipient email: " + recipient);

@@ -1,5 +1,6 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -10,6 +11,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.EnrollResults;
+import teammates.common.datatransfer.InstructorPermissionRole;
 import teammates.common.datatransfer.InstructorPrivileges;
 import teammates.common.util.Const;
 import teammates.storage.entity.Course;
@@ -101,7 +103,7 @@ public class EnrollStudentsActionTest extends BaseActionTest<EnrollStudentsActio
     @Test
     public void testSpecificAccessControl_instructorWithInvalidPermission_cannotAccess() {
         Instructor instructor = new Instructor(course, "name", "instructoremail@tm.tmt",
-                false, "", null, new InstructorPrivileges());
+                false, "", InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM, new InstructorPrivileges());
         when(mockLogic.getInstructorByGoogleId(course.getId(), instructor.getGoogleId())).thenReturn(instructor);
         when(mockLogic.getCourse(course.getId())).thenReturn(course);
         loginAsInstructor(instructor.getGoogleId());
@@ -117,7 +119,7 @@ public class EnrollStudentsActionTest extends BaseActionTest<EnrollStudentsActio
         InstructorPrivileges instructorPrivileges = new InstructorPrivileges();
         instructorPrivileges.updatePrivilege(Const.InstructorPermissions.CAN_MODIFY_STUDENT, true);
         Instructor instructor = new Instructor(course, "name", "instructoremail@tm.tmt",
-                false, "", null, instructorPrivileges);
+                false, "", InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM, instructorPrivileges);
         loginAsInstructor(instructor.getGoogleId());
         when(mockLogic.getInstructorByGoogleId(course.getId(), instructor.getGoogleId())).thenReturn(instructor);
         when(mockLogic.getCourse(course.getId())).thenReturn(course);
@@ -132,6 +134,8 @@ public class EnrollStudentsActionTest extends BaseActionTest<EnrollStudentsActio
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
         };
+
+        when(mockLogic.getInstructorByGoogleId(course.getId(), "random-id")).thenReturn(null);
         loginAsStudent("random-id");
         verifyCannotAccess(params);
 

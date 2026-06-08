@@ -6,7 +6,7 @@ import { InstructorService } from '../../../services/instructor.service';
 import { StatusMessageService } from '../../../services/status-message.service';
 import { StudentService } from '../../../services/student.service';
 import { TableComparatorService } from '../../../services/table-comparator.service';
-import { Course, Instructor, Instructors, JoinState, Student, Students } from '../../../types/api-output';
+import { Course, CourseView, Instructor, Instructors, JoinState, Student, Students } from '../../../types/api-output';
 import { SortBy, SortOrder } from '../../../types/sort-properties';
 import { LoadingRetryComponent } from '../../components/loading-retry/loading-retry.component';
 import { LoadingSpinnerDirective } from '../../components/loading-spinner/loading-spinner.directive';
@@ -31,7 +31,7 @@ export class StudentCourseDetailsPageComponent implements OnInit {
   private statusMessageService = inject(StatusMessageService);
 
   // enum
-  SortBy: typeof SortBy = SortBy;
+  SortBy!: typeof SortBy;
   teammateProfilesSortBy: SortBy = SortBy.NONE;
 
   // data
@@ -42,7 +42,9 @@ export class StudentCourseDetailsPageComponent implements OnInit {
     name: '',
     comments: '',
     joinState: JoinState.NOT_JOINED,
+    teamId: '',
     teamName: '',
+    sectionId: '',
     sectionName: '',
     institute: '',
     courseName: '',
@@ -66,6 +68,10 @@ export class StudentCourseDetailsPageComponent implements OnInit {
   isLoadingInstructor = false;
   isLoadingTeammates = false;
   hasLoadingFailed = false;
+
+  constructor() {
+    this.SortBy = SortBy;
+  }
 
   /**
    * Fetches relevant data to be displayed on page.
@@ -94,8 +100,8 @@ export class StudentCourseDetailsPageComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: (course: Course) => {
-          this.course = course;
+        next: (courseView: CourseView) => {
+          this.course = courseView.course;
         },
         error: (resp: ErrorMessageOutput) => {
           this.hasLoadingFailed = true;
@@ -112,7 +118,7 @@ export class StudentCourseDetailsPageComponent implements OnInit {
   loadStudent(courseId: string): void {
     this.isLoadingStudent = true;
     this.studentService
-      .getStudent(courseId)
+      .getStudent({ courseId })
       .pipe(
         finalize(() => {
           this.isLoadingStudent = false;

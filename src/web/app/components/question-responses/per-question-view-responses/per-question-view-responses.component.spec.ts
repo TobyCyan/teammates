@@ -1,24 +1,24 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
-  CommentOutput,
   FeedbackQuestion,
+  ResponseInstructorComment,
   FeedbackTextQuestionDetails,
   FeedbackTextResponseDetails,
+  QuestionGiverType,
+  QuestionRecipientType,
   ResponseOutput,
-} from 'src/web/types/api-output';
-import SpyInstance = jest.SpyInstance;
+} from '../../../../types/api-output';
 import { PerQuestionViewResponsesComponent } from './per-question-view-responses.component';
 import { FeedbackResponsesService } from '../../../../services/feedback-responses.service';
 import testEventEmission from '../../../../test-helpers/test-event-emitter';
 import {
   CommentVisibilityType,
-  FeedbackParticipantType,
   FeedbackQuestionType,
   NumberOfEntitiesToGiveFeedbackToSetting,
 } from '../../../../types/api-request';
-import { CommentRowModel } from '../../comment-box/comment-row/comment-row.component';
+import type { NewCommentRowModel } from '../../comment-box/comment.model';
 import { CommentTableModel } from '../../comment-box/comment-table/comment-table.model';
 
 describe('PerQuestionViewResponsesComponent', () => {
@@ -27,13 +27,11 @@ describe('PerQuestionViewResponsesComponent', () => {
 
   let feedbackResponsesService: FeedbackResponsesService;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PerQuestionViewResponsesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -45,16 +43,13 @@ describe('PerQuestionViewResponsesComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  const commentOutput: CommentOutput = {
+  const commentOutput: ResponseInstructorComment = {
     commentGiverName: 'Jennie Kim',
     lastEditorName: 'Jennie Kim',
-    commentGiver: 'Jennie Kim',
-    lastEditorEmail: 'jenniekim@gmail.com',
-    feedbackResponseCommentId: '00000000-0000-4000-8000-000000000003',
+    responseInstructorCommentId: '00000000-0000-4000-8000-000000000003',
     commentText: 'commentText',
     createdAt: 0,
     lastEditedAt: 0,
-    isVisibilityFollowingFeedbackQuestion: false,
     showGiverNameTo: [],
     showCommentTo: [],
   };
@@ -74,7 +69,7 @@ describe('PerQuestionViewResponsesComponent', () => {
       answer: '<p>Lisa is a good classmate </p>',
     } as FeedbackTextResponseDetails,
     instructorComments: [],
-    participantComment: commentOutput,
+    participantComment: commentOutput.commentText,
   };
 
   const feedbackQuestion: FeedbackQuestion = {
@@ -86,8 +81,8 @@ describe('PerQuestionViewResponsesComponent', () => {
       shouldAllowRichText: true,
     } as FeedbackTextQuestionDetails,
     questionType: FeedbackQuestionType.TEXT,
-    giverType: FeedbackParticipantType.STUDENTS,
-    recipientType: FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
+    giverType: QuestionGiverType.STUDENTS,
+    recipientType: QuestionRecipientType.STUDENTS_EXCLUDING_SELF,
     numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
     showResponsesTo: [],
     showGiverNameTo: [],
@@ -95,10 +90,10 @@ describe('PerQuestionViewResponsesComponent', () => {
     customNumberOfEntitiesToGiveFeedbackTo: 0,
   };
 
-  const commentRowModel: CommentRowModel = {
+  const commentRowModel: NewCommentRowModel = {
+    commentType: 'new',
     commentEditFormModel: {
       commentText: '',
-      isUsingCustomVisibilities: false,
       showCommentTo: [CommentVisibilityType.RECIPIENT],
       showGiverNameTo: [CommentVisibilityType.RECIPIENT],
     },
@@ -120,7 +115,7 @@ describe('PerQuestionViewResponsesComponent', () => {
     component.question = feedbackQuestion;
     component.instructorCommentTableModel = instructorCommentTableModel;
     component.responses = [responseOutput];
-    const feedbackResponseSpy: SpyInstance = jest
+    const feedbackResponseSpy = vi
       .spyOn(feedbackResponsesService, 'isFeedbackResponsesDisplayedOnSection')
       .mockReturnValue(true);
 

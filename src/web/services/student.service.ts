@@ -5,11 +5,11 @@ import { CourseService } from './course.service';
 import { CsvHelper } from './csv-helper';
 import { HttpRequestService } from './http-request.service';
 import { TableComparatorService } from './table-comparator.service';
-import { JoinStatePipe } from '../app/components/student-list/join-state.pipe';
 import { ResourceEndpoints } from '../types/api-const';
-import { Course, EnrollStudents, MessageOutput, RegenerateKey, Student, Students } from '../types/api-output';
+import { CourseView, EnrollStudents, MessageOutput, Student, Students } from '../types/api-output';
 import { StudentsEnrollRequest, StudentUpdateRequest } from '../types/api-request';
 import { SortBy, SortOrder } from '../types/sort-properties';
+import { joinStateToString } from '../app/utils/join-state.util';
 
 /**
  * Handles student related logic provision.
@@ -42,21 +42,18 @@ export class StudentService {
   /**
    * Gets student of a course by calling API.
    *
-   * <p> If both studentEmail and regKey are not provided, get the student of current logged-in user.
+   * If both userId and regKey are not provided, get the student of current logged-in user.
    *
-   * @param courseId courseId of the course
-   * @param studentEmail if provided, get the student of the course of the given email
-   * @param regKey if provided, get the student of the course with regKey
    */
-  getStudent(courseId: string, studentEmail?: string, regKey?: string): Observable<Student> {
+  getStudent(queryParams: { courseId: string; userId?: string; regKey?: string }): Observable<Student> {
     const paramsMap: { [key: string]: string } = {
-      courseid: courseId,
+      courseid: queryParams.courseId,
     };
-    if (studentEmail) {
-      paramsMap['studentemail'] = studentEmail;
+    if (queryParams.userId) {
+      paramsMap['userid'] = queryParams.userId;
     }
-    if (regKey) {
-      paramsMap['key'] = regKey;
+    if (queryParams.regKey) {
+      paramsMap['key'] = queryParams.regKey;
     }
     return this.httpRequestService.get(ResourceEndpoints.STUDENT, paramsMap);
   }
@@ -66,36 +63,24 @@ export class StudentService {
    */
   updateStudent(
     queryParams: {
-      studentId: string;
+      userId: string;
     },
     requestBody: StudentUpdateRequest,
   ): Observable<MessageOutput> {
     const paramsMap: { [key: string]: string } = {
-      studentid: queryParams.studentId,
+      userid: queryParams.userId,
     };
     return this.httpRequestService.put(ResourceEndpoints.STUDENT, paramsMap, requestBody);
   }
 
   /**
-   * Deletes a student in a course by calling API.
+   * Deletes a student by calling API.
    */
-  deleteStudent(queryParams: { googleId: string; courseId: string }): Observable<any> {
+  deleteStudent(queryParams: { userId: string }): Observable<any> {
     const paramsMap: Record<string, string> = {
-      googleid: queryParams.googleId,
-      courseid: queryParams.courseId,
+      userid: queryParams.userId,
     };
     return this.httpRequestService.delete(ResourceEndpoints.STUDENT, paramsMap);
-  }
-
-  /**
-   * Regenerates the registration key for a student in a course.
-   */
-  regenerateStudentKey(courseId: string, studentEmail: string): Observable<RegenerateKey> {
-    const paramsMap: Record<string, string> = {
-      courseid: courseId,
-      studentemail: studentEmail,
-    };
-    return this.httpRequestService.post(ResourceEndpoints.STUDENT_KEY, paramsMap);
   }
 
   /**
@@ -121,12 +106,11 @@ export class StudentService {
   }
 
   /**
-   * Deletes up to a limited number of students in a course by calling API.
+   * Deletes all students in a course by calling API.
    */
-  batchDeleteStudentsFromCourse(queryParams: { courseId: string; limit: number }): Observable<MessageOutput> {
+  deleteStudentsFromCourse(queryParams: { courseId: string }): Observable<MessageOutput> {
     const paramsMap: Record<string, string> = {
       courseid: queryParams.courseId,
-      limit: queryParams.limit.toString(),
     };
     return this.httpRequestService.delete(ResourceEndpoints.STUDENTS, paramsMap);
   }
@@ -136,7 +120,8 @@ export class StudentService {
    */
   loadStudentListAsCsv(queryParams: { courseId: string }): Observable<string> {
     return this.courseService.getCourseAsInstructor(queryParams.courseId).pipe(
-      mergeMap((course: Course) => {
+      mergeMap((courseView: CourseView) => {
+        const course = courseView.course;
         return this.getStudentsFromCourse({ courseId: queryParams.courseId }).pipe(
           map((students: Students) => {
             return this.processStudentsToCsv(course.courseId, course.courseName, students.students);
@@ -163,12 +148,11 @@ export class StudentService {
         this.tableComparatorService.compare(SortBy.RESPONDENT_NAME, SortOrder.ASC, a.name, b.name)
       );
     });
-    const joinStatePipe: JoinStatePipe = new JoinStatePipe();
     students.forEach((student: Student) => {
       const studentRow: string[] = [
         student.teamName ? student.teamName : '',
         student.name,
-        joinStatePipe.transform(student.joinState),
+        joinStateToString(student.joinState),
         student.email,
       ];
       csvRows.push(hasSection ? [student.sectionName].concat(studentRow) : studentRow);

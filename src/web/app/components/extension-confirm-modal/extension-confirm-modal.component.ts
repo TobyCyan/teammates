@@ -1,7 +1,7 @@
 import { NgClass } from '@angular/common';
 import { Component, EventEmitter, Input, Output, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap/modal';
 import { TableComparatorService } from '../../../services/table-comparator.service';
 import { SortBy, SortOrder } from '../../../types/sort-properties';
 import {
@@ -17,6 +17,8 @@ import {
 } from '../sortable-table/sortable-table.component';
 import { FormatDateDetailPipe } from '../teammates-common/format-date-detail.pipe';
 import { InstructorRoleNamePipe } from '../teammates-common/instructor-role-name.pipe';
+import { DateFormatService } from '../../../services/date-format.service';
+import { instructorRoleToName } from '../../utils/instructor-role-name.util';
 
 export enum ExtensionModalType {
   EXTEND,
@@ -34,8 +36,7 @@ export enum ExtensionModalType {
 export class ExtensionConfirmModalComponent implements OnInit {
   activeModal = inject(NgbActiveModal);
   private tableComparatorService = inject(TableComparatorService);
-  private dateDetailPipe = inject(FormatDateDetailPipe);
-  private instructorRoleNamePipe = inject(InstructorRoleNamePipe);
+  private dateFormatService = inject(DateFormatService);
 
   @Input()
   modalType: ExtensionModalType = ExtensionModalType.EXTEND;
@@ -83,8 +84,8 @@ export class ExtensionConfirmModalComponent implements OnInit {
   instructorColumnsData: ColumnData[] = [];
   instructorRowsData: SortableTableCellData[][] = [];
 
-  SortBy: typeof SortBy = SortBy;
-  SortOrder: typeof SortOrder = SortOrder;
+  SortBy!: typeof SortBy;
+  SortOrder!: typeof SortOrder;
   sortStudentsBy: SortBy = SortBy.SESSION_END_DATE;
   sortStudentOrder: SortOrder = SortOrder.DESC;
   sortInstructorsBy: SortBy = SortBy.SESSION_END_DATE;
@@ -92,6 +93,11 @@ export class ExtensionConfirmModalComponent implements OnInit {
 
   isSubmitting = false;
   isNotifyDeadlines = false;
+
+  constructor() {
+    this.SortBy = SortBy;
+    this.SortOrder = SortOrder;
+  }
 
   ngOnInit(): void {
     if (this.selectedStudents.length > 0) {
@@ -160,7 +166,10 @@ export class ExtensionConfirmModalComponent implements OnInit {
         },
         {
           value: studentData.extensionDeadline,
-          displayValue: this.dateDetailPipe.transform(studentData.extensionDeadline, this.feedbackSessionTimeZone),
+          displayValue: this.dateFormatService.formatDateDetailed(
+            studentData.extensionDeadline,
+            this.feedbackSessionTimeZone,
+          ),
         },
       ];
       return rowData;
@@ -203,13 +212,14 @@ export class ExtensionConfirmModalComponent implements OnInit {
         },
         {
           value: instructorData.role,
-          displayValue: instructorData.role
-            ? this.instructorRoleNamePipe.transform(instructorData.role)
-            : instructorData.role,
+          displayValue: instructorData.role ? instructorRoleToName(instructorData.role) : instructorData.role,
         },
         {
           value: instructorData.extensionDeadline,
-          displayValue: this.dateDetailPipe.transform(instructorData.extensionDeadline, this.feedbackSessionTimeZone),
+          displayValue: this.dateFormatService.formatDateDetailed(
+            instructorData.extensionDeadline,
+            this.feedbackSessionTimeZone,
+          ),
         },
       ];
       return rowData;

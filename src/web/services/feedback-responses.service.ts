@@ -2,9 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpRequestService } from './http-request.service';
 import { InstructorSessionResultSectionType } from '../app/pages-instructor/instructor-session-result-page/instructor-session-result-section-type.enum';
+import { DEFAULT_SECTION_ID } from '../app/pages-instructor/instructor-session-result-page/instructor-session-tab.model';
 import { ResourceEndpoints } from '../types/api-const';
 import {
-  FeedbackConstantSumResponseDetails,
+  FeedbackConstantSumOptionsResponseDetails,
+  FeedbackConstantSumRecipientsResponseDetails,
   FeedbackContributionResponseDetails,
   FeedbackMcqResponseDetails,
   FeedbackMsqResponseDetails,
@@ -14,14 +16,16 @@ import {
   FeedbackRankRecipientsResponseDetails,
   FeedbackResponseDetails,
   FeedbackResponse,
-  FeedbackResponses,
+  FeedbackQuestionResponses,
+  MessageOutput,
   FeedbackRubricResponseDetails,
   FeedbackTextResponseDetails,
   ResponseOutput,
 } from '../types/api-output';
 import { FeedbackResponsesRequest, Intent } from '../types/api-request';
 import {
-  DEFAULT_CONSTSUM_RESPONSE_DETAILS,
+  DEFAULT_CONSTSUM_OPTIONS_RESPONSE_DETAILS,
+  DEFAULT_CONSTSUM_RECIPIENTS_RESPONSE_DETAILS,
   DEFAULT_CONTRIBUTION_RESPONSE_DETAILS,
   DEFAULT_MCQ_RESPONSE_DETAILS,
   DEFAULT_MSQ_RESPONSE_DETAILS,
@@ -77,11 +81,9 @@ export class FeedbackResponsesService {
       case FeedbackQuestionType.RUBRIC:
         return DEFAULT_RUBRIC_RESPONSE_DETAILS();
       case FeedbackQuestionType.CONSTSUM_OPTIONS:
-        return DEFAULT_CONSTSUM_RESPONSE_DETAILS();
+        return DEFAULT_CONSTSUM_OPTIONS_RESPONSE_DETAILS();
       case FeedbackQuestionType.CONSTSUM_RECIPIENTS:
-        return DEFAULT_CONSTSUM_RESPONSE_DETAILS();
-      default:
-        throw new Error(`Unknown question type ${questionType}`);
+        return DEFAULT_CONSTSUM_RECIPIENTS_RESPONSE_DETAILS();
     }
   }
 
@@ -126,18 +128,16 @@ export class FeedbackResponsesService {
       }
       case FeedbackQuestionType.RUBRIC: {
         const rubricDetails: FeedbackRubricResponseDetails = details as FeedbackRubricResponseDetails;
-        return (
-          rubricDetails.answer.length === 0 ||
-          rubricDetails.answer.every((val: number) => val === RUBRIC_ANSWER_NOT_CHOSEN)
-        );
+        return rubricDetails.answer.every((val: number) => val === RUBRIC_ANSWER_NOT_CHOSEN);
       }
       case FeedbackQuestionType.CONSTSUM_OPTIONS: {
-        const constsumDetails: FeedbackConstantSumResponseDetails = details as FeedbackConstantSumResponseDetails;
+        const constsumDetails: FeedbackConstantSumOptionsResponseDetails =
+          details as FeedbackConstantSumOptionsResponseDetails;
         return constsumDetails.answers.length === 0;
       }
       case FeedbackQuestionType.CONSTSUM_RECIPIENTS: {
-        const constsumRecipientsDetails: FeedbackConstantSumResponseDetails =
-          details as FeedbackConstantSumResponseDetails;
+        const constsumRecipientsDetails: FeedbackConstantSumRecipientsResponseDetails =
+          details as FeedbackConstantSumRecipientsResponseDetails;
         return constsumRecipientsDetails.answers.length === 0;
       }
       default:
@@ -150,24 +150,31 @@ export class FeedbackResponsesService {
    */
   isFeedbackResponsesDisplayedOnSection(
     response: ResponseOutput,
-    section: string,
+    sectionId: string,
     sectionType: InstructorSessionResultSectionType,
   ): boolean {
     let isDisplayed = true;
 
-    if (section) {
+    if (sectionId) {
+      const isGiverInSection =
+        sectionId === DEFAULT_SECTION_ID ? response.giverSectionId == null : response.giverSectionId === sectionId;
+      const isRecipientInSection =
+        sectionId === DEFAULT_SECTION_ID
+          ? response.recipientSectionId == null
+          : response.recipientSectionId === sectionId;
+
       switch (sectionType) {
         case InstructorSessionResultSectionType.EITHER:
-          isDisplayed = response.giverSection === section || response.recipientSection === section;
+          isDisplayed = isGiverInSection || isRecipientInSection;
           break;
         case InstructorSessionResultSectionType.GIVER:
-          isDisplayed = response.giverSection === section;
+          isDisplayed = isGiverInSection;
           break;
         case InstructorSessionResultSectionType.EVALUEE:
-          isDisplayed = response.recipientSection === section;
+          isDisplayed = isRecipientInSection;
           break;
         case InstructorSessionResultSectionType.BOTH:
-          isDisplayed = response.giverSection === section && response.recipientSection === section;
+          isDisplayed = isGiverInSection && isRecipientInSection;
           break;
         default:
       }
@@ -195,20 +202,41 @@ export class FeedbackResponsesService {
   }
 
   /**
-   * Submits a list of feedback responses for a feedback question by calling API.
+   * Submits feedback responses for one or more feedback questions in a feedback session by calling API.
    */
   submitFeedbackResponses(
-    questionId: string,
+    feedbackSessionId: string,
     request: FeedbackResponsesRequest,
-    additionalParams: { [key: string]: string } = {},
-  ): Observable<FeedbackResponses> {
+    params: {
+      intent: Intent;
+      key: string;
+      moderatedperson: string;
+    },
+  ): Observable<FeedbackQuestionResponses> {
     return this.httpRequestService.put(
       ResourceEndpoints.RESPONSES,
       {
-        questionid: questionId,
-        ...additionalParams,
+        fsid: feedbackSessionId,
+        ...params,
       },
       request,
     );
+  }
+
+  /**
+   * Deletes a giver comment by clearing it from its feedback response.
+   */
+  deleteGiverComment(params: {
+    responseId: string;
+    intent: Intent;
+    key: string;
+    moderatedPerson: string;
+  }): Observable<MessageOutput> {
+    return this.httpRequestService.delete(ResourceEndpoints.RESPONSE_GIVER_COMMENT, {
+      responseid: params.responseId,
+      intent: params.intent,
+      key: params.key,
+      moderatedperson: params.moderatedPerson,
+    });
   }
 }

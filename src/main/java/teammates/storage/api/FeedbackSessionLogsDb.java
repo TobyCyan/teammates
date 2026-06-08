@@ -15,7 +15,7 @@ import jakarta.persistence.criteria.Root;
 import teammates.common.util.HibernateUtil;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.FeedbackSessionLog;
-import teammates.storage.entity.Student;
+import teammates.storage.entity.User;
 
 /**
  * Handles CRUD operations for feedback session logs.
@@ -44,28 +44,23 @@ public final class FeedbackSessionLogsDb {
     /**
      * Gets the feedback session logs as filtered by the given parameters ordered by
      * ascending timestamp. Logs with the same timestamp will be ordered by the
-     * student's email.
+     * user's email.
      *
-     * @param studentId        Can be null
+     * @param userId           Can be null
      * @param feedbackSessionId Can be null
      */
-    public List<FeedbackSessionLog> getOrderedFeedbackSessionLogs(String courseId, UUID studentId,
+    public List<FeedbackSessionLog> getOrderedFeedbackSessionLogs(String courseId, UUID userId,
             UUID feedbackSessionId, Instant startTime, Instant endTime) {
-
-        assert courseId != null;
-        assert startTime != null;
-        assert endTime != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<FeedbackSessionLog> cr = cb.createQuery(FeedbackSessionLog.class);
         Root<FeedbackSessionLog> root = cr.from(FeedbackSessionLog.class);
         Join<FeedbackSessionLog, FeedbackSession> feedbackSessionJoin = root.join("feedbackSession");
-        Join<FeedbackSessionLog, Student> studentJoin = root.join("student");
+        Join<FeedbackSessionLog, User> userJoin = root.join("user");
 
         List<Predicate> predicates = new ArrayList<>();
 
-        if (studentId != null) {
-            predicates.add(cb.equal(studentJoin.get("id"), studentId));
+        if (userId != null) {
+            predicates.add(cb.equal(userJoin.get("id"), userId));
         }
 
         if (feedbackSessionId != null) {
@@ -77,14 +72,14 @@ public final class FeedbackSessionLogsDb {
         predicates.add(cb.lessThan(root.get("timestamp"), endTime));
 
         cr.select(root).where(predicates.toArray(new Predicate[0])).orderBy(cb.asc(root.get("timestamp")),
-                cb.asc(studentJoin.get("email")));
+                cb.asc(userJoin.get("email")));
         return HibernateUtil.createQuery(cr).getResultList();
     }
 
     /**
-     * Creates feedback session logs.
+     * Persists a feedback session log.
      */
-    public FeedbackSessionLog createFeedbackSessionLog(FeedbackSessionLog log) {
+    public FeedbackSessionLog persistFeedbackSessionLog(FeedbackSessionLog log) {
         HibernateUtil.persist(log);
         return log;
     }
@@ -93,8 +88,6 @@ public final class FeedbackSessionLogsDb {
      * Deletes feedback session logs older than the given cutoff time.
      */
     public int deleteFeedbackSessionLogsOlderThan(Instant cutoffTime) {
-        assert cutoffTime != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaDelete<FeedbackSessionLog> cd = cb.createCriteriaDelete(FeedbackSessionLog.class);
         Root<FeedbackSessionLog> root = cd.from(FeedbackSessionLog.class);

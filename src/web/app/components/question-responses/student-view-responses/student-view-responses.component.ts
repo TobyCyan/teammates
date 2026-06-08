@@ -1,16 +1,17 @@
 import { NgClass } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import {
-  FeedbackParticipantType,
   FeedbackQuestion,
   FeedbackQuestionType,
   NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionGiverType,
+  QuestionRecipientType,
   ResponseOutput,
 } from '../../../../types/api-output';
 import { CommentRowComponent } from '../../comment-box/comment-row/comment-row.component';
 import { CommentRowMode } from '../../comment-box/comment-row/comment-row.mode';
 import { CommentTableComponent } from '../../comment-box/comment-table/comment-table.component';
-import { CommentToCommentRowModelPipe } from '../../comment-box/comment-to-comment-row-model.pipe';
+import { GiverCommentToCommentRowModelPipe } from '../../comment-box/giver-comment-to-comment-row-model.pipe';
 import { CommentsToCommentTableModelPipe } from '../../comment-box/comments-to-comment-table-model.pipe';
 import { SingleResponseComponent } from '../single-response/single-response.component';
 
@@ -25,13 +26,13 @@ import { SingleResponseComponent } from '../single-response/single-response.comp
     SingleResponseComponent,
     CommentRowComponent,
     CommentTableComponent,
-    CommentToCommentRowModelPipe,
+    GiverCommentToCommentRowModelPipe,
     CommentsToCommentTableModelPipe,
   ],
 })
 export class StudentViewResponsesComponent implements OnInit {
   // enum
-  CommentRowMode: typeof CommentRowMode = CommentRowMode;
+  CommentRowMode!: typeof CommentRowMode;
 
   @Input() feedbackQuestion: FeedbackQuestion = {
     feedbackQuestionId: '',
@@ -43,8 +44,8 @@ export class StudentViewResponsesComponent implements OnInit {
       questionText: '',
     },
     questionType: FeedbackQuestionType.MCQ,
-    giverType: FeedbackParticipantType.STUDENTS,
-    recipientType: FeedbackParticipantType.STUDENTS,
+    giverType: QuestionGiverType.STUDENTS,
+    recipientType: QuestionRecipientType.STUDENTS,
     numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
     customNumberOfEntitiesToGiveFeedbackTo: 0,
     showResponsesTo: [],
@@ -57,6 +58,10 @@ export class StudentViewResponsesComponent implements OnInit {
   @Input() timezone = 'UTC';
 
   recipient = '';
+
+  constructor() {
+    this.CommentRowMode = CommentRowMode;
+  }
 
   ngOnInit(): void {
     this.recipient = this.responses.length ? this.responses[0].recipient : '';

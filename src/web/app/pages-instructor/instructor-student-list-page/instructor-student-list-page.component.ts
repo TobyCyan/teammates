@@ -1,6 +1,6 @@
 import { HttpStatusCode } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
-import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
 import { finalize } from 'rxjs/operators';
 import { CourseService, CourseStatistics } from '../../../services/course.service';
 import { InstructorService } from '../../../services/instructor.service';
@@ -9,6 +9,7 @@ import { StudentService } from '../../../services/student.service';
 import { TableComparatorService } from '../../../services/table-comparator.service';
 import {
   Course,
+  CourseView,
   Courses,
   InstructorPermissionSet,
   InstructorPrivilege,
@@ -19,10 +20,10 @@ import { SortBy, SortOrder } from '../../../types/sort-properties';
 import { LoadingRetryComponent } from '../../components/loading-retry/loading-retry.component';
 import { LoadingSpinnerDirective } from '../../components/loading-spinner/loading-spinner.directive';
 import { PanelChevronComponent } from '../../components/panel-chevron/panel-chevron.component';
-import { JoinStatePipe } from '../../components/student-list/join-state.pipe';
 import { StudentListRowModel, StudentListComponent } from '../../components/student-list/student-list.component';
 import { TeammatesRouterDirective } from '../../components/teammates-router/teammates-router.directive';
 import { ErrorMessageOutput } from '../../error-message-output';
+import { joinStateToString } from '../../utils/join-state.util';
 
 interface StudentIndexedData {
   [key: string]: Student[];
@@ -68,9 +69,13 @@ export class InstructorStudentListPageComponent implements OnInit {
   isLoadingCourses = false;
 
   // enum
-  SortBy: typeof SortBy = SortBy;
+  SortBy!: typeof SortBy;
 
   coursesSortBy: SortBy = SortBy.COURSE_CREATION_DATE;
+
+  constructor() {
+    this.SortBy = SortBy;
+  }
 
   ngOnInit(): void {
     this.loadCourses();
@@ -91,7 +96,8 @@ export class InstructorStudentListPageComponent implements OnInit {
       )
       .subscribe({
         next: (courses: Courses) => {
-          courses.courses.forEach((course: Course) => {
+          courses.courses.forEach((courseView: CourseView) => {
+            const course = courseView.course;
             const courseTab: CourseTab = {
               course,
               studentList: [],
@@ -200,11 +206,11 @@ export class InstructorStudentListPageComponent implements OnInit {
   /**
    * Removes the student from course and update the course statistics.
    */
-  removeStudentFromCourse(courseTab: CourseTab, studentEmail: string): void {
-    this.courseService.removeStudentFromCourse(courseTab.course.courseId, studentEmail).subscribe({
+  removeStudentFromCourse(courseTab: CourseTab, studentRow: StudentListRowModel): void {
+    this.studentService.deleteStudent({ userId: studentRow.student.userId }).subscribe({
       next: () => {
         courseTab.studentList = courseTab.studentList.filter(
-          (studentModel: StudentListRowModel) => studentModel.student.email !== studentEmail,
+          (studentModel: StudentListRowModel) => studentModel.student.userId !== studentRow.student.userId,
         );
 
         const students: Student[] = courseTab.studentList.map(
@@ -236,7 +242,7 @@ export class InstructorStudentListPageComponent implements OnInit {
     this.coursesSortBy = by;
 
     if (this.courseTabList.length > 1) {
-      const coursesCopy: CourseTab[] = JSON.parse(JSON.stringify(this.courseTabList));
+      const coursesCopy: CourseTab[] = structuredClone(this.courseTabList);
       coursesCopy.sort(this.sortCoursesBy(by));
       this.courseTabList = coursesCopy;
     }
@@ -288,7 +294,6 @@ export class InstructorStudentListPageComponent implements OnInit {
    * Returns a function to determine the order of sort for students.
    */
   sortStudentBy(by: SortBy, order: SortOrder): (a: StudentListRowModel, b: StudentListRowModel) => number {
-    const joinStatePipe: JoinStatePipe = new JoinStatePipe();
     if (by === SortBy.NONE) {
       // Default order: section name > team name > student name
       return (a: StudentListRowModel, b: StudentListRowModel): number => {
@@ -325,8 +330,8 @@ export class InstructorStudentListPageComponent implements OnInit {
           strB = b.student.email;
           break;
         case SortBy.JOIN_STATUS:
-          strA = joinStatePipe.transform(a.student.joinState);
-          strB = joinStatePipe.transform(b.student.joinState);
+          strA = joinStateToString(a.student.joinState);
+          strB = joinStateToString(b.student.joinState);
           break;
         default:
           strA = '';

@@ -5,6 +5,7 @@ import java.util.Objects;
 import jakarta.annotation.Nullable;
 
 import teammates.common.util.SanitizationHelper;
+import teammates.ui.exception.InvalidHttpRequestBodyException;
 
 /**
  * The request reasonBody for rejecting an account request.
@@ -28,7 +29,7 @@ public class AccountRequestRejectionRequest extends BasicRequest {
     @Override
     public void validate() throws InvalidHttpRequestBodyException {
         if (reasonBody == null || reasonTitle == null) {
-            assertTrue(Objects.equals(reasonBody, reasonTitle),
+            validateTrue(Objects.equals(reasonBody, reasonTitle),
                     "Both reason body and title need to be null to reject silently");
         }
     }

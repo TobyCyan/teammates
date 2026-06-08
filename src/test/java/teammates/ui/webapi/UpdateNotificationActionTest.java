@@ -1,5 +1,6 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
@@ -14,8 +15,8 @@ import teammates.common.exception.InvalidParametersException;
 import teammates.common.util.Const;
 import teammates.storage.entity.Notification;
 import teammates.ui.exception.InvalidHttpParameterException;
+import teammates.ui.exception.InvalidHttpRequestBodyException;
 import teammates.ui.output.NotificationData;
-import teammates.ui.request.InvalidHttpRequestBodyException;
 import teammates.ui.request.NotificationUpdateRequest;
 
 /**

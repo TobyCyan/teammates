@@ -2,8 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpRequestService } from './http-request.service';
 import { ResourceEndpoints } from '../types/api-const';
-import { Course, Courses, JoinStatus, MessageOutput, Student } from '../types/api-output';
-import { CourseCreateRequest, CourseUpdateRequest } from '../types/api-request';
+import { Course, CourseSections, CourseView, Courses, JoinStatus, MessageOutput, Student } from '../types/api-output';
+import { CourseCreateRequest, CourseUpdateRequest, RegKeyRequest } from '../types/api-request';
 
 /**
  * The statistics of a course
@@ -37,7 +37,7 @@ export class CourseService {
   /**
    * Get course data by calling API as an instructor.
    */
-  getCourseAsInstructor(courseId: string, regKey?: string): Observable<Course> {
+  getCourseAsInstructor(courseId: string, regKey?: string): Observable<CourseView> {
     const paramMap: Record<string, string> = {
       courseid: courseId,
       entitytype: 'instructor',
@@ -61,7 +61,7 @@ export class CourseService {
   /**
    * Get course data by calling API as a student.
    */
-  getCourseAsStudent(courseId: string, regKey?: string): Observable<Course> {
+  getCourseAsStudent(courseId: string, regKey?: string): Observable<CourseView> {
     const paramMap: Record<string, string> = {
       courseid: courseId,
       entitytype: 'student',
@@ -85,11 +85,8 @@ export class CourseService {
   /**
    * Creates a course by calling API.
    */
-  createCourse(institute: string, request: CourseCreateRequest): Observable<Course> {
-    const paramMap: Record<string, string> = {
-      instructorinstitution: institute,
-    };
-    return this.httpRequestService.post(ResourceEndpoints.COURSE, paramMap, request);
+  createCourse(request: CourseCreateRequest): Observable<Course> {
+    return this.httpRequestService.post(ResourceEndpoints.COURSE, {}, request);
   }
 
   /**
@@ -127,10 +124,9 @@ export class CourseService {
   /**
    * Get the status of whether the entity has joined the course by calling API.
    */
-  getJoinCourseStatus(regKey: string, entityType: string, isCreatingAccount: boolean): Observable<JoinStatus> {
+  getJoinCourseStatus(regKey: string, isCreatingAccount: boolean): Observable<JoinStatus> {
     const paramMap: Record<string, string> = {
       key: regKey,
-      entitytype: entityType,
     };
 
     if (isCreatingAccount) {
@@ -143,12 +139,8 @@ export class CourseService {
   /**
    * Join a course by calling API.
    */
-  joinCourse(regKey: string, entityType: string): Observable<any> {
-    const paramMap: Record<string, string> = {
-      key: regKey,
-      entitytype: entityType,
-    };
-    return this.httpRequestService.put(ResourceEndpoints.JOIN, paramMap);
+  joinCourse(regKeyRequest: RegKeyRequest): Observable<any> {
+    return this.httpRequestService.put(ResourceEndpoints.JOIN, {}, regKeyRequest);
   }
 
   /**
@@ -162,42 +154,19 @@ export class CourseService {
   }
 
   /**
-   * Send join reminder email to a student.
+   * Send join reminder email to a user.
    */
-  remindStudentForJoin(courseId: string, studentEmail: string): Observable<MessageOutput> {
+  remindUserForJoin(userId: string): Observable<MessageOutput> {
     const paramMap: Record<string, string> = {
-      courseid: courseId,
-      studentemail: studentEmail,
+      userid: userId,
     };
     return this.httpRequestService.post(ResourceEndpoints.JOIN_REMIND, paramMap);
   }
 
   /**
-   * Send join reminder email to an instructor.
+   * Gets the sections for a course.
    */
-  remindInstructorForJoin(courseId: string, instructorEmail: string): Observable<MessageOutput> {
-    const paramMap: Record<string, string> = {
-      courseid: courseId,
-      instructoremail: instructorEmail,
-    };
-    return this.httpRequestService.post(ResourceEndpoints.JOIN_REMIND, paramMap);
-  }
-
-  /**
-   * Removes student from course.
-   */
-  removeStudentFromCourse(courseId: string, studentEmail: string): Observable<any> {
-    const paramsMap: Record<string, string> = {
-      courseid: courseId,
-      studentemail: studentEmail,
-    };
-    return this.httpRequestService.delete(ResourceEndpoints.STUDENT, paramsMap);
-  }
-
-  /**
-   * Gets a list of course section names.
-   */
-  getCourseSectionNames(courseId: string): Observable<any> {
+  getCourseSections(courseId: string): Observable<CourseSections> {
     const paramsMap: Record<string, string> = {
       courseid: courseId,
     };
@@ -219,5 +188,16 @@ export class CourseService {
       numOfTeams: teams.size,
       numOfStudents: students.length,
     };
+  }
+
+  /**
+   * Creates a demo course.
+   */
+  createDemoCourse(key: string, timezone: string): Observable<MessageOutput> {
+    const paramMap: Record<string, string> = { key };
+    if (timezone) {
+      paramMap['timezone'] = timezone;
+    }
+    return this.httpRequestService.post(ResourceEndpoints.DEMO_COURSE, paramMap);
   }
 }

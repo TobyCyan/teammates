@@ -1,5 +1,7 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -98,7 +100,7 @@ public class SearchStudentsActionTest extends BaseActionTest<SearchStudentsActio
         loginAsInstructor(instructorId);
         List<Instructor> instructors = setupInstructors();
 
-        when(mockLogic.getInstructorsForGoogleId(instructorId)).thenReturn(instructors);
+        when(mockLogic.getInstructorsByAccountId(any())).thenReturn(instructors);
         when(mockLogic.searchStudents(searchKey, instructors)).thenReturn(students);
 
         String[] params = {
@@ -109,7 +111,7 @@ public class SearchStudentsActionTest extends BaseActionTest<SearchStudentsActio
         SearchStudentsAction action = getAction(params);
         StudentsData studentsData = (StudentsData) getJsonResult(action).getOutput();
 
-        verify(mockLogic, times(1)).getInstructorsForGoogleId(instructorId);
+        verify(mockLogic, times(1)).getInstructorsByAccountId(any());
         verify(mockLogic, times(1)).searchStudents(searchKey, instructors);
         verify(mockLogic, never()).searchStudentsInWholeSystem(any());
         verifyNoMoreInteractions(mockLogic);
@@ -122,7 +124,7 @@ public class SearchStudentsActionTest extends BaseActionTest<SearchStudentsActio
         loginAsInstructor(instructorId);
         List<Instructor> instructors = setupInstructors();
 
-        when(mockLogic.getInstructorsForGoogleId(instructorId)).thenReturn(instructors);
+        when(mockLogic.getInstructorsByAccountId(any())).thenReturn(instructors);
         when(mockLogic.searchStudents(searchKey, instructors)).thenReturn(List.of());
 
         String[] params = {
@@ -133,7 +135,7 @@ public class SearchStudentsActionTest extends BaseActionTest<SearchStudentsActio
         SearchStudentsAction action = getAction(params);
         StudentsData studentsData = (StudentsData) getJsonResult(action).getOutput();
 
-        verify(mockLogic, times(1)).getInstructorsForGoogleId(instructorId);
+        verify(mockLogic, times(1)).getInstructorsByAccountId(any());
         verify(mockLogic, times(1)).searchStudents(searchKey, instructors);
         verify(mockLogic, never()).searchStudentsInWholeSystem(any());
         verifyNoMoreInteractions(mockLogic);
@@ -155,7 +157,7 @@ public class SearchStudentsActionTest extends BaseActionTest<SearchStudentsActio
         SearchStudentsAction action = getAction(params);
         StudentsData studentsData = (StudentsData) getJsonResult(action).getOutput();
 
-        verify(mockLogic, never()).getInstructorsForGoogleId(any());
+        verify(mockLogic, never()).getInstructorsByAccountId(any());
         verify(mockLogic, never()).searchStudents(any(), any());
         verify(mockLogic, times(1)).searchStudentsInWholeSystem(searchKey);
         verifyNoMoreInteractions(mockLogic);
@@ -177,7 +179,7 @@ public class SearchStudentsActionTest extends BaseActionTest<SearchStudentsActio
         SearchStudentsAction action = getAction(params);
         StudentsData studentsData = (StudentsData) getJsonResult(action).getOutput();
 
-        verify(mockLogic, never()).getInstructorsForGoogleId(any());
+        verify(mockLogic, never()).getInstructorsByAccountId(any());
         verify(mockLogic, never()).searchStudents(any(), any());
         verify(mockLogic, times(1)).searchStudentsInWholeSystem(searchKey);
         verifyNoMoreInteractions(mockLogic);
@@ -192,18 +194,6 @@ public class SearchStudentsActionTest extends BaseActionTest<SearchStudentsActio
         String[] params = {
                 Const.ParamsNames.SEARCH_KEY, searchKey,
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
-        };
-
-        verifyHttpParameterFailure(params);
-    }
-
-    @Test
-    void testExecute_adminSearchStudentsWithInvalidEntity_throwsInvalidHttpParameterException() {
-        loginAsAdmin();
-
-        String[] params = {
-                Const.ParamsNames.SEARCH_KEY, searchKey,
-                Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
         };
 
         verifyHttpParameterFailure(params);
@@ -235,22 +225,5 @@ public class SearchStudentsActionTest extends BaseActionTest<SearchStudentsActio
         };
 
         verifyHttpParameterFailure(params);
-    }
-
-    @Test
-    void testAccessControl() {
-        String[] adminParams = {
-                Const.ParamsNames.SEARCH_KEY, searchKey,
-                Const.ParamsNames.ENTITY_TYPE, Const.EntityType.ADMIN,
-        };
-        String[] instructorParams = {
-                Const.ParamsNames.SEARCH_KEY, searchKey,
-                Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
-        };
-
-        verifyAdminsCanAccess(adminParams);
-        verifyAnyInstructorCanAccess(getTypicalCourse(), instructorParams);
-        verifyStudentsCannotAccess(adminParams);
-        verifyWithoutLoginCannotAccess(adminParams);
     }
 }

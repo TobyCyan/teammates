@@ -16,6 +16,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import teammates.common.util.FieldValidator;
@@ -32,6 +34,7 @@ public class Team extends BaseEntity {
     private UUID id;
 
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "sectionId")
     private Section section;
 
@@ -141,7 +144,7 @@ public class Team extends BaseEntity {
 
     @Override
     public String toString() {
-        return "Team [id=" + id + ", users=" + users + ", name=" + name
+        return "Team [id=" + id + ", sectionId=" + sectionId + ", name=" + name
                 + ", createdAt=" + getCreatedAt() + ", updatedAt=" + updatedAt + "]";
     }
 

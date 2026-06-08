@@ -1,12 +1,11 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { QuestionEditDetailsFormComponent } from './question-edit-details-form.component';
 import {
   FeedbackConstantSumDistributePointsType,
-  FeedbackConstantSumQuestionDetails,
+  FeedbackConstantSumRecipientsQuestionDetails,
 } from '../../../../types/api-output';
-import { DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 
 /**
  * Question details edit form component for constsum recipients question.
@@ -18,19 +17,20 @@ import { DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS } from '../../../../types/
   imports: [FormsModule, NgbTooltip],
 })
 export class ConstsumRecipientsQuestionEditDetailsFormComponent
-  extends QuestionEditDetailsFormComponent<FeedbackConstantSumQuestionDetails>
+  extends QuestionEditDetailsFormComponent<FeedbackConstantSumRecipientsQuestionDetails>
   implements OnChanges
 {
   // enum
-  FeedbackConstantSumDistributePointsType: typeof FeedbackConstantSumDistributePointsType =
-    FeedbackConstantSumDistributePointsType;
-
-  constructor() {
-    super(DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS());
-  }
+  FeedbackConstantSumDistributePointsType!: typeof FeedbackConstantSumDistributePointsType;
 
   @Input() questionNumber = 0;
   pointsRadioGroupName = '';
+
+  constructor() {
+    super();
+    this.FeedbackConstantSumDistributePointsType = FeedbackConstantSumDistributePointsType;
+  }
+
   ngOnChanges(): void {
     this.pointsRadioGroupName = `constsum-recipients-${this.questionNumber}`;
   }

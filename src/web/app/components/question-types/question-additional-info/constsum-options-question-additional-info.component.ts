@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
-import { QuestionAdditionalInfo } from './question-additional-info';
-import { FeedbackConstantSumQuestionDetails } from '../../../../types/api-output';
+import { Component, Input } from '@angular/core';
+import { FeedbackConstantSumOptionsQuestionDetails } from '../../../../types/api-output';
 import { DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 
 /**
@@ -12,10 +11,8 @@ import { DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS } from '../../../../types/def
   styleUrls: ['./constsum-options-question-additional-info.component.scss'],
   imports: [],
 })
-export class ConstsumOptionsQuestionAdditionalInfoComponent extends QuestionAdditionalInfo<FeedbackConstantSumQuestionDetails> {
-  constructor() {
-    super(DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS());
-  }
+export class ConstsumOptionsQuestionAdditionalInfoComponent {
+  @Input() questionDetails: FeedbackConstantSumOptionsQuestionDetails = DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS();
 
   /**
    * Returns the label for the number of points.

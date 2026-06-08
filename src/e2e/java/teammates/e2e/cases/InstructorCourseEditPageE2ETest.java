@@ -1,5 +1,7 @@
 package teammates.e2e.cases;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.List;
 
 import org.testng.annotations.Test;
@@ -67,7 +69,7 @@ public class InstructorCourseEditPageE2ETest extends BaseE2ETestCase {
         newInstructor.setDisplayedToStudents(true);
         newInstructor.setDisplayName("Instructor");
         InstructorPermissionRole role = InstructorPermissionRole
-                .getEnum(Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_TUTOR);
+                .getEnum(Const.InstructorPermissionRoleNames.TUTOR);
         newInstructor.setRole(role);
 
         editPage.addInstructor(newInstructor);
@@ -119,6 +121,7 @@ public class InstructorCourseEditPageE2ETest extends BaseE2ETestCase {
                 Const.InstructorPermissions.CAN_SUBMIT_SESSION_IN_SECTIONS, true);
 
         editPage.editInstructor(2, instructors[0]);
+        editPage.waitForPageToLoad();
         editPage.toggleCustomCourseLevelPrivilege(2, Const.InstructorPermissions.CAN_MODIFY_SESSION);
         editPage.toggleCustomCourseLevelPrivilege(2, Const.InstructorPermissions.CAN_MODIFY_STUDENT);
         editPage.toggleCustomSectionLevelPrivilege(2, 1, "Section 2",

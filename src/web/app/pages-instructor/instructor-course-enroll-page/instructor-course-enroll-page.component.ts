@@ -1,8 +1,7 @@
 import { NgClass } from '@angular/common';
-import { Component, OnInit, DOCUMENT, inject, viewChild } from '@angular/core';
+import { Component, OnInit, inject, viewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { type CellValue } from 'handsontable/common';
-import { PageScrollService } from 'ngx-page-scroll-core';
 import { concat, finalize, Observable } from 'rxjs';
 import { EnrollStatus } from './enroll-status';
 import { FeedbackSessionsService } from '../../../services/feedback-sessions.service';
@@ -13,7 +12,6 @@ import { StudentService } from '../../../services/student.service';
 import { EnrollStudents, HasResponses, JoinState, Student, Students } from '../../../types/api-output';
 import { StudentEnrollRequest, StudentsEnrollRequest } from '../../../types/api-request';
 import { AjaxLoadingComponent } from '../../components/ajax-loading/ajax-loading.component';
-import { AjaxPreloadComponent } from '../../components/ajax-preload/ajax-preload.component';
 import { DataGridComponent } from '../../components/data-grid/data-grid.component';
 import { LoadingRetryComponent } from '../../components/loading-retry/loading-retry.component';
 import { LoadingSpinnerDirective } from '../../components/loading-spinner/loading-spinner.directive';
@@ -23,6 +21,7 @@ import { SimpleModalType } from '../../components/simple-modal/simple-modal-type
 import { StatusMessage } from '../../components/status-message/status-message';
 import { StatusMessageComponent } from '../../components/status-message/status-message.component';
 import { areEmailsEqual, normalizeEmail } from '../../components/teammates-common/email-utils';
+import { PageScrollService } from '../../../services/page-scroll.service';
 import { ErrorMessageOutput } from '../../error-message-output';
 
 interface EnrollResultPanel {
@@ -42,7 +41,6 @@ interface EnrollResultPanel {
     LoadingSpinnerDirective,
     LoadingRetryComponent,
     StatusMessageComponent,
-    AjaxPreloadComponent,
     PanelChevronComponent,
     NgClass,
     ProgressBarComponent,
@@ -58,7 +56,6 @@ export class InstructorCourseEnrollPageComponent implements OnInit {
   private readonly progressBarService = inject(ProgressBarService);
   private readonly simpleModalService = inject(SimpleModalService);
   private readonly pageScrollService = inject(PageScrollService);
-  private readonly document = inject(DOCUMENT);
 
   GENERAL_ERROR_MESSAGE = `You may check that: "Section" and "Comment" are optional while "Team", "Name",
         and "Email" must be filled. "Section", "Team", "Name", and "Comment" should start with an
@@ -74,7 +71,7 @@ export class InstructorCourseEnrollPageComponent implements OnInit {
   newStudentsGrid = viewChild.required<DataGridComponent>('newStudentsGrid');
 
   // enum
-  EnrollStatus: typeof EnrollStatus = EnrollStatus;
+  EnrollStatus!: typeof EnrollStatus;
   courseId = '';
   coursePresent?: boolean;
   isLoadingCourseEnrollPage = false;
@@ -100,6 +97,10 @@ export class InstructorCourseEnrollPageComponent implements OnInit {
   newStudentRowsIndex: Set<number> = new Set();
   modifiedStudentRowsIndex: Set<number> = new Set();
   unchangedStudentRowsIndex: Set<number> = new Set();
+
+  constructor() {
+    this.EnrollStatus = EnrollStatus;
+  }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((queryParams: any) => {
@@ -402,7 +403,7 @@ export class InstructorCourseEnrollPageComponent implements OnInit {
       (value: string | EnrollStatus) => typeof value === 'string',
     );
 
-    for (let i = 0; i < statuses.length; i += 1) {
+    for (const _status of statuses) {
       studentLists.push([]);
     }
 
@@ -454,8 +455,10 @@ export class InstructorCourseEnrollPageComponent implements OnInit {
           email: request.email,
           courseId: this.courseId,
           name: request.name,
+          teamId: '',
           sectionName: request.section,
           teamName: request.team,
+          sectionId: '',
           comments: request.comments,
           joinState: JoinState.NOT_JOINED,
           institute: '',
@@ -600,11 +603,6 @@ export class InstructorCourseEnrollPageComponent implements OnInit {
    * Scrolls user to the target section.
    */
   navigateTo(target: string): void {
-    this.pageScrollService.scroll({
-      document: this.document,
-      duration: 500,
-      scrollTarget: `#${target}`,
-      scrollOffset: 70,
-    });
+    this.pageScrollService.scrollToAnchor(target);
   }
 }

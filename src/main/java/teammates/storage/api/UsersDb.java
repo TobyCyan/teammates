@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -49,6 +50,19 @@ public final class UsersDb {
     }
 
     /**
+     * Gets a user by {@code regKey}.
+     */
+    public User getUserByRegKey(String regKey) {
+        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
+        CriteriaQuery<User> cr = cb.createQuery(User.class);
+        Root<User> userRoot = cr.from(User.class);
+
+        cr.select(userRoot).where(cb.equal(userRoot.get("regKey"), regKey));
+
+        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
+    }
+
+    /**
      * Gets users for the specified course.
      */
     public List<User> getUsersForCourse(String courseId) {
@@ -61,21 +75,17 @@ public final class UsersDb {
     }
 
     /**
-     * Creates an instructor.
+     * Persists an instructor.
      */
-    public Instructor createInstructor(Instructor instructor) {
-        assert instructor != null;
-
+    public Instructor persistInstructor(Instructor instructor) {
         HibernateUtil.persist(instructor);
         return instructor;
     }
 
     /**
-     * Creates a student.
+     * Persists a student.
      */
-    public Student createStudent(Student student) {
-        assert student != null;
-
+    public Student persistStudent(Student student) {
         HibernateUtil.persist(student);
         return student;
     }
@@ -84,27 +94,15 @@ public final class UsersDb {
      * Gets an instructor by its {@code id}.
      */
     public Instructor getInstructor(UUID id) {
-        assert id != null;
-
         return HibernateUtil.get(Instructor.class, id);
     }
 
     /**
-     * Gets an instructor by {@code regKey}.
-     */
-    public Instructor getInstructorByRegKey(String regKey) {
-        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
-        CriteriaQuery<Instructor> cr = cb.createQuery(Instructor.class);
-        Root<Instructor> instructorRoot = cr.from(Instructor.class);
-
-        cr.select(instructorRoot).where(cb.equal(instructorRoot.get("regKey"), regKey));
-
-        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
-    }
-
-    /**
      * Gets an instructor by {@code googleId}.
+     *
+     * @deprecated moving away from googleId based retrieval
      */
+    @Deprecated(forRemoval = false)
     public Instructor getInstructorByGoogleId(String courseId, String googleId) {
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Instructor> cr = cb.createQuery(Instructor.class);
@@ -137,27 +135,61 @@ public final class UsersDb {
      * Gets a student by its {@code id}.
      */
     public Student getStudent(UUID id) {
-        assert id != null;
-
         return HibernateUtil.get(Student.class, id);
     }
 
     /**
-     * Gets a student by {@code regKey}.
+     * Gets an instructor by {@code accountId} and {@code courseId}.
      */
-    public Student getStudentByRegKey(String regKey) {
-        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
-        CriteriaQuery<Student> cr = cb.createQuery(Student.class);
-        Root<Student> studentRoot = cr.from(Student.class);
+    public Instructor getInstructorByAccountId(UUID accountId, String courseId) {
+        String jpql = "SELECT i FROM Instructor i WHERE i.accountId = :accountId AND i.courseId = :courseId";
 
-        cr.select(studentRoot).where(cb.equal(studentRoot.get("regKey"), regKey));
+        TypedQuery<Instructor> query = HibernateUtil.createQuery(jpql, Instructor.class);
+        query.setParameter("accountId", accountId);
+        query.setParameter("courseId", courseId);
+        return query.getResultStream().findFirst().orElse(null);
+    }
 
-        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
+    /**
+     * Gets all instructors by {@code accountId}.
+     */
+    public List<Instructor> getInstructorsByAccountId(UUID accountId) {
+        String jpql = "SELECT i FROM Instructor i WHERE i.accountId = :accountId";
+
+        TypedQuery<Instructor> query = HibernateUtil.createQuery(jpql, Instructor.class);
+        query.setParameter("accountId", accountId);
+        return query.getResultList();
+    }
+
+    /**
+     * Gets a student by {@code accountId} and {@code courseId}.
+     */
+    public Student getStudentByAccountId(UUID accountId, String courseId) {
+        String jpql = "SELECT s FROM Student s WHERE s.accountId = :accountId AND s.courseId = :courseId";
+
+        TypedQuery<Student> query = HibernateUtil.createQuery(jpql, Student.class);
+        query.setParameter("accountId", accountId);
+        query.setParameter("courseId", courseId);
+        return query.getResultStream().findFirst().orElse(null);
+    }
+
+    /**
+     * Gets all students by {@code accountId}.
+     */
+    public List<Student> getStudentsByAccountId(UUID accountId) {
+        String jpql = "SELECT s FROM Student s WHERE s.accountId = :accountId";
+
+        TypedQuery<Student> query = HibernateUtil.createQuery(jpql, Student.class);
+        query.setParameter("accountId", accountId);
+        return query.getResultList();
     }
 
     /**
      * Gets a student by {@code googleId}.
+     *
+     * @deprecated moving away from googleId based retrieval
      */
+    @Deprecated(forRemoval = false)
     public Student getStudentByGoogleId(String courseId, String googleId) {
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Student> cr = cb.createQuery(Student.class);
@@ -173,7 +205,10 @@ public final class UsersDb {
 
     /**
      * Gets all students by {@code googleId}.
+     *
+     * @deprecated moving away from googleId based retrieval
      */
+    @Deprecated(forRemoval = false)
     public List<Student> getStudentsByGoogleId(String googleId) {
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Student> cr = cb.createQuery(Student.class);
@@ -186,27 +221,11 @@ public final class UsersDb {
     }
 
     /**
-     * Gets a list of students by {@code teamName} and {@code courseId}.
-     */
-    public List<Student> getStudentsByTeamName(String teamName, String courseId) {
-        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
-        CriteriaQuery<Student> cr = cb.createQuery(Student.class);
-        Root<Student> studentRoot = cr.from(Student.class);
-
-        studentRoot.alias("student");
-
-        Join<Student, Team> teamsJoin = studentRoot.join("team");
-
-        cr.select(studentRoot).where(cb.and(
-                cb.equal(studentRoot.get("courseId"), courseId),
-                cb.equal(teamsJoin.get("name"), teamName)));
-
-        return HibernateUtil.createQuery(cr).getResultList();
-    }
-
-    /**
      * Gets all instructors and students by {@code googleId}.
+     *
+     * @deprecated moving away from googleId based retrieval
      */
+    @Deprecated(forRemoval = false)
     public List<User> getAllUsersByGoogleId(String googleId) {
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<User> usersCr = cb.createQuery(User.class);
@@ -220,7 +239,10 @@ public final class UsersDb {
 
     /**
      * Gets all instructors by {@code googleId}.
+     *
+     * @deprecated moving away from googleId based retrieval
      */
+    @Deprecated(forRemoval = false)
     public List<Instructor> getAllInstructorsByGoogleId(String googleId) {
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Instructor> instructorsCr = cb.createQuery(Instructor.class);
@@ -234,7 +256,10 @@ public final class UsersDb {
 
     /**
      * Gets all students by {@code googleId}.
+     *
+     * @deprecated moving away from googleId based retrieval
      */
+    @Deprecated(forRemoval = false)
     public List<Student> getAllStudentsByGoogleId(String googleId) {
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Student> studentsCr = cb.createQuery(Student.class);
@@ -379,18 +404,29 @@ public final class UsersDb {
     }
 
     /**
-     * Deletes a user.
+     * Removes a user.
      */
-    public <T extends User> void deleteUser(T user) {
+    public <T extends User> void removeUser(T user) {
         HibernateUtil.remove(user);
+    }
+
+    /**
+     * Deletes all students in the specified {@code courseId}.
+     */
+    public void deleteStudentsInCourse(String courseId) {
+        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
+        CriteriaDelete<Student> cd = cb.createCriteriaDelete(Student.class);
+        Root<Student> root = cd.from(Student.class);
+
+        cd.where(cb.equal(root.get("courseId"), courseId));
+
+        HibernateUtil.executeDelete(cd);
     }
 
     /**
      * Gets the list of instructors for the specified {@code courseId}.
      */
     public List<Instructor> getInstructorsForCourse(String courseId) {
-        assert courseId != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Instructor> cr = cb.createQuery(Instructor.class);
         Root<Instructor> root = cr.from(Instructor.class);
@@ -404,8 +440,6 @@ public final class UsersDb {
      * Gets the list of students for the specified {@code courseId}.
      */
     public List<Student> getStudentsForCourse(String courseId) {
-        assert courseId != null && !courseId.isEmpty();
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Student> cr = cb.createQuery(Student.class);
         Root<Student> root = cr.from(Student.class);
@@ -417,10 +451,11 @@ public final class UsersDb {
 
     /**
      * Gets the instructor with the specified {@code userEmail}.
+     *
+     * @deprecated unused in production code, moving away from email based retrieval
      */
+    @Deprecated(forRemoval = false)
     public Instructor getInstructorForEmail(String courseId, String userEmail) {
-        assert courseId != null;
-        assert userEmail != null;
         String normalizedUserEmail = normalizeEmail(userEmail);
 
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
@@ -437,11 +472,11 @@ public final class UsersDb {
 
     /**
      * Gets instructors with the specified {@code userEmail}.
+     *
+     * @deprecated unused in production code, moving away from email based retrieval
      */
+    @Deprecated(forRemoval = false)
     public List<Instructor> getInstructorsForEmails(String courseId, List<String> userEmails) {
-        assert courseId != null;
-        assert userEmails != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Instructor> cr = cb.createQuery(Instructor.class);
         Root<Instructor> instructorRoot = cr.from(Instructor.class);
@@ -460,33 +495,12 @@ public final class UsersDb {
     }
 
     /**
-     * Gets a non-soft-deleted instructor with the specified {@code email} and {@code institute}.
-     */
-    public Instructor getInstructorByEmailAndInstitute(String email, String institute) {
-        assert email != null;
-        assert institute != null;
-        String normalizedEmail = normalizeEmail(email);
-
-        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
-        CriteriaQuery<Instructor> cr = cb.createQuery(Instructor.class);
-        Root<Instructor> instructorRoot = cr.from(Instructor.class);
-        Join<Instructor, Course> courseJoin = instructorRoot.join("course");
-
-        cr.select(instructorRoot)
-                .where(cb.and(
-                cb.equal(cb.lower(instructorRoot.get("email")), normalizedEmail),
-                        cb.equal(courseJoin.get("institute"), institute),
-                        cb.isNull(courseJoin.get("deletedAt"))));
-
-        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
-    }
-
-    /**
      * Gets the student with the specified {@code userEmail}.
+     *
+     * @deprecated unused in production code, moving away from email based retrieval
      */
+    @Deprecated(forRemoval = false)
     public Student getStudentForEmail(String courseId, String userEmail) {
-        assert courseId != null;
-        assert userEmail != null;
         String normalizedUserEmail = normalizeEmail(userEmail);
 
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
@@ -503,11 +517,11 @@ public final class UsersDb {
 
     /**
      * Gets students with the specified {@code userEmail}.
+     *
+     * @deprecated unused in production code, moving away from email based retrieval
      */
+    @Deprecated(forRemoval = false)
     public List<Student> getStudentsForEmails(String courseId, List<String> userEmails) {
-        assert courseId != null;
-        assert userEmails != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Student> cr = cb.createQuery(Student.class);
         Root<Student> studentRoot = cr.from(Student.class);
@@ -529,7 +543,6 @@ public final class UsersDb {
      * Gets list of students by email.
      */
     public List<Student> getAllStudentsForEmail(String email) {
-        assert email != null;
         String normalizedEmail = normalizeEmail(email);
 
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
@@ -548,10 +561,11 @@ public final class UsersDb {
 
     /**
      * Gets all instructors associated with a googleId.
+     *
+     * @deprecated moving away from googleId based retrieval
      */
+    @Deprecated(forRemoval = false)
     public List<Instructor> getInstructorsForGoogleId(String googleId) {
-        assert googleId != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Instructor> cr = cb.createQuery(Instructor.class);
         Root<Instructor> instructorRoot = cr.from(Instructor.class);
@@ -566,9 +580,6 @@ public final class UsersDb {
      * Gets all students of a section of a course.
      */
     public List<Student> getStudentsForSection(String sectionName, String courseId) {
-        assert sectionName != null;
-        assert courseId != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Student> cr = cb.createQuery(Student.class);
         Root<Student> studentRoot = cr.from(Student.class);
@@ -588,9 +599,6 @@ public final class UsersDb {
      * Gets all students of a team of a course.
      */
     public List<Student> getStudentsForTeam(String teamName, String courseId) {
-        assert teamName != null;
-        assert courseId != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Student> cr = cb.createQuery(Student.class);
         Root<Student> studentRoot = cr.from(Student.class);
@@ -606,32 +614,12 @@ public final class UsersDb {
     }
 
     /**
-     * Gets count of students of a team of a course.
-     */
-    public long getStudentCountForTeam(String teamName, String courseId) {
-        assert teamName != null;
-        assert courseId != null;
-
-        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
-        CriteriaQuery<Long> cr = cb.createQuery(Long.class);
-        Root<Student> studentRoot = cr.from(Student.class);
-        Join<Student, Course> courseJoin = studentRoot.join("course");
-        Join<Student, Team> teamsJoin = studentRoot.join("team");
-
-        cr.select(cb.count(studentRoot.get("id")))
-                .where(cb.and(
-                        cb.equal(courseJoin.get("id"), courseId),
-                        cb.equal(teamsJoin.get("name"), teamName)));
-
-        return HibernateUtil.createQuery(cr).getSingleResult();
-    }
-
-    /**
      * Gets the section with the specified {@code sectionName} and {@code courseId}.
+     *
+     * @deprecated unused in production code
      */
+    @Deprecated(forRemoval = false)
     public Section getSection(String courseId, String sectionName) {
-        assert sectionName != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<Section> cr = cb.createQuery(Section.class);
         Root<Section> sectionRoot = cr.from(Section.class);
@@ -646,23 +634,10 @@ public final class UsersDb {
     }
 
     /**
-     * Gets a team by its {@code section} and {@code teamName}.
+     * Gets a team by its {@code teamId}.
      */
-    public Team getTeam(Section section, String teamName) {
-        assert teamName != null;
-        assert section != null;
-
-        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
-        CriteriaQuery<Team> cr = cb.createQuery(Team.class);
-        Root<Team> teamRoot = cr.from(Team.class);
-        Join<Team, Section> sectionJoin = teamRoot.join("section");
-
-        cr.select(teamRoot)
-                .where(cb.and(
-                        cb.equal(sectionJoin.get("id"), section.getId()),
-                        cb.equal(teamRoot.get("name"), teamName)));
-
-        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
+    public Team getTeam(UUID teamId) {
+        return HibernateUtil.get(Team.class, teamId);
     }
 
 }

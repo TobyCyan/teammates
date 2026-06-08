@@ -1,127 +1,28 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`InstructorSessionEditPageComponent should snap when feedback question failed to load 1`] = `
+exports[`InstructorSessionEditPageComponent > should snap with default fields 1`] = `
 <tm-instructor-session-edit-page
   FeedbackQuestionType={[Function Object]}
-  FeedbackSessionPublishStatus={[Function Object]}
+  FeedbackSessionSubmissionStatus={[Function Object]}
   QuestionEditFormMode={[Function Object]}
   SessionEditFormMode={[Function Object]}
   changeDetectorRef={[Function ViewRef]}
-  courseId="undefined"
+  courseId=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   coursesOfModifiedSession={[Function Array]}
-  datetimeService={[Function DateTimeService]}
-  emailOfInstructorToPreview=""
-  emailOfStudentToPreview=""
+  datetimeService={[Function _DateTimeService]}
   failedToCopySessions={[Function Object]}
   feedbackQuestionModels={[Function Map]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionActionsService={[Function FeedbackSessionActionsService]}
+  feedbackQuestionsService={[Function _FeedbackQuestionsService]}
+  feedbackSessionActionsService={[Function _FeedbackSessionActionsService]}
   feedbackSessionId="undefined"
   feedbackSessionModelBeforeEditing={[Function Object]}
-  feedbackSessionName="undefined"
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  hasLoadingFeedbackQuestionsFailed={[Function Boolean]}
-  hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
-  instructorsOfCourse={[Function Array]}
-  isAddingFromTemplate="false"
-  isAddingQuestionPanelExpanded="false"
-  isCopyingQuestion="false"
-  isEditingMode="false"
-  isLoadingFeedbackQuestions={[Function Boolean]}
-  isLoadingFeedbackSession={[Function Boolean]}
-  isResultActionLoading="false"
-  modifiedSession={[Function Object]}
-  modifiedTimestampsModal={[Function TemplateRef]}
-  navigationService={[Function NavigationService]}
-  newQuestionEditFormModel={[Function Object]}
-  ngbModal={[Function _NgbModal]}
-  progressBarService={[Function ProgressBarService]}
-  publishStatusName={[Function PublishStatusNamePipe]}
-  publishUnpublishRetryAttempts={[Function Number]}
-  questionEditFormModels={[Function Array]}
-  route={[Function ActivatedRoute]}
-  sessionEditFormModel={[Function Object]}
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
-  studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
-  userDeadlines={[Function Object]}
->
-  <tm-loading-retry>
-    <div
-      aria-hidden="true"
-    />
-    <tm-loading-spinner>
-      <div
-        class="loading-container"
-      >
-        <div
-          class="row spinner-border text-primary"
-          role="status"
-        />
-        <div
-          class="row text-secondary"
-        >
-          Loading...
-        </div>
-      </div>
-    </tm-loading-spinner>
-  </tm-loading-retry><tm-loading-retry>
-    <div
-      aria-hidden="true"
-    />
-    <div
-      class="text-center"
-    >
-      <p
-        class="text-muted m-1"
-      >
-        Failed to load feedback questions
-      </p>
-      <button
-        class="btn btn-primary"
-      >
-        <i
-          aria-hidden="true"
-          class="fas fa-redo"
-        />
-         Retry 
-      </button>
-    </div>
-  </tm-loading-retry>
-</tm-instructor-session-edit-page>
-`;
-
-exports[`InstructorSessionEditPageComponent should snap when feedback questions are loading 1`] = `
-<tm-instructor-session-edit-page
-  FeedbackQuestionType={[Function Object]}
-  FeedbackSessionPublishStatus={[Function Object]}
-  QuestionEditFormMode={[Function Object]}
-  SessionEditFormMode={[Function Object]}
-  changeDetectorRef={[Function ViewRef]}
-  courseId="undefined"
-  courseName=""
-  courseService={[Function CourseService]}
-  coursesOfModifiedSession={[Function Array]}
-  datetimeService={[Function DateTimeService]}
-  emailOfInstructorToPreview=""
-  emailOfStudentToPreview=""
-  failedToCopySessions={[Function Object]}
-  feedbackQuestionModels={[Function Map]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionActionsService={[Function FeedbackSessionActionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionModelBeforeEditing={[Function Object]}
-  feedbackSessionName="undefined"
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadingFeedbackQuestionsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAddingFromTemplate="false"
   isAddingQuestionPanelExpanded="false"
@@ -132,22 +33,23 @@ exports[`InstructorSessionEditPageComponent should snap when feedback questions 
   isResultActionLoading="false"
   modifiedSession={[Function Object]}
   modifiedTimestampsModal={[Function TemplateRef]}
-  navigationService={[Function NavigationService]}
+  navigationService={[Function _NavigationService]}
   newQuestionEditFormModel={[Function Object]}
-  ngbModal={[Function _NgbModal]}
-  progressBarService={[Function ProgressBarService]}
-  publishStatusName={[Function PublishStatusNamePipe]}
-  publishUnpublishRetryAttempts={[Function Number]}
+  ngbModal={[Function NgbModal]}
+  progressBarService={[Function _ProgressBarService]}
+  publishUnpublishRetryAttempts="undefined"
   questionEditFormModels={[Function Array]}
   route={[Function ActivatedRoute]}
   sessionEditFormModel={[Function Object]}
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
   userDeadlines={[Function Object]}
+  userIdOfInstructorToPreview=""
+  userIdOfStudentToPreview=""
 >
   <tm-loading-retry>
     <div
@@ -194,325 +96,29 @@ exports[`InstructorSessionEditPageComponent should snap when feedback questions 
 </tm-instructor-session-edit-page>
 `;
 
-exports[`InstructorSessionEditPageComponent should snap when feedback session failed to load 1`] = `
+exports[`InstructorSessionEditPageComponent > should snap with feedback session questions 1`] = `
 <tm-instructor-session-edit-page
   FeedbackQuestionType={[Function Object]}
-  FeedbackSessionPublishStatus={[Function Object]}
-  QuestionEditFormMode={[Function Object]}
-  SessionEditFormMode={[Function Object]}
-  changeDetectorRef={[Function ViewRef]}
-  courseId="undefined"
-  courseName=""
-  courseService={[Function CourseService]}
-  coursesOfModifiedSession={[Function Array]}
-  datetimeService={[Function DateTimeService]}
-  emailOfInstructorToPreview=""
-  emailOfStudentToPreview=""
-  failedToCopySessions={[Function Object]}
-  feedbackQuestionModels={[Function Map]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionActionsService={[Function FeedbackSessionActionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionModelBeforeEditing={[Function Object]}
-  feedbackSessionName="undefined"
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  hasLoadingFeedbackQuestionsFailed="false"
-  hasLoadingFeedbackSessionFailed={[Function Boolean]}
-  instructorService={[Function InstructorService]}
-  instructorsOfCourse={[Function Array]}
-  isAddingFromTemplate="false"
-  isAddingQuestionPanelExpanded="false"
-  isCopyingQuestion="false"
-  isEditingMode="false"
-  isLoadingFeedbackQuestions={[Function Boolean]}
-  isLoadingFeedbackSession={[Function Boolean]}
-  isResultActionLoading="false"
-  modifiedSession={[Function Object]}
-  modifiedTimestampsModal={[Function TemplateRef]}
-  navigationService={[Function NavigationService]}
-  newQuestionEditFormModel={[Function Object]}
-  ngbModal={[Function _NgbModal]}
-  progressBarService={[Function ProgressBarService]}
-  publishStatusName={[Function PublishStatusNamePipe]}
-  publishUnpublishRetryAttempts={[Function Number]}
-  questionEditFormModels={[Function Array]}
-  route={[Function ActivatedRoute]}
-  sessionEditFormModel={[Function Object]}
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
-  studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
-  userDeadlines={[Function Object]}
->
-  <tm-loading-retry>
-    <div
-      aria-hidden="true"
-    />
-    <div
-      class="text-center"
-    >
-      <p
-        class="text-muted m-1"
-      >
-        Failed to load feedback session
-      </p>
-      <button
-        class="btn btn-primary"
-      >
-        <i
-          aria-hidden="true"
-          class="fas fa-redo"
-        />
-         Retry 
-      </button>
-    </div>
-  </tm-loading-retry><tm-loading-retry>
-    <div
-      aria-hidden="true"
-    />
-    <tm-loading-spinner>
-      <div
-        class="loading-container"
-      >
-        <div
-          class="row spinner-border text-primary"
-          role="status"
-        />
-        <div
-          class="row text-secondary"
-        >
-          Loading...
-        </div>
-      </div>
-    </tm-loading-spinner>
-    <div />
-    <br />
-    <br />
-  </tm-loading-retry>
-</tm-instructor-session-edit-page>
-`;
-
-exports[`InstructorSessionEditPageComponent should snap when feedback session is loading 1`] = `
-<tm-instructor-session-edit-page
-  FeedbackQuestionType={[Function Object]}
-  FeedbackSessionPublishStatus={[Function Object]}
-  QuestionEditFormMode={[Function Object]}
-  SessionEditFormMode={[Function Object]}
-  changeDetectorRef={[Function ViewRef]}
-  courseId="undefined"
-  courseName=""
-  courseService={[Function CourseService]}
-  coursesOfModifiedSession={[Function Array]}
-  datetimeService={[Function DateTimeService]}
-  emailOfInstructorToPreview=""
-  emailOfStudentToPreview=""
-  failedToCopySessions={[Function Object]}
-  feedbackQuestionModels={[Function Map]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionActionsService={[Function FeedbackSessionActionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionModelBeforeEditing={[Function Object]}
-  feedbackSessionName="undefined"
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  hasLoadingFeedbackQuestionsFailed="false"
-  hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
-  instructorsOfCourse={[Function Array]}
-  isAddingFromTemplate="false"
-  isAddingQuestionPanelExpanded="false"
-  isCopyingQuestion="false"
-  isEditingMode="false"
-  isLoadingFeedbackQuestions={[Function Boolean]}
-  isLoadingFeedbackSession={[Function Boolean]}
-  isResultActionLoading="false"
-  modifiedSession={[Function Object]}
-  modifiedTimestampsModal={[Function TemplateRef]}
-  navigationService={[Function NavigationService]}
-  newQuestionEditFormModel={[Function Object]}
-  ngbModal={[Function _NgbModal]}
-  progressBarService={[Function ProgressBarService]}
-  publishStatusName={[Function PublishStatusNamePipe]}
-  publishUnpublishRetryAttempts={[Function Number]}
-  questionEditFormModels={[Function Array]}
-  route={[Function ActivatedRoute]}
-  sessionEditFormModel={[Function Object]}
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
-  studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
-  userDeadlines={[Function Object]}
->
-  <tm-loading-retry>
-    <div
-      aria-hidden="true"
-    />
-    <tm-loading-spinner>
-      <div
-        class="loading-container"
-      >
-        <div
-          class="row spinner-border text-primary"
-          role="status"
-        />
-        <div
-          class="row text-secondary"
-        >
-          Loading...
-        </div>
-      </div>
-    </tm-loading-spinner>
-  </tm-loading-retry><tm-loading-retry>
-    <div
-      aria-hidden="true"
-    />
-    <tm-loading-spinner>
-      <div
-        class="loading-container"
-      >
-        <div
-          class="row spinner-border text-primary"
-          role="status"
-        />
-        <div
-          class="row text-secondary"
-        >
-          Loading...
-        </div>
-      </div>
-    </tm-loading-spinner>
-    <div />
-    <br />
-    <br />
-  </tm-loading-retry>
-</tm-instructor-session-edit-page>
-`;
-
-exports[`InstructorSessionEditPageComponent should snap with default fields 1`] = `
-<tm-instructor-session-edit-page
-  FeedbackQuestionType={[Function Object]}
-  FeedbackSessionPublishStatus={[Function Object]}
-  QuestionEditFormMode={[Function Object]}
-  SessionEditFormMode={[Function Object]}
-  changeDetectorRef={[Function ViewRef]}
-  courseId="undefined"
-  courseName=""
-  courseService={[Function CourseService]}
-  coursesOfModifiedSession={[Function Array]}
-  datetimeService={[Function DateTimeService]}
-  emailOfInstructorToPreview=""
-  emailOfStudentToPreview=""
-  failedToCopySessions={[Function Object]}
-  feedbackQuestionModels={[Function Map]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionActionsService={[Function FeedbackSessionActionsService]}
-  feedbackSessionId="undefined"
-  feedbackSessionModelBeforeEditing={[Function Object]}
-  feedbackSessionName="undefined"
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  hasLoadingFeedbackQuestionsFailed="false"
-  hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
-  instructorsOfCourse={[Function Array]}
-  isAddingFromTemplate="false"
-  isAddingQuestionPanelExpanded="false"
-  isCopyingQuestion="false"
-  isEditingMode="false"
-  isLoadingFeedbackQuestions={[Function Boolean]}
-  isLoadingFeedbackSession={[Function Boolean]}
-  isResultActionLoading="false"
-  modifiedSession={[Function Object]}
-  modifiedTimestampsModal={[Function TemplateRef]}
-  navigationService={[Function NavigationService]}
-  newQuestionEditFormModel={[Function Object]}
-  ngbModal={[Function _NgbModal]}
-  progressBarService={[Function ProgressBarService]}
-  publishStatusName={[Function PublishStatusNamePipe]}
-  publishUnpublishRetryAttempts={[Function Number]}
-  questionEditFormModels={[Function Array]}
-  route={[Function ActivatedRoute]}
-  sessionEditFormModel={[Function Object]}
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
-  studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
-  userDeadlines={[Function Object]}
->
-  <tm-loading-retry>
-    <div
-      aria-hidden="true"
-    />
-    <tm-loading-spinner>
-      <div
-        class="loading-container"
-      >
-        <div
-          class="row spinner-border text-primary"
-          role="status"
-        />
-        <div
-          class="row text-secondary"
-        >
-          Loading...
-        </div>
-      </div>
-    </tm-loading-spinner>
-  </tm-loading-retry><tm-loading-retry>
-    <div
-      aria-hidden="true"
-    />
-    <tm-loading-spinner>
-      <div
-        class="loading-container"
-      >
-        <div
-          class="row spinner-border text-primary"
-          role="status"
-        />
-        <div
-          class="row text-secondary"
-        >
-          Loading...
-        </div>
-      </div>
-    </tm-loading-spinner>
-    <div />
-    <br />
-    <br />
-  </tm-loading-retry>
-</tm-instructor-session-edit-page>
-`;
-
-exports[`InstructorSessionEditPageComponent should snap with feedback session questions 1`] = `
-<tm-instructor-session-edit-page
-  FeedbackQuestionType={[Function Object]}
-  FeedbackSessionPublishStatus={[Function Object]}
+  FeedbackSessionSubmissionStatus={[Function Object]}
   QuestionEditFormMode={[Function Object]}
   SessionEditFormMode={[Function Object]}
   changeDetectorRef={[Function ViewRef]}
   courseId={[Function String]}
   courseName={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   coursesOfModifiedSession={[Function Array]}
-  datetimeService={[Function DateTimeService]}
-  emailOfInstructorToPreview=""
-  emailOfStudentToPreview=""
+  datetimeService={[Function _DateTimeService]}
   failedToCopySessions={[Function Object]}
   feedbackQuestionModels={[Function Map]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionActionsService={[Function FeedbackSessionActionsService]}
+  feedbackQuestionsService={[Function _FeedbackQuestionsService]}
+  feedbackSessionActionsService={[Function _FeedbackSessionActionsService]}
   feedbackSessionId="undefined"
   feedbackSessionModelBeforeEditing={[Function Object]}
   feedbackSessionName={[Function String]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadingFeedbackQuestionsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAddingFromTemplate="false"
   isAddingQuestionPanelExpanded="false"
@@ -523,22 +129,23 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
   isResultActionLoading="false"
   modifiedSession={[Function Object]}
   modifiedTimestampsModal={[Function TemplateRef]}
-  navigationService={[Function NavigationService]}
+  navigationService={[Function _NavigationService]}
   newQuestionEditFormModel={[Function Object]}
-  ngbModal={[Function _NgbModal]}
-  progressBarService={[Function ProgressBarService]}
-  publishStatusName={[Function PublishStatusNamePipe]}
-  publishUnpublishRetryAttempts={[Function Number]}
+  ngbModal={[Function NgbModal]}
+  progressBarService={[Function _ProgressBarService]}
+  publishUnpublishRetryAttempts="undefined"
   questionEditFormModels={[Function Array]}
   route={[Function ActivatedRoute]}
   sessionEditFormModel={[Function Object]}
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
   userDeadlines={[Function Object]}
+  userIdOfInstructorToPreview=""
+  userIdOfStudentToPreview=""
 >
   <tm-loading-retry>
     <div
@@ -699,9 +306,16 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                   <tm-rich-text-editor
                     id="instructions"
                   >
-                    <div
-                      inviewport=""
-                    >
+                    <div>
+                      <editor
+                        class="editor editor-disabled ng-untouched ng-pristine ng-valid"
+                        placeholder=""
+                      >
+                        <textarea
+                          id="tinymce-editor-id-1"
+                          style="visibility: hidden;"
+                        />
+                      </editor>
                       <div>
                          2000 characters left 
                       </div>
@@ -1230,7 +844,7 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                   >
                     <a
                       class="ps-3 pt-2"
-                      href="/web/instructor/sessions/individual-extension?courseid=testId&fsname=test%20session&fsid=ee47e471-fbd8-478e-a350-51152802215b&preselectnonsubmitters=false"
+                      href="/web/instructor/sessions/individual-extension?fsid=ee47e471-fbd8-478e-a350-51152802215b&preselectnonsubmitters=false"
                       tmrouterlink="/web/instructor/sessions/individual-extension"
                     >
                        Individual Deadline Extensions 
@@ -2008,7 +1622,7 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
               </div>
             </button>
             <div
-              class="ng-trigger ng-trigger-collapseAnim ng-animating"
+              class="collapse show"
             >
               <div
                 class="card-body"
@@ -2066,12 +1680,17 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                               class="col-md-10"
                             >
                               <tm-rich-text-editor>
-                                <div
-                                  inviewport=""
-                                >
-                                  <div
-                                    style=""
+                                <div>
+                                  <editor
+                                    class="editor ng-untouched ng-pristine ng-valid"
+                                    placeholder="More details about the question e.g. "In answering the question, do consider communications made informally within the team, and formal communications with the instructors and tutors.""
                                   >
+                                    <textarea
+                                      id="tinymce-editor-id-2"
+                                      style="visibility: hidden;"
+                                    />
+                                  </editor>
+                                  <div>
                                      2000 characters left 
                                   </div>
                                 </div>
@@ -2083,9 +1702,7 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                       <div
                         class="padding-15px"
                       >
-                        <tm-text-question-edit-details-form
-                          style=""
-                        >
+                        <tm-text-question-edit-details-form>
                           <div
                             class="row padding-15px"
                           >
@@ -2141,6 +1758,16 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                        (Who is giving feedback about whom?)
                     </div>
                     <div
+                      class="alert alert-warning my-2"
+                    >
+                      <strong>
+                        Changing feedback path settings is not recommended
+                      </strong>
+                      <p>
+                         There may already be responses to this question. Changing the feedback path will result in existing responses being deleted. 
+                      </p>
+                    </div>
+                    <div
                       autoclose="outside"
                       class="margin-top-15px w-100"
                       ngbdropdown=""
@@ -2153,7 +1780,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                       >
                         <span
                           class="text-wrap"
-                          style=""
                         >
                            Students in this course will give feedback on 
                           <i
@@ -2174,7 +1800,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           ngbdropdown=""
-                          style=""
                         >
                           <div
                             class="text-wrap dropdown-item"
@@ -2191,7 +1816,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           ngbdropdown=""
-                          style=""
                         >
                           <div
                             class="text-wrap dropdown-item"
@@ -2208,7 +1832,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           ngbdropdown=""
-                          style=""
                         >
                           <div
                             class="text-wrap dropdown-item"
@@ -2239,7 +1862,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                     </div>
                     <div
                       class="row margin-top-15px align-items-center"
-                      style=""
                     >
                       <div
                         class="offset-1 col-md-4 text-md-end"
@@ -2303,6 +1925,16 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                        (Who can see the responses?) 
                     </div>
                     <div
+                      class="alert alert-warning my-2"
+                    >
+                      <strong>
+                        Changing visibility settings is not recommended
+                      </strong>
+                      <p>
+                         This question and its visibility settings have already been made visible to participants. Consider carefully before making changes to the visibility settings as participants may already have expectations regarding the visibility of responses. 
+                      </p>
+                    </div>
+                    <div
                       class="margin-top-15px"
                       ngbdropdown=""
                     >
@@ -2312,9 +1944,7 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         id="btn-question-visibility"
                         ngbdropdowntoggle=""
                       >
-                        <span
-                          style=""
-                        >
+                        <span>
                           Custom visibility options
                         </span>
                       </button>
@@ -2330,7 +1960,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -2340,7 +1969,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -2350,7 +1978,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -2360,7 +1987,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -2370,7 +1996,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -2381,11 +2006,9 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         <li
                           aria-hidden="true"
                           class="dropdown-divider"
-                          style=""
                         />
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -2401,7 +2024,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                       <table
                         aria-label="Custom Visibility Options Table"
                         class="table margin-top-15px background-color-white table-striped"
-                        style=""
                       >
                         <thead>
                           <tr>
@@ -2581,14 +2203,10 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                       <ul
                         class="text-muted background-color-warning"
                       >
-                        <li
-                          style=""
-                        >
+                        <li>
                            Your team members can see your response, but not the name of the recipient, or your name 
                         </li>
-                        <li
-                          style=""
-                        >
+                        <li>
                            Instructors in this course can see your response, but not the name of the recipient, or your name 
                         </li>
                       </ul>
@@ -2597,7 +2215,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                 </tm-visibility-panel>
                 <div
                   class="row margin-top-15px"
-                  style=""
                 >
                   <div
                     class="col-12 text-end"
@@ -2741,7 +2358,7 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
               </div>
             </button>
             <div
-              class="ng-trigger ng-trigger-collapseAnim ng-animating"
+              class="collapse show"
             >
               <div
                 class="card-body"
@@ -2799,12 +2416,17 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                               class="col-md-10"
                             >
                               <tm-rich-text-editor>
-                                <div
-                                  inviewport=""
-                                >
-                                  <div
-                                    style=""
+                                <div>
+                                  <editor
+                                    class="editor ng-untouched ng-pristine ng-valid"
+                                    placeholder="More details about the question e.g. "In answering the question, do consider communications made informally within the team, and formal communications with the instructors and tutors.""
                                   >
+                                    <textarea
+                                      id="tinymce-editor-id-1"
+                                      style="visibility: hidden;"
+                                    />
+                                  </editor>
+                                  <div>
                                      2000 characters left 
                                   </div>
                                 </div>
@@ -2816,9 +2438,7 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                       <div
                         class="padding-15px"
                       >
-                        <tm-text-question-edit-details-form
-                          style=""
-                        >
+                        <tm-text-question-edit-details-form>
                           <div
                             class="row padding-15px"
                           >
@@ -2874,6 +2494,16 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                        (Who is giving feedback about whom?)
                     </div>
                     <div
+                      class="alert alert-warning my-2"
+                    >
+                      <strong>
+                        Changing feedback path settings is not recommended
+                      </strong>
+                      <p>
+                         There may already be responses to this question. Changing the feedback path will result in existing responses being deleted. 
+                      </p>
+                    </div>
+                    <div
                       autoclose="outside"
                       class="margin-top-15px w-100"
                       ngbdropdown=""
@@ -2886,7 +2516,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                       >
                         <span
                           class="text-wrap"
-                          style=""
                         >
                            Students in this course will give feedback on 
                           <i
@@ -2907,7 +2536,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           ngbdropdown=""
-                          style=""
                         >
                           <div
                             class="text-wrap dropdown-item"
@@ -2924,7 +2552,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           ngbdropdown=""
-                          style=""
                         >
                           <div
                             class="text-wrap dropdown-item"
@@ -2941,7 +2568,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           ngbdropdown=""
-                          style=""
                         >
                           <div
                             class="text-wrap dropdown-item"
@@ -2972,7 +2598,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                     </div>
                     <div
                       class="row margin-top-15px align-items-center"
-                      style=""
                     >
                       <div
                         class="offset-1 col-md-4 text-md-end"
@@ -3036,6 +2661,16 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                        (Who can see the responses?) 
                     </div>
                     <div
+                      class="alert alert-warning my-2"
+                    >
+                      <strong>
+                        Changing visibility settings is not recommended
+                      </strong>
+                      <p>
+                         This question and its visibility settings have already been made visible to participants. Consider carefully before making changes to the visibility settings as participants may already have expectations regarding the visibility of responses. 
+                      </p>
+                    </div>
+                    <div
                       class="margin-top-15px"
                       ngbdropdown=""
                     >
@@ -3045,9 +2680,7 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         id="btn-question-visibility"
                         ngbdropdowntoggle=""
                       >
-                        <span
-                          style=""
-                        >
+                        <span>
                           Custom visibility options
                         </span>
                       </button>
@@ -3063,7 +2696,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -3073,7 +2705,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -3083,7 +2714,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -3093,7 +2723,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -3103,7 +2732,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         </li>
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -3114,11 +2742,9 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                         <li
                           aria-hidden="true"
                           class="dropdown-divider"
-                          style=""
                         />
                         <li
                           class="text-wrap dropdown-item"
-                          style=""
                         >
                           <button
                             class="dropdown-button"
@@ -3134,7 +2760,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                       <table
                         aria-label="Custom Visibility Options Table"
                         class="table margin-top-15px background-color-white table-striped"
-                        style=""
                       >
                         <thead>
                           <tr>
@@ -3314,14 +2939,10 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                       <ul
                         class="text-muted background-color-warning"
                       >
-                        <li
-                          style=""
-                        >
+                        <li>
                            Your team members can see your response, but not the name of the recipient, or your name 
                         </li>
-                        <li
-                          style=""
-                        >
+                        <li>
                            Instructors in this course can see your response, but not the name of the recipient, or your name 
                         </li>
                       </ul>
@@ -3330,7 +2951,6 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
                 </tm-visibility-panel>
                 <div
                   class="row margin-top-15px"
-                  style=""
                 >
                   <div
                     class="col-12 text-end"
@@ -3754,31 +3374,29 @@ exports[`InstructorSessionEditPageComponent should snap with feedback session qu
 </tm-instructor-session-edit-page>
 `;
 
-exports[`InstructorSessionEditPageComponent should snap with new question added 1`] = `
+exports[`InstructorSessionEditPageComponent > should snap with new question added 1`] = `
 <tm-instructor-session-edit-page
   FeedbackQuestionType={[Function Object]}
-  FeedbackSessionPublishStatus={[Function Object]}
+  FeedbackSessionSubmissionStatus={[Function Object]}
   QuestionEditFormMode={[Function Object]}
   SessionEditFormMode={[Function Object]}
   changeDetectorRef={[Function ViewRef]}
-  courseId="undefined"
+  courseId=""
   courseName=""
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   coursesOfModifiedSession={[Function Array]}
-  datetimeService={[Function DateTimeService]}
-  emailOfInstructorToPreview=""
-  emailOfStudentToPreview=""
+  datetimeService={[Function _DateTimeService]}
   failedToCopySessions={[Function Object]}
   feedbackQuestionModels={[Function Map]}
-  feedbackQuestionsService={[Function FeedbackQuestionsService]}
-  feedbackSessionActionsService={[Function FeedbackSessionActionsService]}
+  feedbackQuestionsService={[Function _FeedbackQuestionsService]}
+  feedbackSessionActionsService={[Function _FeedbackSessionActionsService]}
   feedbackSessionId="undefined"
   feedbackSessionModelBeforeEditing={[Function Object]}
-  feedbackSessionName="undefined"
-  feedbackSessionsService={[Function FeedbackSessionsService]}
+  feedbackSessionName=""
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasLoadingFeedbackQuestionsFailed="false"
   hasLoadingFeedbackSessionFailed="false"
-  instructorService={[Function InstructorService]}
+  instructorService={[Function _InstructorService]}
   instructorsOfCourse={[Function Array]}
   isAddingFromTemplate="false"
   isAddingQuestionPanelExpanded={[Function Boolean]}
@@ -3789,22 +3407,23 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
   isResultActionLoading="false"
   modifiedSession={[Function Object]}
   modifiedTimestampsModal={[Function TemplateRef]}
-  navigationService={[Function NavigationService]}
+  navigationService={[Function _NavigationService]}
   newQuestionEditFormModel={[Function Object]}
-  ngbModal={[Function _NgbModal]}
-  progressBarService={[Function ProgressBarService]}
-  publishStatusName={[Function PublishStatusNamePipe]}
-  publishUnpublishRetryAttempts={[Function Number]}
+  ngbModal={[Function NgbModal]}
+  progressBarService={[Function _ProgressBarService]}
+  publishUnpublishRetryAttempts="undefined"
   questionEditFormModels={[Function Array]}
   route={[Function ActivatedRoute]}
   sessionEditFormModel={[Function Object]}
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
-  studentService={[Function StudentService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
+  studentService={[Function _StudentService]}
   studentsOfCourse={[Function Array]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
   userDeadlines={[Function Object]}
+  userIdOfInstructorToPreview=""
+  userIdOfStudentToPreview=""
 >
   <tm-loading-retry>
     <div
@@ -3962,9 +3581,16 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                   <tm-rich-text-editor
                     id="instructions"
                   >
-                    <div
-                      inviewport=""
-                    >
+                    <div>
+                      <editor
+                        class="editor editor-disabled ng-untouched ng-pristine ng-valid"
+                        placeholder=""
+                      >
+                        <textarea
+                          id="tinymce-editor-id-1"
+                          style="visibility: hidden;"
+                        />
+                      </editor>
                       <div>
                          2000 characters left 
                       </div>
@@ -4493,7 +4119,7 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                   >
                     <a
                       class="ps-3 pt-2"
-                      href="/web/instructor/sessions/individual-extension?courseid=&fsname=&fsid=&preselectnonsubmitters=false"
+                      href="/web/instructor/sessions/individual-extension?fsid=&preselectnonsubmitters=false"
                       tmrouterlink="/web/instructor/sessions/individual-extension"
                     >
                        Individual Deadline Extensions 
@@ -5234,7 +4860,7 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
           </div>
         </button>
         <div
-          class="ng-trigger ng-trigger-collapseAnim ng-animating"
+          class="collapse show"
         >
           <div
             class="card-body"
@@ -5292,12 +4918,17 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                           class="col-md-10"
                         >
                           <tm-rich-text-editor>
-                            <div
-                              inviewport=""
-                            >
-                              <div
-                                style=""
+                            <div>
+                              <editor
+                                class="editor ng-untouched ng-pristine ng-valid"
+                                placeholder="More details about the question e.g. "In answering the question, do consider communications made informally within the team, and formal communications with the instructors and tutors.""
                               >
+                                <textarea
+                                  id="tinymce-editor-id-1"
+                                  style="visibility: hidden;"
+                                />
+                              </editor>
+                              <div>
                                  2000 characters left 
                               </div>
                             </div>
@@ -5309,9 +4940,7 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                   <div
                     class="padding-15px"
                   >
-                    <tm-text-question-edit-details-form
-                      style=""
-                    >
+                    <tm-text-question-edit-details-form>
                       <div
                         class="row padding-15px"
                       >
@@ -5377,9 +5006,7 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     id="btn-feedback-path"
                     ngbdropdowntoggle=""
                   >
-                    <span
-                      style=""
-                    >
+                    <span>
                       Custom feedback path
                     </span>
                   </button>
@@ -5395,7 +5022,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     </li>
                     <li
                       ngbdropdown=""
-                      style=""
                     >
                       <div
                         class="text-wrap dropdown-item"
@@ -5412,7 +5038,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     </li>
                     <li
                       ngbdropdown=""
-                      style=""
                     >
                       <div
                         class="text-wrap dropdown-item"
@@ -5429,7 +5054,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     </li>
                     <li
                       ngbdropdown=""
-                      style=""
                     >
                       <div
                         class="text-wrap dropdown-item"
@@ -5460,7 +5084,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                 </div>
                 <div
                   class="row margin-top-15px"
-                  style=""
                 >
                   <div
                     class="col-sm-6 mb-2 mb-sm-0"
@@ -5492,7 +5115,7 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                             Instructors in this course
                           </option>
                           <option
-                            value="1: SELF"
+                            value="1: SESSION_CREATOR"
                           >
                             Feedback session creator (i.e., me)
                           </option>
@@ -5601,7 +5224,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                 </div>
                 <div
                   class="row margin-top-15px align-items-center"
-                  style=""
                 >
                   <div
                     class="offset-1 col-md-4 text-md-end"
@@ -5674,9 +5296,7 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     id="btn-question-visibility"
                     ngbdropdowntoggle=""
                   >
-                    <span
-                      style=""
-                    >
+                    <span>
                       Custom visibility options
                     </span>
                   </button>
@@ -5692,7 +5312,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     </li>
                     <li
                       class="text-wrap dropdown-item"
-                      style=""
                     >
                       <button
                         class="dropdown-button"
@@ -5702,7 +5321,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     </li>
                     <li
                       class="text-wrap dropdown-item"
-                      style=""
                     >
                       <button
                         class="dropdown-button"
@@ -5712,7 +5330,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     </li>
                     <li
                       class="text-wrap dropdown-item"
-                      style=""
                     >
                       <button
                         class="dropdown-button"
@@ -5722,7 +5339,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     </li>
                     <li
                       class="text-wrap dropdown-item"
-                      style=""
                     >
                       <button
                         class="dropdown-button"
@@ -5732,7 +5348,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     </li>
                     <li
                       class="text-wrap dropdown-item"
-                      style=""
                     >
                       <button
                         class="dropdown-button"
@@ -5742,7 +5357,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     </li>
                     <li
                       class="text-wrap dropdown-item"
-                      style=""
                     >
                       <button
                         class="dropdown-button"
@@ -5753,11 +5367,9 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                     <li
                       aria-hidden="true"
                       class="dropdown-divider"
-                      style=""
                     />
                     <li
                       class="text-wrap dropdown-item"
-                      style=""
                     >
                       <button
                         class="dropdown-button"
@@ -5773,7 +5385,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                   <table
                     aria-label="Custom Visibility Options Table"
                     class="table margin-top-15px background-color-white table-striped"
-                    style=""
                   >
                     <thead>
                       <tr>
@@ -5987,9 +5598,7 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
                   <ul
                     class="text-muted background-color-warning"
                   >
-                    <li
-                      style=""
-                    >
+                    <li>
                       No-one can see your responses
                     </li>
                   </ul>
@@ -5998,7 +5607,6 @@ exports[`InstructorSessionEditPageComponent should snap with new question added 
             </tm-visibility-panel>
             <div
               class="row margin-top-15px"
-              style=""
             >
               <div
                 class="col-12 text-end"

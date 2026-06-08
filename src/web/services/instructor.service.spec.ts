@@ -7,14 +7,18 @@ import { InstructorService } from './instructor.service';
 import createSpyFromClass from '../test-helpers/create-spy-from-class';
 import { ResourceEndpoints } from '../types/api-const';
 import { Instructor, Instructors, JoinState } from '../types/api-output';
-import {
-  InstructorCreateRequest,
-  InstructorPermissionRole,
-  InstructorPrivilegeUpdateRequest,
-} from '../types/api-request';
+import { InstructorCreateRequest, InstructorPermissionRole, InstructorUpdateRequest } from '../types/api-request';
 
 const defaultRequestBody: InstructorCreateRequest = {
-  id: '123',
+  name: 'John Doe',
+  email: 'johndoe@gmail.com',
+  role: InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_COOWNER,
+  displayName: 'John Doe',
+  isDisplayedToStudent: true,
+};
+
+const defaultUpdateRequestBody: InstructorUpdateRequest = {
+  id: '00000000-0000-4000-8000-000000000001',
   name: 'John Doe',
   email: 'johndoe@gmail.com',
   role: InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_COOWNER,
@@ -27,6 +31,9 @@ const defaultInstructors: Instructors = {
     {
       googleId: '',
       courseId: 'CS3281',
+      courseName: 'Test Course',
+      institute: 'Test Institute',
+      userId: 'test-user-id',
       email: '',
       isDisplayedToStudents: true,
       displayedToStudentsAs: '',
@@ -37,6 +44,9 @@ const defaultInstructors: Instructors = {
     {
       googleId: '',
       courseId: 'CS3282',
+      courseName: 'Test Course',
+      institute: 'Test Institute',
+      userId: 'test-user-id',
       email: '',
       isDisplayedToStudents: true,
       displayedToStudentsAs: '',
@@ -84,18 +94,21 @@ describe('InstructorService', () => {
   });
 
   it('should execute PUT when updating an instructor for a course', () => {
-    service.updateInstructor({ courseId: 'CS3281', requestBody: defaultRequestBody });
+    service.updateInstructor({ courseId: 'CS3281', requestBody: defaultUpdateRequestBody });
     const paramMap: Record<string, string> = {
       courseid: 'CS3281',
     };
-    expect(spyHttpRequestService.put).toHaveBeenCalledWith(ResourceEndpoints.INSTRUCTOR, paramMap, defaultRequestBody);
+    expect(spyHttpRequestService.put).toHaveBeenCalledWith(
+      ResourceEndpoints.INSTRUCTOR,
+      paramMap,
+      defaultUpdateRequestBody,
+    );
   });
 
   it('should execute DELETE when deleting an instructor for a course', () => {
-    service.deleteInstructor({ courseId: 'CS3281', instructorEmail: 'John Doe' });
+    service.deleteInstructor({ userId: '00000000-0000-4000-8000-000000000001' });
     const paramMap: Record<string, string> = {
-      courseid: 'CS3281',
-      instructoremail: 'John Doe',
+      userid: '00000000-0000-4000-8000-000000000001',
     };
     expect(spyHttpRequestService.delete).toHaveBeenCalledWith(ResourceEndpoints.INSTRUCTOR, paramMap);
   });
@@ -127,37 +140,12 @@ describe('InstructorService', () => {
     expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.INSTRUCTOR_PRIVILEGE, paramMap);
   });
 
-  it('should call put when updating instructor privileges', () => {
+  it('should call get when loading instructor privileges by user ID', () => {
     const paramMap: Record<string, string> = {
-      courseid: 'CS3281',
-      instructoremail: 'johndoe@gmail.com',
-    };
-    const requestBody: InstructorPrivilegeUpdateRequest = {
-      privileges: {
-        courseLevel: {
-          canModifyCourse: true,
-          canModifySession: true,
-          canModifyStudent: true,
-          canModifyInstructor: true,
-          canViewStudentInSections: true,
-          canModifySessionCommentsInSections: true,
-          canViewSessionInSections: true,
-          canSubmitSessionInSections: true,
-        },
-        sectionLevel: {},
-        sessionLevel: {},
-      },
+      userid: '00000000-0000-4000-8000-000000000001',
     };
 
-    service.updateInstructorPrivilege({
-      requestBody,
-      courseId: paramMap['courseid'],
-      instructorEmail: paramMap['instructoremail'],
-    });
-    expect(spyHttpRequestService.put).toHaveBeenCalledWith(
-      ResourceEndpoints.INSTRUCTOR_PRIVILEGE,
-      paramMap,
-      requestBody,
-    );
+    service.loadInstructorPrivilege({ userId: paramMap['userid'] });
+    expect(spyHttpRequestService.get).toHaveBeenCalledWith(ResourceEndpoints.INSTRUCTOR_PRIVILEGE, paramMap);
   });
 });

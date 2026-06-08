@@ -5,7 +5,6 @@ import {
   FeedbackContributionResponseDetails,
   FeedbackMcqQuestionDetails,
   FeedbackMcqResponseDetails,
-  FeedbackParticipantType,
   FeedbackQuestionType,
   FeedbackSession,
   FeedbackSessionPublishStatus,
@@ -15,6 +14,8 @@ import {
   InstructorPermissionRole,
   JoinState,
   NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionGiverType,
+  QuestionRecipientType,
   ResponseOutput,
   ResponseVisibleSetting,
   SessionVisibleSetting,
@@ -25,7 +26,7 @@ import {
   DEFAULT_MCQ_QUESTION_DETAILS,
   DEFAULT_MCQ_RESPONSE_DETAILS,
 } from '../../../../types/default-question-structs';
-import { CommentEditFormModel } from '../../../components/comment-box/comment-edit-form/comment-edit-form.component';
+import type { CommentEditFormModel } from '../../../components/comment-box/comment.model';
 import { CommentTableModel } from '../../../components/comment-box/comment-table/comment-table.model';
 import { SessionEditFormModel } from '../../../components/session-edit-form/session-edit-form-model';
 import { RecycleBinFeedbackSessionRowModel } from '../../../components/sessions-recycle-bin-table/sessions-recycle-bin-table.component';
@@ -78,7 +79,6 @@ export const EXAMPLE_SESSION_EDIT_FORM_MODEL: SessionEditFormModel = {
 export const EXAMPLE_COMMENT_EDIT_FORM_MODEL: CommentEditFormModel = {
   commentText: '',
 
-  isUsingCustomVisibilities: false,
   showCommentTo: [],
   showGiverNameTo: [],
 };
@@ -115,13 +115,12 @@ export const EXAMPLE_RESPONSE_WITH_COMMENT: ResponseOutput = {
   } as FeedbackContributionResponseDetails,
   instructorComments: [
     {
-      commentGiver: 'Instructor',
-      lastEditorEmail: '',
-      feedbackResponseCommentId: '00000000-0000-4000-8000-000000000001',
+      commentGiverName: 'Instructor',
+      lastEditorName: 'Instructor',
+      responseInstructorCommentId: '00000000-0000-4000-8000-000000000001',
       commentText: 'Good to know!',
       createdAt: 1,
       lastEditedAt: 1,
-      isVisibilityFollowingFeedbackQuestion: true,
       showGiverNameTo: [CommentVisibilityType.GIVER],
       showCommentTo: [CommentVisibilityType.GIVER],
     },
@@ -159,7 +158,9 @@ export const EXAMPLE_STUDENTS: Student[] = [
     courseId: 'test.exa-demo',
     name: 'Alice Betsy',
     comments: 'Alice is a transfer student.',
+    teamId: 'team-a',
     teamName: 'Team A',
+    sectionId: 'section-a',
     sectionName: 'Section A',
     joinState: JoinState.JOINED,
     institute: 'NUS',
@@ -178,7 +179,7 @@ export const EXAMPLE_INSTRUCTORS: Instructor[] = [
     isDisplayedToStudents: true,
     displayedToStudentsAs: 'Instructor',
     name: 'Bob Ruth',
-    key: 'impicklerick',
+    key: 'instructor-key',
     role: InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_COOWNER,
     joinState: JoinState.JOINED,
     institute: 'NUS',
@@ -224,9 +225,9 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
     isReadOnly: true,
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
-        isUsingCustomVisibilities: true,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -238,9 +239,9 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
     isReadOnly: true,
     commentRows: [],
     newCommentRow: {
+      commentType: 'new',
       commentEditFormModel: {
         commentText: '',
-        isUsingCustomVisibilities: false,
         showCommentTo: [],
         showGiverNameTo: [],
       },
@@ -255,6 +256,10 @@ export const EXAMPLE_INSTRUCTOR_COMMENT_TABLE_MODEL: Record<string, CommentTable
  */
 export const EXAMPLE_GRQ_RESPONSES: Record<string, SectionTabModel> = {
   'Section A': {
+    section: {
+      sectionId: 'Section A',
+      sectionName: 'Section A',
+    },
     questions: [
       {
         feedbackQuestion: {
@@ -274,8 +279,8 @@ export const EXAMPLE_GRQ_RESPONSES: Record<string, SectionTabModel> = {
             questionText: 'How well did team member perform?',
           } as FeedbackMcqQuestionDetails,
           questionType: FeedbackQuestionType.MCQ,
-          giverType: FeedbackParticipantType.STUDENTS,
-          recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+          giverType: QuestionGiverType.STUDENTS,
+          recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
           numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
           showResponsesTo: [],
           showGiverNameTo: [],
@@ -352,8 +357,8 @@ export const EXAMPLE_QUESTIONS_WITH_RESPONSES: FeedbackQuestionModel[] = [
         mcqChoices: ['<p>Good</p>', '<p>Normal</p>', '<p>Bad</p>'],
       } as FeedbackMcqQuestionDetails,
       questionType: FeedbackQuestionType.MCQ,
-      giverType: FeedbackParticipantType.STUDENTS,
-      recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+      giverType: QuestionGiverType.STUDENTS,
+      recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
       numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
       showResponsesTo: [FeedbackVisibilityType.RECIPIENT],
       showGiverNameTo: [],
@@ -423,7 +428,6 @@ export const EXAMPLE_QUESTIONS_WITH_RESPONSES: FeedbackQuestionModel[] = [
     otherResponses: [],
     isLoaded: true,
     isLoading: false,
-    hasResponse: true,
     hasResponseButNotVisibleForPreview: false,
     hasCommentNotVisibleForPreview: false,
   },

@@ -1,5 +1,7 @@
 package teammates.common.datatransfer.questions;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.testng.annotations.Test;
 
 import teammates.test.BaseTestCase;
@@ -17,5 +19,12 @@ public class FeedbackResponseDetailsTest extends BaseTestCase {
 
         assertEquals("updated", frd.getAnswerString());
         assertEquals("original", frdDeep.getAnswerString());
+    }
+
+    @Test
+    public void testConstSumResponseDetails_defaultType_shouldBeConstSumOptions() {
+        FeedbackConstantSumOptionsResponseDetails details = new FeedbackConstantSumOptionsResponseDetails();
+
+        assertEquals(FeedbackQuestionType.CONSTSUM_OPTIONS, details.getQuestionType());
     }
 }

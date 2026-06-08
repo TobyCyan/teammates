@@ -1,12 +1,7 @@
 import { Component, Input, inject } from '@angular/core';
-import {
-  NgbModalRef,
-  NgbModal,
-  NgbTooltip,
-  NgbDropdown,
-  NgbDropdownToggle,
-  NgbDropdownMenu,
-} from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdown, NgbDropdownToggle, NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap/dropdown';
+import { NgbModalRef, NgbModal } from '@ng-bootstrap/ng-bootstrap/modal';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { AccountRequestTableRowModel } from './account-request-table-model';
 import { EditRequestModalComponentResult } from './admin-edit-request-modal/admin-edit-request-modal-model';
 import { EditRequestModalComponent } from './admin-edit-request-modal/admin-edit-request-modal.component';
@@ -30,10 +25,10 @@ import { SimpleModalType } from '../simple-modal/simple-modal-type';
   imports: [NgbTooltip, AjaxLoadingComponent, NgbDropdown, NgbDropdownToggle, NgbDropdownMenu],
 })
 export class AccountRequestTableComponent {
-  private statusMessageService = inject(StatusMessageService);
-  private simpleModalService = inject(SimpleModalService);
-  private accountService = inject(AccountService);
-  private ngbModal = inject(NgbModal);
+  private readonly statusMessageService = inject(StatusMessageService);
+  private readonly simpleModalService = inject(SimpleModalService);
+  private readonly accountService = inject(AccountService);
+  private readonly ngbModal = inject(NgbModal);
 
   @Input()
   accountRequests: AccountRequestTableRowModel[] = [];
@@ -179,9 +174,5 @@ export class AccountRequestTableComponent {
       },
       () => {},
     );
-  }
-
-  trackAccountRequest(_: number, accountRequest: AccountRequestTableRowModel): string {
-    return accountRequest.id;
   }
 }

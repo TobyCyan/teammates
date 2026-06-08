@@ -1,21 +1,17 @@
 package teammates.ui.webapi;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
 import teammates.common.util.Const;
 import teammates.storage.entity.FeedbackQuestion;
 import teammates.storage.entity.FeedbackResponse;
-import teammates.storage.entity.FeedbackResponseComment;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Student;
 import teammates.ui.exception.EntityNotFoundException;
 import teammates.ui.exception.InvalidHttpParameterException;
 import teammates.ui.exception.UnauthorizedAccessException;
-import teammates.ui.output.FeedbackResponseCommentData;
-import teammates.ui.output.FeedbackResponseData;
 import teammates.ui.output.FeedbackResponsesData;
 import teammates.ui.request.Intent;
 
@@ -31,12 +27,8 @@ public class GetFeedbackResponsesAction extends BasicFeedbackSubmissionAction {
 
     @Override
     void checkSpecificAccessControl() throws UnauthorizedAccessException {
-        FeedbackQuestion feedbackQuestion = null;
-
-        UUID feedbackQuestionId;
-
-        feedbackQuestionId = getUuidRequestParamValue(Const.ParamsNames.FEEDBACK_QUESTION_ID);
-        feedbackQuestion = logic.getFeedbackQuestion(feedbackQuestionId);
+        UUID feedbackQuestionId = getUuidRequestParamValue(Const.ParamsNames.FEEDBACK_QUESTION_ID);
+        FeedbackQuestion feedbackQuestion = logic.getFeedbackQuestion(feedbackQuestionId);
 
         if (feedbackQuestion == null) {
             throw new EntityNotFoundException("Feedback Question not found");
@@ -47,18 +39,15 @@ public class GetFeedbackResponsesAction extends BasicFeedbackSubmissionAction {
                                                 feedbackQuestion.getCourseId());
 
         verifyInstructorCanSeeQuestionIfInModeration(feedbackQuestion);
-        verifyNotPreview();
 
         Intent intent = Intent.valueOf(getNonNullRequestParamValue(Const.ParamsNames.INTENT));
         switch (intent) {
         case STUDENT_SUBMISSION:
-            gateKeeper.verifyAnswerableForStudent(feedbackQuestion);
-            Student student = getStudentOfCourseFromRequest(feedbackSession.getCourseId());
+            Student student = getStudentOfCourseForSubmission(feedbackSession.getCourseId(), false);
             checkAccessControlForStudentFeedbackSubmission(student, feedbackSession);
             break;
         case INSTRUCTOR_SUBMISSION:
-            gateKeeper.verifyAnswerableForInstructor(feedbackQuestion);
-            Instructor instructor = getInstructorOfCourseFromRequest(feedbackSession.getCourseId());
+            Instructor instructor = getInstructorOfCourseForSubmission(feedbackSession.getCourseId(), false);
             checkAccessControlForInstructorFeedbackSubmission(instructor, feedbackSession);
             break;
         default:
@@ -68,12 +57,8 @@ public class GetFeedbackResponsesAction extends BasicFeedbackSubmissionAction {
 
     @Override
     public JsonResult execute() {
-        FeedbackQuestion feedbackQuestion = null;
-
-        UUID feedbackQuestionId;
-
-        feedbackQuestionId = getUuidRequestParamValue(Const.ParamsNames.FEEDBACK_QUESTION_ID);
-        feedbackQuestion = logic.getFeedbackQuestion(feedbackQuestionId);
+        UUID feedbackQuestionId = getUuidRequestParamValue(Const.ParamsNames.FEEDBACK_QUESTION_ID);
+        FeedbackQuestion feedbackQuestion = logic.getFeedbackQuestion(feedbackQuestionId);
 
         if (feedbackQuestion == null) {
             throw new EntityNotFoundException("Feedback Question not found");
@@ -84,33 +69,18 @@ public class GetFeedbackResponsesAction extends BasicFeedbackSubmissionAction {
         List<FeedbackResponse> responses;
         switch (intent) {
         case STUDENT_SUBMISSION:
-            Student student = getStudentOfCourseFromRequest(feedbackQuestion.getCourseId());
+            Student student = getStudentOfCourseForSubmission(feedbackQuestion.getCourseId(), false);
             responses = logic.getFeedbackResponsesFromStudentOrTeamForQuestion(feedbackQuestion, student);
             break;
         case INSTRUCTOR_SUBMISSION:
-            Instructor instructor = getInstructorOfCourseFromRequest(feedbackQuestion.getCourseId());
+            Instructor instructor = getInstructorOfCourseForSubmission(feedbackQuestion.getCourseId(), false);
             responses = logic.getFeedbackResponsesFromInstructorForQuestion(feedbackQuestion, instructor);
             break;
         default:
             throw new InvalidHttpParameterException("Unknown intent " + intent);
         }
 
-        List<FeedbackResponseData> responsesData = new LinkedList<>();
-        responses.forEach(response -> {
-            FeedbackResponseData data = new FeedbackResponseData(response);
-            // Only MCQ and MSQ questions can have participant comment
-            FeedbackResponseComment comment =
-                    logic.getFeedbackResponseCommentForResponseFromParticipant(response.getId());
-            if (comment != null) {
-                data.setGiverComment(new FeedbackResponseCommentData(comment));
-            }
-            responsesData.add(data);
-        });
-        FeedbackResponsesData result = new FeedbackResponsesData();
-        if (!responsesData.isEmpty()) {
-            result.setResponses(responsesData);
-        }
-
+        FeedbackResponsesData result = FeedbackResponsesData.createFromEntity(responses);
         return new JsonResult(result);
     }
 

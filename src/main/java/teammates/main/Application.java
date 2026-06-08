@@ -41,8 +41,7 @@ public final class Application {
         if (Config.isDevServerLoginEnabled()) {
             // For dev server, we dynamically add servlet to serve the dev server login page.
 
-            ServletHolder devServerLoginServlet =
-                    new ServletHolder("DevServerLoginServlet", new DevServerLoginServlet());
+            ServletHolder devServerLoginServlet = new ServletHolder("DevServerLoginServlet", new DevServerLoginServlet());
             webapp.addServlet(devServerLoginServlet, "/devServerLogin");
         }
 

@@ -1,6 +1,9 @@
 package teammates.e2e.cases;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.time.Instant;
+import java.util.UUID;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
@@ -102,14 +105,6 @@ public class AdminSearchPageE2ETest extends BaseE2ETestCase {
 
         ______TS("Typical case: Expand and collapse links");
         searchPage.verifyLinkExpansionButtons(student, instructor, accountRequest);
-
-        ______TS("Typical case: Reset account request successful");
-        searchContent = "asearch.instructor1@gmail.tmt";
-        searchPage.clearSearchBox();
-        searchPage.inputSearchContent(searchContent);
-        searchPage.clickSearchButton();
-        searchPage.clickResetAccountRequestButton(accountRequest);
-        assertNull(BACKDOOR.getAccountRequest(accountRequest.getId()).getRegisteredAt());
 
         ______TS("Typical case: Delete account request successful");
         accountRequest = testData.accountRequests.get("unregisteredInstructor1");
@@ -222,15 +217,16 @@ public class AdminSearchPageE2ETest extends BaseE2ETestCase {
     }
 
     private String getExpectedStudentHomePageLink(Student student) {
+        UUID accountId = student.isRegistered() ? student.getAccountId() : null;
         return student.isRegistered() ? createFrontendUrl(Const.WebPageURIs.STUDENT_HOME_PAGE)
-                .withUserId(student.getGoogleId())
+                .withMasqueradeAccount(accountId)
                 .toAbsoluteString()
                 : "";
     }
 
     private String getExpectedStudentManageAccountLink(Student student) {
         return student.isRegistered() ? createFrontendUrl(Const.WebPageURIs.ADMIN_ACCOUNTS_PAGE)
-                .withParam(Const.ParamsNames.INSTRUCTOR_ID, student.getGoogleId())
+                .withParam(Const.ParamsNames.ACCOUNT_ID, student.getAccountId().toString())
                 .toAbsoluteString()
                 : "";
     }
@@ -249,16 +245,15 @@ public class AdminSearchPageE2ETest extends BaseE2ETestCase {
     }
 
     private String getExpectedInstructorHomePageLink(Instructor instructor) {
-        String googleId = instructor.isRegistered() ? instructor.getGoogleId() : "";
+        UUID accountId = instructor.isRegistered() ? instructor.getAccountId() : null;
         return createFrontendUrl(Const.WebPageURIs.INSTRUCTOR_HOME_PAGE)
-                .withUserId(googleId)
+                .withMasqueradeAccount(accountId)
                 .toAbsoluteString();
     }
 
     private String getExpectedInstructorManageAccountLink(Instructor instructor) {
-        String googleId = instructor.isRegistered() ? instructor.getGoogleId() : "";
         return createFrontendUrl(Const.WebPageURIs.ADMIN_ACCOUNTS_PAGE)
-                .withParam(Const.ParamsNames.INSTRUCTOR_ID, googleId)
+                .withParam(Const.ParamsNames.ACCOUNT_ID, instructor.getAccountId().toString())
                 .toAbsoluteString();
     }
 

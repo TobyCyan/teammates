@@ -1,11 +1,13 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 
 import org.testng.annotations.Test;
 
+import teammates.common.datatransfer.InstructorPermissionRole;
 import teammates.common.datatransfer.InstructorPrivileges;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
@@ -79,7 +81,8 @@ public class UpdateCourseActionTest extends BaseActionTest<UpdateCourseAction> {
         UpdateCourseAction action = getAction(request, params);
         CourseData actionOutput = (CourseData) getJsonResult(action).getOutput();
 
-        assertEquals(JsonUtils.toJson(new CourseData(expectedCourse)), JsonUtils.toJson(actionOutput));
+        assertEquals(JsonUtils.toJson(new CourseData(expectedCourse)),
+                JsonUtils.toJson(actionOutput));
     }
 
     @Test
@@ -109,7 +112,7 @@ public class UpdateCourseActionTest extends BaseActionTest<UpdateCourseAction> {
         Course course = new Course("course-id", "name", Const.DEFAULT_TIME_ZONE, "institute");
 
         Instructor instructor = new Instructor(course, "name", "instructoremail@tm.tmt",
-                false, "", null, new InstructorPrivileges());
+                false, "", InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM, new InstructorPrivileges());
 
         loginAsInstructor(googleId);
         when(mockLogic.getCourse(course.getId())).thenReturn(course);
@@ -129,7 +132,7 @@ public class UpdateCourseActionTest extends BaseActionTest<UpdateCourseAction> {
         InstructorPrivileges instructorPrivileges = new InstructorPrivileges();
         instructorPrivileges.updatePrivilege(Const.InstructorPermissions.CAN_MODIFY_COURSE, true);
         Instructor instructor = new Instructor(course, "name", "instructoremail@tm.tmt",
-                false, "", null, instructorPrivileges);
+                false, "", InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM, instructorPrivileges);
 
         loginAsInstructor(googleId);
         when(mockLogic.getCourse(course.getId())).thenReturn(course);
@@ -147,6 +150,8 @@ public class UpdateCourseActionTest extends BaseActionTest<UpdateCourseAction> {
         String[] params = {
                 Const.ParamsNames.COURSE_ID, "course-id",
         };
+
+        when(mockLogic.getInstructorByGoogleId("course-id", googleId)).thenReturn(null);
         loginAsStudent(googleId);
         verifyCannotAccess(params);
 

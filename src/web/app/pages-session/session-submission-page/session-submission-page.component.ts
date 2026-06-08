@@ -1,21 +1,18 @@
 import { KeyValuePipe } from '@angular/common';
-import { AfterViewInit, Component, OnInit, DOCUMENT, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { NgbModal, NgbModalRef, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
-import { DestroyableDirective, InViewportDirective } from 'ng-in-viewport';
-import { PageScrollService } from 'ngx-page-scroll-core';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { forkJoin, Observable, of } from 'rxjs';
-import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
+import { catchError, finalize, map, switchMap, tap } from 'rxjs/operators';
 import { SavingCompleteModalComponent } from './saving-complete-modal/saving-complete-modal.component';
 import { SessionView } from './session-view.enum';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import { CourseService } from '../../../services/course.service';
 import { DeadlineExtensionHelper } from '../../../services/deadline-extension-helper';
-import { FeedbackQuestionsService } from '../../../services/feedback-questions.service';
-import { FeedbackResponseCommentService } from '../../../services/feedback-response-comment.service';
-import { FeedbackResponsesResponse, FeedbackResponsesService } from '../../../services/feedback-responses.service';
+import { FeedbackResponsesService } from '../../../services/feedback-responses.service';
 import { FeedbackSessionsService } from '../../../services/feedback-sessions.service';
 import { InstructorService } from '../../../services/instructor.service';
 import { LogService } from '../../../services/log.service';
@@ -23,32 +20,32 @@ import { NavigationService } from '../../../services/navigation.service';
 import { SimpleModalService } from '../../../services/simple-modal.service';
 import { StatusMessageService } from '../../../services/status-message.service';
 import { StudentService } from '../../../services/student.service';
+import { SubmissionReceiptService } from '../../../services/submission-receipt.service';
 import { TimezoneService } from '../../../services/timezone.service';
 import {
   AuthInfo,
-  Course,
-  FeedbackParticipantType,
+  CourseView,
   FeedbackQuestion,
   FeedbackQuestionRecipient,
-  FeedbackQuestionRecipients,
   FeedbackQuestionType,
   FeedbackResponse,
-  FeedbackResponseComment,
-  FeedbackResponses,
+  FeedbackQuestionResponses,
   FeedbackSession,
   FeedbackSessionLogType,
   FeedbackSessionSubmissionStatus,
   Instructor,
   NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionRecipientType,
   RegkeyValidity,
   Student,
+  SessionSubmission,
+  SessionSubmissionQuestion,
 } from '../../../types/api-output';
 import { FeedbackResponseRequest, Intent } from '../../../types/api-request';
 import { Milliseconds } from '../../../types/datetime-const';
 import { DEFAULT_NUMBER_OF_RETRY_ATTEMPTS } from '../../../types/default-retry-attempts';
-import { castAsSelectElement } from '../../../types/event-target-caster';
 import { AjaxLoadingComponent } from '../../components/ajax-loading/ajax-loading.component';
-import { CommentRowModel } from '../../components/comment-box/comment-row/comment-row.component';
+import { giverCommentToCommentRowModel } from '../../components/comment-box/comment-row-model-mapper';
 import { ErrorReportComponent } from '../../components/error-report/error-report.component';
 import { LoadingRetryComponent } from '../../components/loading-retry/loading-retry.component';
 import { LoadingSpinnerDirective } from '../../components/loading-spinner/loading-spinner.directive';
@@ -57,15 +54,13 @@ import {
   FeedbackResponseRecipientSubmissionFormModel,
   QuestionSubmissionFormMode,
   QuestionSubmissionFormModel,
+  ResponseSubmissionStatus,
 } from '../../components/question-submission-form/question-submission-form-model';
 import { QuestionSubmissionFormComponent } from '../../components/question-submission-form/question-submission-form.component';
 import { SimpleModalType } from '../../components/simple-modal/simple-modal-type';
 import { SafeHtmlPipe } from '../../components/teammates-common/safe-html.pipe';
+import { PageScrollService } from '../../../services/page-scroll.service';
 import { ErrorMessageOutput } from '../../error-message-output';
-
-interface FeedbackQuestionsResponse {
-  questions: FeedbackQuestion[];
-}
 
 /**
  * Feedback session submission page.
@@ -79,39 +74,33 @@ interface FeedbackQuestionsResponse {
     FormsModule,
     LoadingRetryComponent,
     QuestionSubmissionFormComponent,
-    DestroyableDirective,
-    InViewportDirective,
     NgbTooltip,
     AjaxLoadingComponent,
     SafeHtmlPipe,
     KeyValuePipe,
   ],
 })
-export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
-  private route = inject(ActivatedRoute);
-  private statusMessageService = inject(StatusMessageService);
-  private timezoneService = inject(TimezoneService);
-  private feedbackQuestionsService = inject(FeedbackQuestionsService);
-  private feedbackResponsesService = inject(FeedbackResponsesService);
-  private feedbackSessionsService = inject(FeedbackSessionsService);
-  private studentService = inject(StudentService);
-  private instructorService = inject(InstructorService);
-  private courseService = inject(CourseService);
-  private ngbModal = inject(NgbModal);
-  private simpleModalService = inject(SimpleModalService);
-  private pageScrollService = inject(PageScrollService);
-  private authService = inject(AuthService);
-  private navigationService = inject(NavigationService);
-  private commentService = inject(FeedbackResponseCommentService);
-  private logService = inject(LogService);
-  private document = inject(DOCUMENT);
-
-  readonly castAsSelectElement = castAsSelectElement;
+export class SessionSubmissionPageComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly statusMessageService = inject(StatusMessageService);
+  private readonly timezoneService = inject(TimezoneService);
+  private readonly feedbackResponsesService = inject(FeedbackResponsesService);
+  private readonly feedbackSessionsService = inject(FeedbackSessionsService);
+  private readonly submissionReceiptService = inject(SubmissionReceiptService);
+  private readonly studentService = inject(StudentService);
+  private readonly instructorService = inject(InstructorService);
+  private readonly courseService = inject(CourseService);
+  private readonly ngbModal = inject(NgbModal);
+  private readonly simpleModalService = inject(SimpleModalService);
+  private readonly pageScrollService = inject(PageScrollService);
+  private readonly authService = inject(AuthService);
+  private readonly navigationService = inject(NavigationService);
+  private readonly logService = inject(LogService);
 
   // enum
-  FeedbackSessionSubmissionStatus: typeof FeedbackSessionSubmissionStatus = FeedbackSessionSubmissionStatus;
-  FeedbackQuestionType: typeof FeedbackQuestionType = FeedbackQuestionType;
-  Intent: typeof Intent = Intent;
+  FeedbackSessionSubmissionStatus!: typeof FeedbackSessionSubmissionStatus;
+  FeedbackQuestionType!: typeof FeedbackQuestionType;
+  Intent!: typeof Intent;
 
   courseId = '';
   feedbackSessionName = '';
@@ -140,32 +129,33 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
   questionSubmissionForms: QuestionSubmissionFormModel[] = [];
 
   isSavingResponses = false;
+  isDownloadingSubmissionReceipt = false;
   isSubmissionFormsDisabled = false;
 
   isModerationHintExpanded = false;
   moderatedQuestionId = '';
 
-  isCourseLoading = true;
   isFeedbackSessionLoading = true;
   isFeedbackSessionQuestionsLoading = true;
   hasFeedbackSessionQuestionsLoadingFailed = false;
-  retryAttempts: number = DEFAULT_NUMBER_OF_RETRY_ATTEMPTS;
+  retryAttempts: number;
 
   isQuestionCountOne = false;
 
-  allSessionViews = SessionView;
+  allSessionViews!: typeof SessionView;
   currentSelectedSessionView: SessionView = SessionView.DEFAULT;
-  hasLoadedAllRecipients = false;
   // Records the recipient to groupable questions mapping used in grouping questions by recipients view
   recipientQuestionMap: Map<string, Set<number>> = new Map<string, Set<number>>();
-  ungroupableQuestions: Set<number> = new Set();
   ungroupableQuestionsSorted: number[] = [];
 
-  studentId: string | undefined = '';
-
-  private backendUrl: string = environment.backendUrl;
+  private readonly backendUrl: string = environment.backendUrl;
 
   constructor() {
+    this.retryAttempts = DEFAULT_NUMBER_OF_RETRY_ATTEMPTS;
+    this.FeedbackSessionSubmissionStatus = FeedbackSessionSubmissionStatus;
+    this.FeedbackQuestionType = FeedbackQuestionType;
+    this.Intent = Intent;
+    this.allSessionViews = SessionView;
     this.timezoneService.getTzVersion(); // import timezone service to load timezone data
   }
 
@@ -179,8 +169,6 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
         switchMap(() => this.route.queryParams),
       )
       .subscribe((queryParams: any) => {
-        this.courseId = queryParams.courseid;
-        this.feedbackSessionName = queryParams.fsname;
         this.feedbackSessionId = queryParams.fsid;
         this.regKey = queryParams.key ? queryParams.key : '';
         this.moderatedPerson = queryParams.moderatedperson ? queryParams.moderatedperson : '';
@@ -196,8 +184,8 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
           this.isSubmissionFormsDisabled = true;
         }
 
-        const nextUrl = `${window.location.pathname}${window.location.search.replace(/&/g, '%26')}`;
-        this.authService.getAuthUser(undefined, nextUrl).subscribe({
+        const nextUrl = `${globalThis.location.pathname}${globalThis.location.search.replaceAll('&', '%26')}`;
+        this.authService.getAuthUser(nextUrl).subscribe({
           next: (auth: AuthInfo) => {
             const isPreviewOrModeration = !!(auth.user && (this.moderatedPerson || this.previewAsPerson));
             if (auth.user) {
@@ -212,15 +200,11 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
                       this.navigationService.navigateByURLWithParamEncoding(
                         `/web/${this.entityType}/sessions/submission`,
                         {
-                          courseid: this.courseId,
-                          fsname: this.feedbackSessionName,
                           fsid: this.feedbackSessionId,
                         },
                       );
                     } else {
                       // Valid, unused registration key; load information based on the key
-                      this.loadCourseInfo();
-                      this.loadPersonName();
                       this.loadFeedbackSession(false, auth);
                     }
                   } else if (resp.isValid) {
@@ -256,8 +240,6 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
             } else if (this.loggedInUser) {
               // Load information based on logged in user
               // This will also cover moderation/preview cases
-              this.loadCourseInfo();
-              this.loadPersonName();
               this.loadFeedbackSession(false, auth);
             } else {
               this.navigationService.navigateWithErrorMessage(
@@ -273,52 +255,8 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
       });
   }
 
-  // Solution for checking partial element visibility adapted from
-  // https://stackoverflow.com/questions/30943662/check-if-element-is-partially-in-viewport
-  /**
-   * Checks if a given element is in view.
-   *
-   * @param e element to perform check for
-   */
-  isInViewport(e: HTMLElement): boolean {
-    const rect = e.getBoundingClientRect();
-    const windowHeight: number = window.innerHeight || document.documentElement.clientHeight;
-
-    return !(
-      Math.floor(100 - ((rect.top >= 0 ? 0 : rect.top) / +-rect.height) * 100) < 1 ||
-      Math.floor(100 - ((rect.bottom - windowHeight) / rect.height) * 100) < 1
-    );
-  }
-
-  /**
-   * Scrolls to the question based on its given question id.
-   */
-  scrollToQuestion(): void {
-    const div: HTMLElement | null = document.getElementById(this.moderatedQuestionId);
-
-    // continue scrolling as long as the element to scroll to is yet to be found or not in view
-    if (div == null || !this.isInViewport(div)) {
-      setTimeout(() => {
-        this.pageScrollService.scroll({
-          document: this.document,
-          scrollTarget: `#${this.moderatedQuestionId}`,
-          scrollOffset: 70,
-        });
-        this.scrollToQuestion();
-      }, 500);
-    }
-  }
-
-  ngAfterViewInit(): void {
-    if (!this.moderatedQuestionId) {
-      return;
-    }
-    this.scrollToQuestion();
-  }
-
-  private loadCourseInfo(): void {
-    this.isCourseLoading = true;
-    let request: Observable<Course>;
+  private loadCourseInfoData$(): Observable<CourseView | null> {
+    let request: Observable<CourseView>;
     switch (this.intent) {
       case Intent.STUDENT_SUBMISSION:
         if (this.moderatedPerson || this.previewAsPerson) {
@@ -331,52 +269,61 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
         request = this.courseService.getCourseAsInstructor(this.courseId, this.regKey);
         break;
       default:
-        this.isCourseLoading = false;
-        return;
+        return of(null);
     }
-    request.subscribe({
-      next: (resp: Course) => {
-        this.courseName = resp.courseName;
-        this.courseInstitute = resp.institute;
-        this.isCourseLoading = false;
-      },
-      error: () => {
-        this.isCourseLoading = false;
-      },
-    });
+
+    return request.pipe(
+      tap((resp: CourseView) => {
+        this.courseName = resp.course.courseName;
+        this.courseInstitute = resp.course.institute;
+      }),
+      catchError(() => of(null)),
+    );
   }
 
   /**
    * Loads the name of the person involved in the submission.
    */
-  loadPersonName(): void {
+  private loadPersonNameData$(): Observable<Student | Instructor | null> {
     switch (this.intent) {
       case Intent.STUDENT_SUBMISSION:
-        this.studentService
-          .getStudent(this.courseId, this.moderatedPerson || this.previewAsPerson, this.regKey)
-          .subscribe((student: Student) => {
-            this.studentId = student.userId;
+        if (this.moderatedPerson || this.previewAsPerson) {
+          const userId = this.moderatedPerson || this.previewAsPerson;
+          return this.studentService.getStudent({ courseId: this.courseId, userId }).pipe(
+            tap((student: Student) => {
+              this.personName = student.name;
+              this.personEmail = student.email;
+              this.logStudentAccess();
+            }),
+            catchError(() => of(null)),
+          );
+        }
+        return this.studentService.getStudent({ courseId: this.courseId, regKey: this.regKey }).pipe(
+          tap((student: Student) => {
             this.personName = student.name;
             this.personEmail = student.email;
             this.logStudentAccess();
-          });
-        break;
+          }),
+          catchError(() => of(null)),
+        );
       case Intent.INSTRUCTOR_SUBMISSION:
-        this.instructorService
+        return this.instructorService
           .getInstructor({
             courseId: this.courseId,
-            feedbackSessionName: this.feedbackSessionName,
             intent: this.intent,
             key: this.regKey,
             moderatedPerson: this.moderatedPerson,
             previewAs: this.previewAsPerson,
           })
-          .subscribe((instructor: Instructor) => {
-            this.personName = instructor.name;
-            this.personEmail = instructor.email;
-          });
-        break;
+          .pipe(
+            tap((instructor: Instructor) => {
+              this.personName = instructor.name;
+              this.personEmail = instructor.email;
+            }),
+            catchError(() => of(null)),
+          );
       default:
+        return of(null);
     }
   }
 
@@ -402,82 +349,34 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
         previewAs: this.previewAsPerson,
       })
       .pipe(
-        finalize(() => {
-          this.isFeedbackSessionLoading = false;
-        }),
-      )
-      .subscribe({
-        next: (feedbackSession: FeedbackSession) => {
+        tap((feedbackSessionView) => {
+          const feedbackSession = feedbackSessionView.feedbackSession;
           this.feedbackSessionId = feedbackSession.feedbackSessionId;
+          this.courseId = feedbackSession.courseId;
+          this.feedbackSessionName = feedbackSession.feedbackSessionName;
           this.feedbackSessionInstructions = feedbackSession.instructions;
           this.formattedSessionOpeningTime = this.timezoneService.formatToString(
             feedbackSession.submissionStartTimestamp,
             feedbackSession.timeZone,
             TIME_FORMAT,
           );
-
           this.formattedSessionClosingTime = this.getFormattedSessionClosingTime(feedbackSession, TIME_FORMAT);
-
           this.feedbackSessionSubmissionStatus = feedbackSession.submissionStatus;
           this.feedbackSessionTimezone = feedbackSession.timeZone;
 
           this.logStudentAccess();
-
-          // don't show alert modal in moderation
-          if (!this.moderatedPerson) {
-            let modalContent: string;
-            switch (feedbackSession.submissionStatus) {
-              case FeedbackSessionSubmissionStatus.VISIBLE_NOT_OPEN:
-                this.isSubmissionFormsDisabled = true;
-                modalContent = `<p><strong>The feedback session is currently not open for submissions.</strong></p>
-                <p>You can view the questions and any submitted responses
-                for this feedback session but cannot submit new responses.</p>`;
-                this.simpleModalService.openInformationModal(
-                  'Feedback Session Not Open',
-                  SimpleModalType.WARNING,
-                  modalContent,
-                );
-                break;
-              case FeedbackSessionSubmissionStatus.OPEN:
-                if (this.isFeedbackEndingLessThanFifteenMinutes(feedbackSession)) {
-                  modalContent = 'Warning: you have less than 15 minutes before the submission deadline expires!';
-                  this.simpleModalService.openInformationModal(
-                    'Feedback Session Will Be Closing Soon!',
-                    SimpleModalType.WARNING,
-                    modalContent,
-                  );
-                }
-                break;
-              case FeedbackSessionSubmissionStatus.CLOSED:
-                this.isSubmissionFormsDisabled = true;
-                modalContent = `<p><strong>Feedback Session is Closed</strong></p>
-                <p>You can view the questions and any submitted responses
-                for this feedback session but cannot submit new responses.</p>`;
-                this.simpleModalService.openInformationModal(
-                  'Feedback Session Closed',
-                  SimpleModalType.WARNING,
-                  modalContent,
-                );
-                break;
-              case FeedbackSessionSubmissionStatus.GRACE_PERIOD:
-              default:
-            }
-          }
-
-          this.loadFeedbackQuestions();
-
-          // Display note on submission on mobile device
-          const mobileDeviceWidth = 768;
-          if (
-            this.feedbackSessionSubmissionStatus === FeedbackSessionSubmissionStatus.OPEN &&
-            window.innerWidth < mobileDeviceWidth
-          ) {
-            const modalContent = `Note that you can use the Submit button to save responses already entered,
-              and continue to answer remaining questions after that.
-              You may also edit your submission any number of times before the closing time of this session.`;
-            this.simpleModalService.openInformationModal('Note On Submission', SimpleModalType.INFO, modalContent);
-          }
-        },
+          this.handleSubmissionStatusBanner(feedbackSession);
+          this.showMobileSubmissionNote();
+        }),
+        switchMap(() =>
+          forkJoin([this.loadCourseInfoData$(), this.loadPersonNameData$(), this.loadFeedbackQuestionsData$()]),
+        ),
+        finalize(() => {
+          this.isFeedbackSessionLoading = false;
+        }),
+      )
+      .subscribe({
+        next: () => {},
         error: (resp: ErrorMessageOutput) => {
           if (resp.status === 404) {
             const message =
@@ -498,7 +397,7 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
           } else if (resp.status === 403) {
             if (loginRequired && !auth.user) {
               // There is no logged in user for a valid, used registration key, redirect to login page
-              window.location.href = `${this.backendUrl}${auth.loginUrl}`;
+              globalThis.location.href = `${this.backendUrl}${auth.loginUrl}`;
             } else {
               this.simpleModalService.openInformationModal(
                 'Not Authorised To Access!',
@@ -524,10 +423,17 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
    * Loads feedback questions to submit.
    */
   loadFeedbackQuestions(): void {
+    this.loadFeedbackQuestionsData$().subscribe();
+  }
+
+  private loadFeedbackQuestionsData$(): Observable<QuestionSubmissionFormModel[]> {
     this.isFeedbackSessionQuestionsLoading = true;
     this.questionSubmissionForms = [];
-    this.feedbackQuestionsService
-      .getFeedbackQuestions({
+    this.recipientQuestionMap = new Map<string, Set<number>>();
+    this.ungroupableQuestionsSorted = [];
+
+    return this.feedbackSessionsService
+      .getSessionSubmissionData({
         feedbackSessionId: this.feedbackSessionId,
         intent: this.intent,
         key: this.regKey,
@@ -535,135 +441,171 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
         previewAs: this.previewAsPerson,
       })
       .pipe(
+        tap((response: SessionSubmission) => this.buildSubmissionForms(response)),
+        tap(() => {
+          this.ungroupableQuestionsSorted.sort((a: number, b: number) => a - b);
+          this.isQuestionCountOne = this.questionSubmissionForms.length === 1;
+          this.scrollToModeratedQuestion();
+        }),
+        map(() => this.questionSubmissionForms),
+        catchError((resp: ErrorMessageOutput) => {
+          this.handleError(resp);
+          return of([]);
+        }),
         finalize(() => {
           this.isFeedbackSessionQuestionsLoading = false;
         }),
-      )
-      .subscribe({
-        next: (response: FeedbackQuestionsResponse) => {
-          response.questions.forEach((feedbackQuestion: FeedbackQuestion) => {
-            const model: QuestionSubmissionFormModel = {
-              isLoading: false,
-              isLoaded: false,
-              isTabExpanded: true,
-              feedbackQuestionId: feedbackQuestion.feedbackQuestionId,
-
-              questionNumber: feedbackQuestion.questionNumber,
-              questionBrief: feedbackQuestion.questionBrief,
-              questionDescription: feedbackQuestion.questionDescription,
-
-              giverType: feedbackQuestion.giverType,
-              recipientType: feedbackQuestion.recipientType,
-              recipientList: [],
-              recipientSubmissionForms: [],
-
-              questionType: feedbackQuestion.questionType,
-              questionDetails: feedbackQuestion.questionDetails,
-
-              numberOfEntitiesToGiveFeedbackToSetting: feedbackQuestion.numberOfEntitiesToGiveFeedbackToSetting,
-              customNumberOfEntitiesToGiveFeedbackTo: feedbackQuestion.customNumberOfEntitiesToGiveFeedbackTo
-                ? feedbackQuestion.customNumberOfEntitiesToGiveFeedbackTo
-                : 0,
-
-              showGiverNameTo: feedbackQuestion.showGiverNameTo,
-              showRecipientNameTo: feedbackQuestion.showRecipientNameTo,
-              showResponsesTo: feedbackQuestion.showResponsesTo,
-
-              isTabExpandedForRecipients: new Map<string, boolean>(),
-            };
-            this.questionSubmissionForms.push(model);
-          });
-
-          this.isQuestionCountOne = this.questionSubmissionForms.length === 1;
-        },
-        error: (resp: ErrorMessageOutput) => {
-          this.handleError(resp);
-        },
-      });
+      );
   }
 
-  /**
-   * Tracks the question submission form by feedback question id.
-   *
-   * @see https://angular.io/api/common/NgForOf#properties
-   */
-  trackQuestionSubmissionFormByFn(_: any, item: QuestionSubmissionFormModel): any {
-    return item.feedbackQuestionId;
+  private buildSubmissionForms(response: SessionSubmission): void {
+    response.questions.forEach((questionData: SessionSubmissionQuestion) => {
+      const feedbackQuestion: FeedbackQuestion = questionData.question;
+      const model: QuestionSubmissionFormModel = {
+        isTabExpanded: true,
+        feedbackQuestionId: feedbackQuestion.feedbackQuestionId,
+
+        questionNumber: feedbackQuestion.questionNumber,
+        questionBrief: feedbackQuestion.questionBrief,
+        questionDescription: feedbackQuestion.questionDescription,
+
+        giverType: feedbackQuestion.giverType,
+        recipientType: feedbackQuestion.recipientType,
+        recipientList: questionData.recipients.map((recipient: FeedbackQuestionRecipient) => ({
+          recipientIdentifier: recipient.identifier,
+          recipientName: recipient.name,
+          recipientSection: recipient.section,
+          recipientTeam: recipient.team,
+        })),
+        recipientSubmissionForms: [],
+
+        questionType: feedbackQuestion.questionType,
+        questionDetails: feedbackQuestion.questionDetails,
+
+        numberOfEntitiesToGiveFeedbackToSetting: feedbackQuestion.numberOfEntitiesToGiveFeedbackToSetting,
+        customNumberOfEntitiesToGiveFeedbackTo: feedbackQuestion.customNumberOfEntitiesToGiveFeedbackTo
+          ? feedbackQuestion.customNumberOfEntitiesToGiveFeedbackTo
+          : 0,
+
+        showGiverNameTo: feedbackQuestion.showGiverNameTo,
+        showRecipientNameTo: feedbackQuestion.showRecipientNameTo,
+        showResponsesTo: feedbackQuestion.showResponsesTo,
+
+        isTabExpandedForRecipients: new Map<string, boolean>(),
+      };
+
+      this.questionSubmissionForms.push(model);
+      this.addQuestionGrouping(model);
+
+      if (this.previewAsPerson) {
+        this.buildPreviewSubmissionForms(model);
+      } else {
+        this.populateSubmissionForms(model, questionData.responses);
+      }
+    });
   }
 
-  /**
-   * Loads the feedback question recipients for the question.
-   */
-  loadFeedbackQuestionRecipientsForQuestion(model: QuestionSubmissionFormModel): void {
-    this.feedbackQuestionsService
-      .loadFeedbackQuestionRecipients({
-        questionId: model.feedbackQuestionId,
-        intent: this.intent,
-        key: this.regKey,
-        moderatedPerson: this.moderatedPerson,
-        previewAs: this.previewAsPerson,
-      })
-      .subscribe({
-        next: (response: FeedbackQuestionRecipients) => {
-          response.recipients.forEach((recipient: FeedbackQuestionRecipient) => {
-            model.recipientList.push({
-              recipientIdentifier: recipient.identifier,
-              recipientName: recipient.name,
-              recipientSection: recipient.section,
-              recipientTeam: recipient.team,
-            });
-          });
+  private scrollToModeratedQuestion(): void {
+    if (!this.moderatedQuestionId) {
+      return;
+    }
 
-          if (!this.hasLoadedAllRecipients) {
-            // Keep track of the recipient to questions mapping and the ungroupable questions even before
-            // changing to grouping questions by recipients view
-            if (
-              this.getQuestionSubmissionFormModeInDefaultView(model) === QuestionSubmissionFormMode.FIXED_RECIPIENT &&
-              model.questionType !== FeedbackQuestionType.RANK_RECIPIENTS &&
-              model.questionType !== FeedbackQuestionType.CONSTSUM_RECIPIENTS &&
-              model.questionType !== FeedbackQuestionType.CONTRIB
-            ) {
-              model.recipientList.forEach((recipient: FeedbackResponseRecipient) => {
-                this.addQuestionForRecipient(recipient.recipientIdentifier, model.questionNumber);
-              });
-            } else {
-              this.ungroupableQuestions.add(model.questionNumber);
-            }
-          }
+    setTimeout(() => this.pageScrollService.scrollToAnchor(this.moderatedQuestionId), 350);
+  }
 
-          if (this.previewAsPerson) {
-            // don't load responses in preview mode
-            // generate a list of empty response box
-            const formMode: QuestionSubmissionFormMode = this.getQuestionSubmissionFormModeInDefaultView(model);
-            model.recipientList.forEach((recipient: FeedbackResponseRecipient) => {
-              if (
-                formMode === QuestionSubmissionFormMode.FLEXIBLE_RECIPIENT &&
-                model.recipientSubmissionForms.length >= model.customNumberOfEntitiesToGiveFeedbackTo
-              ) {
-                return;
-              }
+  private buildPreviewSubmissionForms(model: QuestionSubmissionFormModel): void {
+    model.recipientSubmissionForms = [];
+    const formMode: QuestionSubmissionFormMode = this.getQuestionSubmissionFormModeInDefaultView(model);
+    model.recipientList.forEach((recipient: FeedbackResponseRecipient) => {
+      if (
+        formMode === QuestionSubmissionFormMode.FLEXIBLE_RECIPIENT &&
+        model.recipientSubmissionForms.length >= model.customNumberOfEntitiesToGiveFeedbackTo
+      ) {
+        return;
+      }
 
-              let recipientIdentifier = '';
-              if (formMode !== QuestionSubmissionFormMode.FLEXIBLE_RECIPIENT) {
-                recipientIdentifier = recipient.recipientIdentifier;
-              }
-
-              model.recipientSubmissionForms.push({
-                recipientIdentifier,
-                responseDetails: this.feedbackResponsesService.getDefaultFeedbackResponseDetails(model.questionType),
-                responseId: '',
-                isValid: true,
-                isModified: false,
-              });
-            });
-            model.isLoading = false;
-            model.isLoaded = true;
-          } else {
-            this.loadFeedbackResponses(model);
-          }
-        },
-        error: (resp: ErrorMessageOutput) => this.statusMessageService.showErrorToast(resp.error.message),
+      model.recipientSubmissionForms.push({
+        recipientIdentifier:
+          formMode === QuestionSubmissionFormMode.FLEXIBLE_RECIPIENT ? '' : recipient.recipientIdentifier,
+        responseDetails: this.feedbackResponsesService.getDefaultFeedbackResponseDetails(model.questionType),
+        responseId: '',
+        status: ResponseSubmissionStatus.NEW,
+        isValid: true,
       });
+    });
+  }
+
+  private addQuestionGrouping(model: QuestionSubmissionFormModel): void {
+    const isGroupableQuestion =
+      this.getQuestionSubmissionFormModeInDefaultView(model) === QuestionSubmissionFormMode.FIXED_RECIPIENT &&
+      model.recipientType !== QuestionRecipientType.NONE &&
+      model.questionType !== FeedbackQuestionType.RANK_RECIPIENTS &&
+      model.questionType !== FeedbackQuestionType.CONSTSUM_RECIPIENTS &&
+      model.questionType !== FeedbackQuestionType.CONTRIB;
+
+    if (!isGroupableQuestion) {
+      this.ungroupableQuestionsSorted.push(model.questionNumber);
+      return;
+    }
+
+    model.recipientList.forEach((recipient: FeedbackResponseRecipient) => {
+      this.addQuestionForRecipient(recipient.recipientIdentifier, model.questionNumber);
+    });
+  }
+
+  private handleSubmissionStatusBanner(feedbackSession: FeedbackSession): void {
+    // don't show alert modal in moderation
+    if (this.moderatedPerson) {
+      return;
+    }
+
+    let modalContent: string;
+    switch (feedbackSession.submissionStatus) {
+      case FeedbackSessionSubmissionStatus.VISIBLE_NOT_OPEN:
+        this.isSubmissionFormsDisabled = true;
+        modalContent = `<p><strong>The feedback session is currently not open for submissions.</strong></p>
+                <p>You can view the questions and any submitted responses
+                for this feedback session but cannot submit new responses.</p>`;
+        this.simpleModalService.openInformationModal(
+          'Feedback Session Not Open',
+          SimpleModalType.WARNING,
+          modalContent,
+        );
+        break;
+      case FeedbackSessionSubmissionStatus.OPEN:
+        if (this.isFeedbackEndingLessThanFifteenMinutes(feedbackSession)) {
+          modalContent = 'Warning: you have less than 15 minutes before the submission deadline expires!';
+          this.simpleModalService.openInformationModal(
+            'Feedback Session Will Be Closing Soon!',
+            SimpleModalType.WARNING,
+            modalContent,
+          );
+        }
+        break;
+      case FeedbackSessionSubmissionStatus.CLOSED:
+        this.isSubmissionFormsDisabled = true;
+        modalContent = `<p><strong>Feedback Session is Closed</strong></p>
+                <p>You can view the questions and any submitted responses
+                for this feedback session but cannot submit new responses.</p>`;
+        this.simpleModalService.openInformationModal('Feedback Session Closed', SimpleModalType.WARNING, modalContent);
+        break;
+      case FeedbackSessionSubmissionStatus.GRACE_PERIOD:
+      default:
+    }
+  }
+
+  private showMobileSubmissionNote(): void {
+    // Display note on submission on mobile device
+    const mobileDeviceWidth = 768;
+    if (
+      this.feedbackSessionSubmissionStatus === FeedbackSessionSubmissionStatus.OPEN &&
+      window.innerWidth < mobileDeviceWidth
+    ) {
+      const modalContent = `Note that you can use the Submit button to save responses already entered,
+              and continue to answer remaining questions after that.
+              You may also edit your submission any number of times before the closing time of this session.`;
+      this.simpleModalService.openInformationModal('Note On Submission', SimpleModalType.INFO, modalContent);
+    }
   }
 
   /**
@@ -674,13 +616,13 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
     recipientListLength: number,
   ): QuestionSubmissionFormMode {
     const isNumberOfEntitiesToGiveFeedbackToSettingLimited: boolean =
-      (model.recipientType === FeedbackParticipantType.STUDENTS ||
-        model.recipientType === FeedbackParticipantType.STUDENTS_EXCLUDING_SELF ||
-        model.recipientType === FeedbackParticipantType.STUDENTS_IN_SAME_SECTION ||
-        model.recipientType === FeedbackParticipantType.TEAMS ||
-        model.recipientType === FeedbackParticipantType.TEAMS_EXCLUDING_SELF ||
-        model.recipientType === FeedbackParticipantType.TEAMS_IN_SAME_SECTION ||
-        model.recipientType === FeedbackParticipantType.INSTRUCTORS) &&
+      (model.recipientType === QuestionRecipientType.STUDENTS ||
+        model.recipientType === QuestionRecipientType.STUDENTS_EXCLUDING_SELF ||
+        model.recipientType === QuestionRecipientType.STUDENTS_IN_SAME_SECTION ||
+        model.recipientType === QuestionRecipientType.TEAMS ||
+        model.recipientType === QuestionRecipientType.TEAMS_EXCLUDING_SELF ||
+        model.recipientType === QuestionRecipientType.TEAMS_IN_SAME_SECTION ||
+        model.recipientType === QuestionRecipientType.INSTRUCTORS) &&
       model.numberOfEntitiesToGiveFeedbackToSetting === NumberOfEntitiesToGiveFeedbackToSetting.CUSTOM &&
       recipientListLength > model.customNumberOfEntitiesToGiveFeedbackTo;
 
@@ -699,105 +641,61 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
   /**
    * Loads the responses of the feedback question to {@recipientSubmissionForms} in the model.
    */
-  loadFeedbackResponses(model: QuestionSubmissionFormModel): void {
-    this.feedbackResponsesService
-      .getFeedbackResponse({
-        questionId: model.feedbackQuestionId,
-        intent: this.intent,
-        key: this.regKey,
-        moderatedPerson: this.moderatedPerson,
-      })
-      .pipe(
-        finalize(() => {
-          model.isLoading = false;
-          model.isLoaded = true;
-        }),
-      )
-      .subscribe({
-        next: (existingResponses: FeedbackResponsesResponse) => {
-          if (this.getQuestionSubmissionFormModeInDefaultView(model) === QuestionSubmissionFormMode.FIXED_RECIPIENT) {
-            // need to generate a full list of submission forms
-            model.recipientList.forEach((recipient: FeedbackResponseRecipient) => {
-              const matchedExistingResponse: FeedbackResponse | undefined = existingResponses.responses.find(
-                (response: FeedbackResponse) => response.recipientIdentifier === recipient.recipientIdentifier,
-              );
-              const submissionForm: FeedbackResponseRecipientSubmissionFormModel = {
-                recipientIdentifier: recipient.recipientIdentifier,
-                responseDetails: matchedExistingResponse
-                  ? matchedExistingResponse.responseDetails
-                  : this.feedbackResponsesService.getDefaultFeedbackResponseDetails(model.questionType),
-                responseId: matchedExistingResponse ? matchedExistingResponse.feedbackResponseId : '',
-                isValid: true,
-                isModified: false,
-              };
-              if (matchedExistingResponse?.giverComment) {
-                submissionForm.commentByGiver = this.getCommentModel(
-                  matchedExistingResponse.giverComment,
-                  recipient.recipientIdentifier,
-                );
-              }
-              model.recipientSubmissionForms.push(submissionForm);
-            });
-          }
-
-          if (
-            this.getQuestionSubmissionFormModeInDefaultView(model) === QuestionSubmissionFormMode.FLEXIBLE_RECIPIENT
-          ) {
-            // need to generate limited number of submission forms
-            let numberOfRecipientSubmissionFormsNeeded: number =
-              model.customNumberOfEntitiesToGiveFeedbackTo - existingResponses.responses.length;
-
-            existingResponses.responses.forEach((response: FeedbackResponse) => {
-              const submissionForm: FeedbackResponseRecipientSubmissionFormModel = {
-                recipientIdentifier: response.recipientIdentifier,
-                responseDetails: response.responseDetails,
-                responseId: response.feedbackResponseId,
-                isValid: true,
-                isModified: false,
-              };
-              if (response.giverComment) {
-                submissionForm.commentByGiver = this.getCommentModel(
-                  response.giverComment,
-                  response.recipientIdentifier,
-                );
-              }
-              model.recipientSubmissionForms.push(submissionForm);
-            });
-
-            // generate empty submission forms
-            while (numberOfRecipientSubmissionFormsNeeded > 0) {
-              model.recipientSubmissionForms.push({
-                recipientIdentifier: '',
-                responseDetails: this.feedbackResponsesService.getDefaultFeedbackResponseDetails(model.questionType),
-                responseId: '',
-                isValid: true,
-                isModified: false,
-              });
-              numberOfRecipientSubmissionFormsNeeded -= 1;
-            }
-          }
-        },
-        error: (resp: ErrorMessageOutput) => this.statusMessageService.showErrorToast(resp.error.message),
+  private populateSubmissionForms(model: QuestionSubmissionFormModel, existingResponses: FeedbackResponse[]): void {
+    model.recipientSubmissionForms = [];
+    if (this.getQuestionSubmissionFormModeInDefaultView(model) === QuestionSubmissionFormMode.FIXED_RECIPIENT) {
+      // need to generate a full list of submission forms
+      model.recipientList.forEach((recipient: FeedbackResponseRecipient) => {
+        const matchedExistingResponse: FeedbackResponse | undefined = existingResponses.find(
+          (response: FeedbackResponse) => response.recipientIdentifier === recipient.recipientIdentifier,
+        );
+        const submissionForm: FeedbackResponseRecipientSubmissionFormModel = {
+          recipientIdentifier: recipient.recipientIdentifier,
+          responseDetails: matchedExistingResponse
+            ? matchedExistingResponse.responseDetails
+            : this.feedbackResponsesService.getDefaultFeedbackResponseDetails(model.questionType),
+          responseId: matchedExistingResponse ? matchedExistingResponse.feedbackResponseId : '',
+          status: matchedExistingResponse ? ResponseSubmissionStatus.SAVED : ResponseSubmissionStatus.NEW,
+          isValid: true,
+        };
+        if (matchedExistingResponse?.giverComment) {
+          submissionForm.commentByGiver = giverCommentToCommentRowModel(matchedExistingResponse.giverComment);
+        }
+        model.recipientSubmissionForms.push(submissionForm);
       });
-  }
+    }
 
-  /**
-   * Gets the comment model for a given comment.
-   */
-  getCommentModel(comment: FeedbackResponseComment, recipientIdentifier: string): CommentRowModel {
-    return {
-      originalComment: comment,
-      originalRecipientIdentifier: recipientIdentifier,
-      commentEditFormModel: {
-        commentText: comment.commentText,
-        // the participant comment shall not use custom visibilities
-        isUsingCustomVisibilities: false,
-        showCommentTo: [],
-        showGiverNameTo: [],
-      },
-      timezone: this.feedbackSessionTimezone,
-      isEditing: false,
-    };
+    if (this.getQuestionSubmissionFormModeInDefaultView(model) === QuestionSubmissionFormMode.FLEXIBLE_RECIPIENT) {
+      // need to generate limited number of submission forms
+      let numberOfRecipientSubmissionFormsNeeded: number =
+        model.customNumberOfEntitiesToGiveFeedbackTo - existingResponses.length;
+
+      existingResponses.forEach((response: FeedbackResponse) => {
+        const submissionForm: FeedbackResponseRecipientSubmissionFormModel = {
+          recipientIdentifier: response.recipientIdentifier,
+          responseDetails: response.responseDetails,
+          responseId: response.feedbackResponseId,
+          status: ResponseSubmissionStatus.SAVED,
+          isValid: true,
+        };
+        if (response.giverComment) {
+          submissionForm.commentByGiver = giverCommentToCommentRowModel(response.giverComment);
+        }
+        model.recipientSubmissionForms.push(submissionForm);
+      });
+
+      // generate empty submission forms
+      while (numberOfRecipientSubmissionFormsNeeded > 0) {
+        model.recipientSubmissionForms.push({
+          recipientIdentifier: '',
+          responseDetails: this.feedbackResponsesService.getDefaultFeedbackResponseDetails(model.questionType),
+          responseId: '',
+          status: ResponseSubmissionStatus.NEW,
+          isValid: true,
+        });
+        numberOfRecipientSubmissionFormsNeeded -= 1;
+      }
+    }
   }
 
   /**
@@ -815,112 +713,51 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
    * <p>All empty feedback response will be deleted; For non-empty responses, update/create them if necessary.
    *
    * @param questionSubmissionForms An array of question submission forms to be saved
-   * @param recipientId The recipient identifier of the selected recipient when saving responses for this recipient
-   * only. This parameter will be null when saving responses for all questions or saving responses for one question.
    */
-  saveFeedbackResponses(questionSubmissionForms: QuestionSubmissionFormModel[], recipientId: string | null): void {
+  saveFeedbackResponses(questionSubmissionForms: QuestionSubmissionFormModel[]): void {
     const notYetAnsweredQuestions: Set<number> = new Set();
-    const requestIds: Record<string, string> = {};
-    const answers: Record<string, FeedbackResponse[]> = {};
     const failToSaveQuestions: Record<number, string> = {}; // Map of question number to error message
-    const savingRequests: Observable<any>[] = [];
+    const questionResponses: Record<string, FeedbackResponseRequest[]> = {};
 
     questionSubmissionForms.forEach((questionSubmissionFormModel: QuestionSubmissionFormModel) => {
-      let isQuestionFullyAnswered = true;
-
       const responses: FeedbackResponseRequest[] = [];
+      let hasValidationErrorInQuestion = false;
 
       questionSubmissionFormModel.recipientSubmissionForms.forEach(
         (recipientSubmissionFormModel: FeedbackResponseRecipientSubmissionFormModel) => {
-          if (!recipientSubmissionFormModel.isValid) {
+          // Consider untouched questions to be valid
+          // Untouched questions are those that are not filled in and are not saved before
+          const isValid =
+            recipientSubmissionFormModel.status === ResponseSubmissionStatus.NEW ||
+            recipientSubmissionFormModel.isValid;
+
+          if (!isValid) {
             failToSaveQuestions[questionSubmissionFormModel.questionNumber] =
               'Invalid responses provided. Please check question constraints.';
+            hasValidationErrorInQuestion = true;
             return;
           }
-          const isFeedbackResponseDetailsEmpty: boolean = this.feedbackResponsesService.isFeedbackResponseDetailsEmpty(
-            questionSubmissionFormModel.questionType,
-            recipientSubmissionFormModel.responseDetails,
-          );
 
-          if (!isFeedbackResponseDetailsEmpty) {
+          if (
+            !this.feedbackResponsesService.isFeedbackResponseDetailsEmpty(
+              questionSubmissionFormModel.questionType,
+              recipientSubmissionFormModel.responseDetails,
+            )
+          ) {
+            // Only include non-empty responses in the request, empty responses will be deleted in the backend
             responses.push({
+              responseId: recipientSubmissionFormModel.responseId,
               recipient: recipientSubmissionFormModel.recipientIdentifier,
               responseDetails: recipientSubmissionFormModel.responseDetails,
+              giverComment: recipientSubmissionFormModel.commentByGiver?.commentEditFormModel.commentText ?? '',
             });
           }
         },
       );
 
-      isQuestionFullyAnswered = responses.length > 0;
-
-      if (!failToSaveQuestions[questionSubmissionFormModel.questionNumber]) {
-        savingRequests.push(
-          this.feedbackResponsesService
-            .submitFeedbackResponses(
-              questionSubmissionFormModel.feedbackQuestionId,
-              {
-                responses,
-              },
-              {
-                intent: this.intent,
-                key: this.regKey,
-                moderatedperson: this.moderatedPerson,
-                singlerecipientidforsubmission: recipientId?.toString() || '',
-              },
-            )
-            .pipe(
-              tap((resp: FeedbackResponses) => {
-                const responsesMap: Record<string, FeedbackResponse> = {};
-                resp.responses.forEach((response: FeedbackResponse) => {
-                  responsesMap[response.recipientIdentifier] = response;
-                  answers[questionSubmissionFormModel.feedbackQuestionId] =
-                    answers[questionSubmissionFormModel.feedbackQuestionId] || [];
-                  answers[questionSubmissionFormModel.feedbackQuestionId].push(response);
-                });
-                requestIds[questionSubmissionFormModel.feedbackQuestionId] = resp.requestId || '';
-
-                questionSubmissionFormModel.recipientSubmissionForms.forEach(
-                  (recipientSubmissionFormModel: FeedbackResponseRecipientSubmissionFormModel) => {
-                    if (responsesMap[recipientSubmissionFormModel.recipientIdentifier]) {
-                      const correspondingResp: FeedbackResponse =
-                        responsesMap[recipientSubmissionFormModel.recipientIdentifier];
-                      recipientSubmissionFormModel.responseId = correspondingResp.feedbackResponseId;
-                      recipientSubmissionFormModel.responseDetails = correspondingResp.responseDetails;
-                      recipientSubmissionFormModel.recipientIdentifier = correspondingResp.recipientIdentifier;
-                    } else {
-                      recipientSubmissionFormModel.responseId = '';
-                      recipientSubmissionFormModel.commentByGiver = undefined;
-                    }
-                  },
-                );
-              }),
-              switchMap(() =>
-                forkJoin(
-                  questionSubmissionFormModel.recipientSubmissionForms.map(
-                    (recipientSubmissionFormModel: FeedbackResponseRecipientSubmissionFormModel) =>
-                      this.createCommentRequest(recipientSubmissionFormModel),
-                  ),
-                ),
-              ),
-              tap(() => {
-                if (recipientId) {
-                  questionSubmissionFormModel.recipientSubmissionForms.forEach((form) => {
-                    if (form.recipientIdentifier === recipientId) {
-                      form.isModified = false;
-                    }
-                  });
-                } else {
-                  questionSubmissionFormModel.recipientSubmissionForms.forEach((form) => {
-                    form.isModified = false;
-                  });
-                }
-              }),
-              catchError((error: ErrorMessageOutput) => {
-                failToSaveQuestions[questionSubmissionFormModel.questionNumber] = error.error.message;
-                return of(error);
-              }),
-            ),
-        );
+      const isQuestionFullyAnswered = responses.length > 0;
+      if (!hasValidationErrorInQuestion) {
+        questionResponses[questionSubmissionFormModel.feedbackQuestionId] = responses;
       }
 
       if (!isQuestionFullyAnswered) {
@@ -928,126 +765,134 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
       }
     });
 
-    this.isSavingResponses = true;
-    forkJoin(savingRequests)
-      .pipe(
-        finalize(() => {
-          this.isSavingResponses = false;
+    if (Object.keys(questionResponses).length === 0) {
+      this.openSavingCompleteModal(questionSubmissionForms, notYetAnsweredQuestions, failToSaveQuestions);
+      return;
+    }
 
-          const modalRef: NgbModalRef = this.ngbModal.open(SavingCompleteModalComponent);
-          modalRef.componentInstance.requestIds = requestIds;
-          modalRef.componentInstance.courseId = this.courseId;
-          modalRef.componentInstance.feedbackSessionName = this.feedbackSessionName;
-          modalRef.componentInstance.feedbackSessionTimezone = this.feedbackSessionTimezone;
-          modalRef.componentInstance.personEmail = this.personEmail;
-          modalRef.componentInstance.personName = this.personName;
-          modalRef.componentInstance.questions = questionSubmissionForms;
-          modalRef.componentInstance.answers = answers;
-          modalRef.componentInstance.notYetAnsweredQuestions = Array.from(notYetAnsweredQuestions.values());
-          modalRef.componentInstance.failToSaveQuestions = failToSaveQuestions;
-        }),
-      )
-      .subscribe();
+    this.submitFeedbackResponses(
+      questionResponses,
+      questionSubmissionForms,
+      notYetAnsweredQuestions,
+      failToSaveQuestions,
+    );
   }
 
-  /**
-   * Creates comment request.
-   */
-  createCommentRequest(recipientSubmissionFormModel: FeedbackResponseRecipientSubmissionFormModel): Observable<any> {
-    if (!recipientSubmissionFormModel.responseId) {
-      // responseId not set, cannot set comment
-      return of({});
-    }
-    if (!recipientSubmissionFormModel.commentByGiver) {
-      // comment not given, do nothing
-      return of({});
-    }
-
-    const isSameRecipient =
-      recipientSubmissionFormModel.recipientIdentifier ===
-      recipientSubmissionFormModel.commentByGiver.originalRecipientIdentifier;
-
-    if (!recipientSubmissionFormModel.commentByGiver.originalComment || !isSameRecipient) {
-      // comment is new or original comment deleted because recipient has changed
-
-      if (recipientSubmissionFormModel.commentByGiver.commentEditFormModel.commentText === '') {
-        // new comment is empty
-        recipientSubmissionFormModel.commentByGiver = undefined;
-        return of({});
-      }
-
-      // create new comment
-      return this.commentService
-        .createComment(
-          {
-            commentText: recipientSubmissionFormModel.commentByGiver.commentEditFormModel.commentText,
-            // we ignore the fields in comment edit model as participant comment
-            // will follow visibilities from question by design
-            showCommentTo: [],
-            showGiverNameTo: [],
-          },
-          recipientSubmissionFormModel.responseId,
-          this.intent,
-          {
-            key: this.regKey,
-            moderatedperson: this.moderatedPerson,
-          },
-        )
-        .pipe(
-          tap((comment: FeedbackResponseComment) => {
-            recipientSubmissionFormModel.commentByGiver = this.getCommentModel(
-              comment,
-              recipientSubmissionFormModel.recipientIdentifier,
-            );
-          }),
-        );
-    }
-
-    // existing comment
-
-    if (recipientSubmissionFormModel.commentByGiver.commentEditFormModel.commentText === '') {
-      // comment is empty, create delete request
-      return this.commentService
-        .deleteComment(
-          recipientSubmissionFormModel.commentByGiver.originalComment.feedbackResponseCommentId,
-          this.intent,
-          {
-            key: this.regKey,
-            moderatedperson: this.moderatedPerson,
-          },
-        )
-        .pipe(
-          tap(() => {
-            recipientSubmissionFormModel.commentByGiver = undefined;
-          }),
-        );
-    }
-
-    // update comment
-    return this.commentService
-      .updateComment(
+  private submitFeedbackResponses(
+    questionResponses: Record<string, FeedbackResponseRequest[]>,
+    questionSubmissionForms: QuestionSubmissionFormModel[],
+    notYetAnsweredQuestions: Set<number>,
+    failToSaveQuestions: Record<number, string>,
+  ) {
+    this.isSavingResponses = true;
+    this.feedbackResponsesService
+      .submitFeedbackResponses(
+        this.feedbackSessionId,
+        { questionResponses },
         {
-          commentText: recipientSubmissionFormModel.commentByGiver.commentEditFormModel.commentText,
-          // we ignore the fields in comment edit model as participant comment
-          // will follow visibilities from question by design
-          showCommentTo: [],
-          showGiverNameTo: [],
-        },
-        recipientSubmissionFormModel.commentByGiver.originalComment.feedbackResponseCommentId,
-        this.intent,
-        {
+          intent: this.intent,
           key: this.regKey,
           moderatedperson: this.moderatedPerson,
         },
       )
       .pipe(
-        tap((comment: FeedbackResponseComment) => {
-          recipientSubmissionFormModel.commentByGiver = this.getCommentModel(
-            comment,
-            recipientSubmissionFormModel.recipientIdentifier,
-          );
+        finalize(() => {
+          this.isSavingResponses = false;
         }),
-      );
+      )
+      .subscribe({
+        next: (resp: FeedbackQuestionResponses) => {
+          questionSubmissionForms.forEach((questionSubmissionFormModel: QuestionSubmissionFormModel) => {
+            if (!(questionSubmissionFormModel.feedbackQuestionId in questionResponses)) {
+              return;
+            }
+
+            const submittedQuestionResponses: FeedbackResponse[] =
+              resp.questionResponses[questionSubmissionFormModel.feedbackQuestionId] ?? [];
+            const responsesMap: Record<string, FeedbackResponse> = {};
+            submittedQuestionResponses.forEach((response: FeedbackResponse) => {
+              responsesMap[response.recipientIdentifier] = response;
+            });
+
+            questionSubmissionFormModel.recipientSubmissionForms.forEach(
+              (recipientSubmissionFormModel: FeedbackResponseRecipientSubmissionFormModel) => {
+                if (responsesMap[recipientSubmissionFormModel.recipientIdentifier]) {
+                  const correspondingResp: FeedbackResponse =
+                    responsesMap[recipientSubmissionFormModel.recipientIdentifier];
+                  recipientSubmissionFormModel.responseId = correspondingResp.feedbackResponseId;
+                  recipientSubmissionFormModel.status = ResponseSubmissionStatus.SAVED;
+                  recipientSubmissionFormModel.responseDetails = correspondingResp.responseDetails;
+                  recipientSubmissionFormModel.recipientIdentifier = correspondingResp.recipientIdentifier;
+                  recipientSubmissionFormModel.commentByGiver = correspondingResp.giverComment
+                    ? giverCommentToCommentRowModel(correspondingResp.giverComment)
+                    : undefined;
+                } else {
+                  // empty response is deleted in the backend, reset the form model to default state
+                  recipientSubmissionFormModel.responseId = '';
+                  recipientSubmissionFormModel.status = ResponseSubmissionStatus.NEW;
+                  recipientSubmissionFormModel.commentByGiver = undefined;
+                }
+              },
+            );
+          });
+
+          this.openSavingCompleteModal(questionSubmissionForms, notYetAnsweredQuestions, failToSaveQuestions);
+          this.logStudentSubmission();
+        },
+        error: (resp: ErrorMessageOutput) => {
+          const contextMessage = resp.error?.message ?? 'An unknown error occurred.';
+          this.simpleModalService.openInformationModal(
+            'Saving Failed',
+            SimpleModalType.DANGER,
+            `An error occurred and your responses could not be saved. Error details: ${contextMessage}`,
+          );
+        },
+      });
+  }
+
+  private openSavingCompleteModal(
+    questionSubmissionForms: QuestionSubmissionFormModel[],
+    notYetAnsweredQuestions: Set<number>,
+    failToSaveQuestions: Record<number, string>,
+  ): void {
+    const modalRef: NgbModalRef = this.ngbModal.open(SavingCompleteModalComponent);
+    modalRef.componentInstance.questions = questionSubmissionForms;
+    modalRef.componentInstance.notYetAnsweredQuestions = Array.from(notYetAnsweredQuestions.values());
+    modalRef.componentInstance.failToSaveQuestions = failToSaveQuestions;
+  }
+
+  downloadSubmissionReceipt(): void {
+    this.isDownloadingSubmissionReceipt = true;
+    this.submissionReceiptService
+      .downloadSubmissionReceipt({
+        questionSubmissionForms: this.questionSubmissionForms,
+        intent: this.intent,
+        key: this.regKey,
+        moderatedPerson: this.moderatedPerson,
+        feedbackSessionTimezone: this.feedbackSessionTimezone,
+        personName: this.personName,
+        personEmail: this.personEmail,
+        courseName: this.courseName,
+        courseId: this.courseId,
+        feedbackSessionName: this.feedbackSessionName,
+      })
+      .pipe(
+        finalize(() => {
+          this.isDownloadingSubmissionReceipt = false;
+        }),
+      )
+      .subscribe({
+        next: (hasResponses: boolean) => {
+          if (!hasResponses) {
+            this.statusMessageService.showWarningToast(
+              'No submitted responses found to include in submission receipt.',
+            );
+          }
+        },
+        error: () => {
+          this.statusMessageService.showErrorToast('An error occurred while generating the submission receipt.');
+        },
+      });
   }
 
   /**
@@ -1057,19 +902,18 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
     const recipientSubmissionFormModel: FeedbackResponseRecipientSubmissionFormModel =
       this.questionSubmissionForms[questionIndex].recipientSubmissionForms[responseIdx];
 
-    if (!recipientSubmissionFormModel.commentByGiver?.originalComment) {
+    if (!recipientSubmissionFormModel.responseId) {
+      recipientSubmissionFormModel.commentByGiver = undefined;
       return;
     }
 
-    this.commentService
-      .deleteComment(
-        recipientSubmissionFormModel.commentByGiver.originalComment.feedbackResponseCommentId,
-        this.intent,
-        {
-          key: this.regKey,
-          moderatedperson: this.moderatedPerson,
-        },
-      )
+    this.feedbackResponsesService
+      .deleteGiverComment({
+        responseId: recipientSubmissionFormModel.responseId,
+        intent: this.intent,
+        key: this.regKey,
+        moderatedPerson: this.moderatedPerson,
+      })
       .subscribe({
         next: () => {
           recipientSubmissionFormModel.commentByGiver = undefined;
@@ -1093,17 +937,10 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
     this.hasFeedbackSessionQuestionsLoadingFailed = true;
     if (this.retryAttempts < 0) {
       const report: NgbModalRef = this.ngbModal.open(ErrorReportComponent);
-      report.componentInstance.requestId = resp.error.requestId;
+      report.componentInstance.requestId = resp.headers?.get('X-Request-Id');
       report.componentInstance.errorMessage = resp.error.message;
     } else {
       this.statusMessageService.showErrorToast(resp.error.message);
-    }
-  }
-
-  loadRecipientsAndResponses(event: any, questionSubmissionForm: QuestionSubmissionFormModel): void {
-    if (event?.visible && !questionSubmissionForm.isLoaded && !questionSubmissionForm.isLoading) {
-      questionSubmissionForm.isLoading = true;
-      this.loadFeedbackQuestionRecipientsForQuestion(questionSubmissionForm);
     }
   }
 
@@ -1143,7 +980,7 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
         questionsToRecipient.has(questionSubmissionFormModel.questionNumber),
     );
 
-    this.saveFeedbackResponses(recipientQSForms, recipientId);
+    this.saveFeedbackResponses(recipientQSForms);
   }
 
   private addQuestionForRecipient(recipientId: string, questionId: any): void {
@@ -1165,72 +1002,7 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
       this.currentSelectedSessionView = SessionView.DEFAULT;
     } else if (selectedView === SessionView.GROUP_RECIPIENTS) {
       this.currentSelectedSessionView = SessionView.GROUP_RECIPIENTS;
-      this.groupQuestionsByRecipient();
     }
-  }
-
-  /**
-   * Group questions by recipients in {@code GROUP_RECIPIENTS} view.
-   */
-  groupQuestionsByRecipient(): void {
-    if (this.hasLoadedAllRecipients) {
-      return;
-    }
-    // We first need to load the recipient for all the questions. This is because questions with
-    // FIXED_RECIPIENT question submission mode are ungroupable and to know whether the question
-    // submission mode of a question, we need to load the recipient list first.
-    const recipientsObservables: Observable<FeedbackQuestionRecipients>[] = [];
-    const questionsToBeLoaded: QuestionSubmissionFormModel[] = [];
-
-    this.questionSubmissionForms.forEach((model: QuestionSubmissionFormModel) => {
-      if (!model.isLoading && !model.isLoaded) {
-        questionsToBeLoaded.push(model);
-        recipientsObservables.push(
-          this.feedbackQuestionsService.loadFeedbackQuestionRecipients({
-            questionId: model.feedbackQuestionId,
-            intent: this.intent,
-            key: this.regKey,
-            moderatedPerson: this.moderatedPerson,
-            previewAs: this.previewAsPerson,
-          }),
-        );
-      }
-    });
-
-    // Find the groupable and ungroupable questions and construct the recipient to question mapping.
-    forkJoin(recipientsObservables)
-      .pipe(
-        finalize(() => {
-          this.ungroupableQuestionsSorted = Array.from(this.ungroupableQuestions).sort();
-          this.hasLoadedAllRecipients = true;
-        }),
-      )
-      .subscribe({
-        next: (feedbackQuestionRecipients: FeedbackQuestionRecipients[]) => {
-          for (let i = 0; i < feedbackQuestionRecipients.length; i += 1) {
-            const question: QuestionSubmissionFormModel = questionsToBeLoaded[i];
-            // Only questions with question submission form mode being FIXED_RECIPIENT and with question type
-            // not being CONSTSUM_RECIPIENTS, RANK_RECIPIENTS, and CONTRIB, are the groupable questions.
-            if (
-              this.getQuestionSubmissionFormMode(question, feedbackQuestionRecipients[i].recipients.length) ===
-                QuestionSubmissionFormMode.FIXED_RECIPIENT &&
-              question.questionType !== FeedbackQuestionType.CONSTSUM_RECIPIENTS &&
-              question.questionType !== FeedbackQuestionType.RANK_RECIPIENTS &&
-              question.questionType !== FeedbackQuestionType.CONTRIB
-            ) {
-              for (let j = 0; j < feedbackQuestionRecipients[i].recipients.length; j += 1) {
-                const recipient: FeedbackQuestionRecipient = feedbackQuestionRecipients[i].recipients[j];
-                this.addQuestionForRecipient(recipient.identifier, question.questionNumber);
-              }
-            } else {
-              this.ungroupableQuestions.add(question.questionNumber);
-            }
-          }
-        },
-        error: () => {
-          this.statusMessageService.showWarningToast('Failed to build groupable questions');
-        },
-      });
   }
 
   /**
@@ -1262,14 +1034,34 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // dummy vars to check that both student and session has been loaded
-    if (!this.personEmail || !this.feedbackSessionTimezone) {
+    if (!this.feedbackSessionId) {
       return;
     }
 
     this.logService
       .createFeedbackSessionLog({
         logType: FeedbackSessionLogType.ACCESS,
+        key: this.regKey,
+        feedbackSessionId: this.feedbackSessionId,
+      })
+      .subscribe();
+  }
+
+  /**
+   * Logs student submission after successful response submission.
+   */
+  logStudentSubmission(): void {
+    if (this.intent !== Intent.STUDENT_SUBMISSION) {
+      return;
+    }
+
+    if (!this.feedbackSessionId) {
+      return;
+    }
+
+    this.logService
+      .createFeedbackSessionLog({
+        logType: FeedbackSessionLogType.SUBMISSION,
         key: this.regKey,
         feedbackSessionId: this.feedbackSessionId,
       })

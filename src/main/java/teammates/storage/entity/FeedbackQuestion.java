@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
+import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -21,13 +21,18 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
+import teammates.common.datatransfer.participanttypes.ViewerType;
 import teammates.common.datatransfer.questions.FeedbackQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackQuestionType;
 import teammates.common.util.FieldValidator;
-import teammates.storage.entity.questions.FeedbackConstantSumQuestion;
+import teammates.storage.entity.questions.FeedbackConstantSumOptionsQuestion;
+import teammates.storage.entity.questions.FeedbackConstantSumRecipientsQuestion;
 import teammates.storage.entity.questions.FeedbackContributionQuestion;
 import teammates.storage.entity.questions.FeedbackMcqQuestion;
 import teammates.storage.entity.questions.FeedbackMsqQuestion;
@@ -43,18 +48,20 @@ import teammates.storage.entity.questions.FeedbackTextQuestion;
 @Entity
 @Table(name = "FeedbackQuestions")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(length = 63)
 public abstract class FeedbackQuestion extends BaseEntity implements Comparable<FeedbackQuestion> {
     @Id
     private UUID id;
 
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "sessionId")
     private FeedbackSession feedbackSession;
 
     @Column(insertable = false, updatable = false)
     private UUID sessionId;
 
-    @OneToMany(mappedBy = "feedbackQuestion", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "feedbackQuestion")
     private Set<FeedbackResponse> feedbackResponses = new HashSet<>();
 
     @Column(nullable = false)
@@ -65,26 +72,26 @@ public abstract class FeedbackQuestion extends BaseEntity implements Comparable<
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private FeedbackParticipantType giverType;
+    private QuestionGiverType giverType;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private FeedbackParticipantType recipientType;
+    private QuestionRecipientType recipientType;
 
     @Column(nullable = false)
     private Integer numOfEntitiesToGiveFeedbackTo;
 
     @Column(nullable = false)
-    @Convert(converter = FeedbackParticipantTypeListConverter.class)
-    private List<FeedbackParticipantType> showResponsesTo;
+    @Convert(converter = ViewerTypeListConverter.class)
+    private List<ViewerType> showResponsesTo;
 
     @Column(nullable = false)
-    @Convert(converter = FeedbackParticipantTypeListConverter.class)
-    private List<FeedbackParticipantType> showGiverNameTo;
+    @Convert(converter = ViewerTypeListConverter.class)
+    private List<ViewerType> showGiverNameTo;
 
     @Column(nullable = false)
-    @Convert(converter = FeedbackParticipantTypeListConverter.class)
-    private List<FeedbackParticipantType> showRecipientNameTo;
+    @Convert(converter = ViewerTypeListConverter.class)
+    private List<ViewerType> showRecipientNameTo;
 
     @UpdateTimestamp
     @Column
@@ -96,9 +103,9 @@ public abstract class FeedbackQuestion extends BaseEntity implements Comparable<
 
     protected FeedbackQuestion(
             Integer questionNumber,
-            String description, FeedbackParticipantType giverType, FeedbackParticipantType recipientType,
-            Integer numOfEntitiesToGiveFeedbackTo, List<FeedbackParticipantType> showResponsesTo,
-            List<FeedbackParticipantType> showGiverNameTo, List<FeedbackParticipantType> showRecipientNameTo
+            String description, QuestionGiverType giverType, QuestionRecipientType recipientType,
+            Integer numOfEntitiesToGiveFeedbackTo, List<ViewerType> showResponsesTo,
+            List<ViewerType> showGiverNameTo, List<ViewerType> showRecipientNameTo
     ) {
         this.setId(UUID.randomUUID());
         this.setFeedbackSession(feedbackSession);
@@ -132,9 +139,9 @@ public abstract class FeedbackQuestion extends BaseEntity implements Comparable<
      */
     public static FeedbackQuestion makeQuestion(
             Integer questionNumber,
-            String description, FeedbackParticipantType giverType, FeedbackParticipantType recipientType,
-            Integer numOfEntitiesToGiveFeedbackTo, List<FeedbackParticipantType> showResponsesTo,
-            List<FeedbackParticipantType> showGiverNameTo, List<FeedbackParticipantType> showRecipientNameTo,
+            String description, QuestionGiverType giverType, QuestionRecipientType recipientType,
+            Integer numOfEntitiesToGiveFeedbackTo, List<ViewerType> showResponsesTo,
+            List<ViewerType> showGiverNameTo, List<ViewerType> showRecipientNameTo,
             FeedbackQuestionDetails feedbackQuestionDetails
     ) {
         FeedbackQuestion feedbackQuestion = null;
@@ -167,8 +174,15 @@ public abstract class FeedbackQuestion extends BaseEntity implements Comparable<
                     feedbackQuestionDetails
             );
             break;
-        case CONSTSUM, CONSTSUM_OPTIONS, CONSTSUM_RECIPIENTS:
-            feedbackQuestion = new FeedbackConstantSumQuestion(
+        case CONSTSUM_OPTIONS:
+            feedbackQuestion = new FeedbackConstantSumOptionsQuestion(
+                    questionNumber, description, giverType, recipientType,
+                    numOfEntitiesToGiveFeedbackTo, showResponsesTo, showGiverNameTo, showRecipientNameTo,
+                    feedbackQuestionDetails
+            );
+            break;
+        case CONSTSUM_RECIPIENTS:
+            feedbackQuestion = new FeedbackConstantSumRecipientsQuestion(
                     questionNumber, description, giverType, recipientType,
                     numOfEntitiesToGiveFeedbackTo, showResponsesTo, showGiverNameTo, showRecipientNameTo,
                     feedbackQuestionDetails
@@ -224,8 +238,8 @@ public abstract class FeedbackQuestion extends BaseEntity implements Comparable<
      * require the responses to be deleted for consistency.
      * Does not check if any responses exist.
      */
-    public boolean areResponseDeletionsRequiredForChanges(FeedbackParticipantType giverType,
-                                                          FeedbackParticipantType recipientType,
+    public boolean areResponseDeletionsRequiredForChanges(QuestionGiverType giverType,
+                                                          QuestionRecipientType recipientType,
                                                           FeedbackQuestionDetails questionDetails) {
         if (giverType != this.giverType
                 || recipientType != this.recipientType) {
@@ -300,19 +314,19 @@ public abstract class FeedbackQuestion extends BaseEntity implements Comparable<
      */
     public abstract void setQuestionDetails(FeedbackQuestionDetails questionDetails);
 
-    public FeedbackParticipantType getGiverType() {
+    public QuestionGiverType getGiverType() {
         return giverType;
     }
 
-    public void setGiverType(FeedbackParticipantType giverType) {
+    public void setGiverType(QuestionGiverType giverType) {
         this.giverType = giverType;
     }
 
-    public FeedbackParticipantType getRecipientType() {
+    public QuestionRecipientType getRecipientType() {
         return recipientType;
     }
 
-    public void setRecipientType(FeedbackParticipantType recipientType) {
+    public void setRecipientType(QuestionRecipientType recipientType) {
         this.recipientType = recipientType;
     }
 
@@ -324,27 +338,27 @@ public abstract class FeedbackQuestion extends BaseEntity implements Comparable<
         this.numOfEntitiesToGiveFeedbackTo = numOfEntitiesToGiveFeedbackTo;
     }
 
-    public List<FeedbackParticipantType> getShowResponsesTo() {
+    public List<ViewerType> getShowResponsesTo() {
         return showResponsesTo;
     }
 
-    public void setShowResponsesTo(List<FeedbackParticipantType> showResponsesTo) {
+    public void setShowResponsesTo(List<ViewerType> showResponsesTo) {
         this.showResponsesTo = showResponsesTo;
     }
 
-    public List<FeedbackParticipantType> getShowGiverNameTo() {
+    public List<ViewerType> getShowGiverNameTo() {
         return showGiverNameTo;
     }
 
-    public void setShowGiverNameTo(List<FeedbackParticipantType> showGiverNameTo) {
+    public void setShowGiverNameTo(List<ViewerType> showGiverNameTo) {
         this.showGiverNameTo = showGiverNameTo;
     }
 
-    public List<FeedbackParticipantType> getShowRecipientNameTo() {
+    public List<ViewerType> getShowRecipientNameTo() {
         return showRecipientNameTo;
     }
 
-    public void setShowRecipientNameTo(List<FeedbackParticipantType> showRecipientNameTo) {
+    public void setShowRecipientNameTo(List<ViewerType> showRecipientNameTo) {
         this.showRecipientNameTo = showRecipientNameTo;
     }
 
@@ -409,8 +423,7 @@ public abstract class FeedbackQuestion extends BaseEntity implements Comparable<
     /**
      * Returns true if the response is visible to the given participant type.
      */
-    public boolean isResponseVisibleTo(FeedbackParticipantType userType) {
+    public boolean isResponseVisibleTo(ViewerType userType) {
         return showResponsesTo.contains(userType);
     }
 }
-

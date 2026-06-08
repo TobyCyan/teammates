@@ -1,10 +1,9 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap/modal';
 import { RejectWithReasonModalComponentResult } from './admin-reject-with-reason-modal-model';
 import { environment } from '../../../../environments/environment';
 import { AdminSearchResult, InstructorAccountSearchResult, SearchService } from '../../../../services/search.service';
 import { StatusMessageService } from '../../../../services/status-message.service';
-import { castAsInputElement } from '../../../../types/event-target-caster';
 import { ErrorMessageOutput } from '../../../error-message-output';
 import { RichTextEditorComponent } from '../../rich-text-editor/rich-text-editor.component';
 
@@ -20,8 +19,6 @@ export class RejectWithReasonModalComponent implements OnInit {
   activeModal = inject(NgbActiveModal);
   statusMessageService = inject(StatusMessageService);
   private searchService = inject(SearchService);
-
-  readonly castAsInputElement = castAsInputElement;
 
   @Input()
   accountRequestName = '';

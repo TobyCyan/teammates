@@ -12,6 +12,7 @@ import jakarta.persistence.criteria.Root;
 
 import teammates.common.util.HibernateUtil;
 import teammates.common.util.TimeHelper;
+import teammates.storage.entity.Course;
 import teammates.storage.entity.DeadlineExtension;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.User;
@@ -34,11 +35,9 @@ public final class DeadlineExtensionsDb {
     }
 
     /**
-     * Creates a deadline extension.
+     * Persists a deadline extension.
      */
-    public DeadlineExtension createDeadlineExtension(DeadlineExtension de) {
-        assert de != null;
-
+    public DeadlineExtension persistDeadlineExtension(DeadlineExtension de) {
         HibernateUtil.persist(de);
         return de;
     }
@@ -47,8 +46,6 @@ public final class DeadlineExtensionsDb {
      * Gets a deadline extension by {@code id}.
      */
     public DeadlineExtension getDeadlineExtension(UUID id) {
-        assert id != null;
-
         return HibernateUtil.get(DeadlineExtension.class, id);
     }
 
@@ -56,9 +53,6 @@ public final class DeadlineExtensionsDb {
      * Get DeadlineExtension by {@code userId} and {@code feedbackSessionId}.
      */
     public DeadlineExtension getDeadlineExtension(UUID userId, UUID feedbackSessionId) {
-        assert userId != null;
-        assert feedbackSessionId != null;
-
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<DeadlineExtension> cr = cb.createQuery(DeadlineExtension.class);
         Root<DeadlineExtension> root = cr.from(DeadlineExtension.class);
@@ -74,9 +68,9 @@ public final class DeadlineExtensionsDb {
     }
 
     /**
-     * Deletes a deadline extension.
+     * Removes a deadline extension.
      */
-    public void deleteDeadlineExtension(DeadlineExtension de) {
+    public void removeDeadlineExtension(DeadlineExtension de) {
         HibernateUtil.remove(de);
     }
 
@@ -88,34 +82,18 @@ public final class DeadlineExtensionsDb {
         CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
         CriteriaQuery<DeadlineExtension> cr = cb.createQuery(DeadlineExtension.class);
         Root<DeadlineExtension> root = cr.from(DeadlineExtension.class);
+        Join<DeadlineExtension, FeedbackSession> feedbackSessionJoin = root.join("feedbackSession");
+        Join<FeedbackSession, Course> courseJoin = feedbackSessionJoin.join("course");
 
         cr.select(root).where(cb.and(
                 cb.greaterThanOrEqualTo(root.get("endTime"), Instant.now()),
                 cb.lessThanOrEqualTo(root.get("endTime"), TimeHelper.getInstantDaysOffsetFromNow(1)),
-                cb.equal(root.get("isClosingSoonEmailSent"), false)
+                cb.isFalse(root.get("isClosingSoonEmailSent")),
+                cb.isTrue(feedbackSessionJoin.get("isClosingSoonEmailEnabled")),
+                cb.isNull(feedbackSessionJoin.get("deletedAt")),
+                cb.isNull(courseJoin.get("deletedAt"))
                 ));
 
         return HibernateUtil.createQuery(cr).getResultList();
-    }
-
-    /**
-     * Gets the DeadlineExtension with the specified {@code feedbackSessionId} and {@code userId} if it exists.
-     * Otherwise, return null.
-     */
-    public DeadlineExtension getDeadlineExtensionForUser(UUID feedbackSessionId, UUID userId) {
-        assert feedbackSessionId != null;
-        assert userId != null;
-
-        CriteriaBuilder cb = HibernateUtil.getCriteriaBuilder();
-        CriteriaQuery<DeadlineExtension> cr = cb.createQuery(DeadlineExtension.class);
-        Root<DeadlineExtension> deadlineExtensionRoot = cr.from(DeadlineExtension.class);
-        Join<DeadlineExtension, User> userJoin = deadlineExtensionRoot.join("user");
-        Join<DeadlineExtension, FeedbackSession> sessionJoin = deadlineExtensionRoot.join("feedbackSession");
-
-        cr.select(deadlineExtensionRoot).where(cb.and(
-                cb.equal(sessionJoin.get("id"), feedbackSessionId),
-                cb.equal(userJoin.get("id"), userId)));
-
-        return HibernateUtil.createQuery(cr).getResultStream().findFirst().orElse(null);
     }
 }

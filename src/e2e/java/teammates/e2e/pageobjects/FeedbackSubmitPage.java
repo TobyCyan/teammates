@@ -11,11 +11,16 @@ import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
-import teammates.common.datatransfer.questions.FeedbackConstantSumQuestionDetails;
-import teammates.common.datatransfer.questions.FeedbackConstantSumResponseDetails;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
+import teammates.common.datatransfer.participanttypes.ViewerType;
+import teammates.common.datatransfer.questions.FeedbackConstantSumOptionsQuestionDetails;
+import teammates.common.datatransfer.questions.FeedbackConstantSumOptionsResponseDetails;
+import teammates.common.datatransfer.questions.FeedbackConstantSumRecipientsQuestionDetails;
+import teammates.common.datatransfer.questions.FeedbackConstantSumRecipientsResponseDetails;
 import teammates.common.datatransfer.questions.FeedbackContributionQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackContributionResponseDetails;
 import teammates.common.datatransfer.questions.FeedbackMcqQuestionDetails;
@@ -24,6 +29,7 @@ import teammates.common.datatransfer.questions.FeedbackMsqQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackMsqResponseDetails;
 import teammates.common.datatransfer.questions.FeedbackNumericalScaleQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackNumericalScaleResponseDetails;
+import teammates.common.datatransfer.questions.FeedbackQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackRankOptionsQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackRankOptionsResponseDetails;
 import teammates.common.datatransfer.questions.FeedbackRankQuestionDetails;
@@ -90,16 +96,25 @@ public class FeedbackSubmitPage extends AppPage {
     }
 
     public void verifyRecipients(int qnNumber, List<String> recipientNames, String role) {
-        WebElement questionForm = getQuestionForm(qnNumber);
         Collections.sort(recipientNames);
         for (int i = 0; i < recipientNames.size(); i++) {
-            assertEquals(recipientNames.get(i) + " (" + role + ")",
-                    questionForm.findElement(By.id("recipient-name-qn-" + qnNumber + "-idx-" + i)).getText());
+            String expectedRecipient = recipientNames.get(i) + " (" + role + ")";
+            String recipientId = "recipient-name-qn-" + qnNumber + "-idx-" + i;
+            String actualRecipient = waitFor(driver -> {
+                try {
+                    WebElement questionForm = getQuestionForm(qnNumber);
+                    return questionForm.findElement(By.id(recipientId)).getText();
+                } catch (NoSuchElementException | StaleElementReferenceException e) {
+                    return null;
+                }
+            });
+            assertEquals(expectedRecipient, actualRecipient);
         }
     }
 
     public void verifyWarningMessageForPartialResponse(int[] unansweredQuestions) {
         click(getSubmitAllQuestionsButton());
+        waitForPageToLoad();
         StringBuilder expectedSb = new StringBuilder();
         for (int unansweredQuestion : unansweredQuestions) {
             expectedSb.append(unansweredQuestion).append(", ");
@@ -325,25 +340,30 @@ public class FeedbackSubmitPage extends AppPage {
     }
 
     public void verifyConstSumQuestion(int qnNumber, String recipient,
-                                       FeedbackConstantSumQuestionDetails questionDetails) {
-        if (!questionDetails.isDistributeToRecipients()) {
-            List<String> constSumOptions = questionDetails.getConstSumOptions();
+                                       FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            List<String> constSumOptions = optionsQuestionDetails.getConstSumOptions();
             List<WebElement> optionTexts = getConstSumOptions(qnNumber, recipient);
             for (int i = 0; i < constSumOptions.size(); i++) {
                 assertEquals(constSumOptions.get(i), optionTexts.get(i).getText());
             }
         }
 
-        int totalPoints = questionDetails.getPoints();
-        if (questionDetails.isPointsPerOption()) {
-            totalPoints *= questionDetails.getNumOfConstSumOptions();
+        int totalPoints = getConstSumPoints(questionDetails);
+        if (isConstSumPointsPerOption(questionDetails)) {
+            if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+                totalPoints *= optionsQuestionDetails.getNumOfConstSumOptions();
+            } else {
+                totalPoints *= getConstSumRecipientInputs(qnNumber).size();
+            }
         }
         assertEquals(getQuestionForm(qnNumber).findElement(By.id("total-points-message")).getText(),
                 "Total points distributed should add up to " + totalPoints + ".");
 
-        if (questionDetails.isForceUnevenDistribution()) {
-            String entityType = questionDetails.isDistributeToRecipients() ? "recipient" : "option";
-            if ("All options".equals(questionDetails.getDistributePointsFor())) {
+        if (isConstSumForceUnevenDistribution(questionDetails)) {
+            String entityType = questionDetails instanceof FeedbackConstantSumRecipientsQuestionDetails
+                    ? "recipient" : "option";
+            if ("All options".equals(getConstSumDistributePointsFor(questionDetails))) {
                 assertEquals(getQuestionForm(qnNumber).findElement(By.id("all-uneven-message")).getText(),
                         "Every " + entityType + " should be allocated different number of points.");
             } else {
@@ -354,8 +374,8 @@ public class FeedbackSubmitPage extends AppPage {
     }
 
     public void fillConstSumOptionResponse(int qnNumber, String recipient, FeedbackResponse response) {
-        FeedbackConstantSumResponseDetails responseDetails =
-                (FeedbackConstantSumResponseDetails) response.getFeedbackResponseDetailsCopy();
+        FeedbackConstantSumOptionsResponseDetails responseDetails =
+                (FeedbackConstantSumOptionsResponseDetails) response.getFeedbackResponseDetailsCopy();
         List<Integer> answers = responseDetails.getAnswers();
         List<WebElement> constSumInputs = getConstSumInputs(qnNumber, recipient);
         for (int i = 0; i < answers.size(); i++) {
@@ -364,8 +384,8 @@ public class FeedbackSubmitPage extends AppPage {
     }
 
     public void verifyConstSumOptionResponse(int qnNumber, String recipient, FeedbackResponse response) {
-        FeedbackConstantSumResponseDetails responseDetails =
-                (FeedbackConstantSumResponseDetails) response.getFeedbackResponseDetailsCopy();
+        FeedbackConstantSumOptionsResponseDetails responseDetails =
+                (FeedbackConstantSumOptionsResponseDetails) response.getFeedbackResponseDetailsCopy();
         List<Integer> answers = responseDetails.getAnswers();
         List<WebElement> constSumInputs = getConstSumInputs(qnNumber, recipient);
         for (int i = 0; i < answers.size(); i++) {
@@ -376,8 +396,8 @@ public class FeedbackSubmitPage extends AppPage {
     public void fillConstSumRecipientResponse(int qnNumber, List<FeedbackResponse> responses) {
         List<WebElement> recipientInputs = getConstSumRecipientInputs(qnNumber);
         for (int i = 0; i < responses.size(); i++) {
-            FeedbackConstantSumResponseDetails response =
-                    (FeedbackConstantSumResponseDetails) responses.get(i).getFeedbackResponseDetailsCopy();
+            FeedbackConstantSumRecipientsResponseDetails response =
+                    (FeedbackConstantSumRecipientsResponseDetails) responses.get(i).getFeedbackResponseDetailsCopy();
             fillTextBox(recipientInputs.get(i), Integer.toString(response.getAnswers().get(0)));
         }
     }
@@ -385,11 +405,39 @@ public class FeedbackSubmitPage extends AppPage {
     public void verifyConstSumRecipientResponse(int qnNumber, List<FeedbackResponse> responses) {
         List<WebElement> recipientInputs = getConstSumRecipientInputs(qnNumber);
         for (int i = 0; i < responses.size(); i++) {
-            FeedbackConstantSumResponseDetails response =
-                    (FeedbackConstantSumResponseDetails) responses.get(i).getFeedbackResponseDetailsCopy();
+            FeedbackConstantSumRecipientsResponseDetails response =
+                    (FeedbackConstantSumRecipientsResponseDetails) responses.get(i).getFeedbackResponseDetailsCopy();
             assertEquals(recipientInputs.get(i).getAttribute("value"),
                     Integer.toString(response.getAnswers().get(0)));
         }
+    }
+
+    private boolean isConstSumPointsPerOption(FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            return optionsQuestionDetails.isPointsPerOption();
+        }
+        return ((FeedbackConstantSumRecipientsQuestionDetails) questionDetails).isPointsPerOption();
+    }
+
+    private boolean isConstSumForceUnevenDistribution(FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            return optionsQuestionDetails.isForceUnevenDistribution();
+        }
+        return ((FeedbackConstantSumRecipientsQuestionDetails) questionDetails).isForceUnevenDistribution();
+    }
+
+    private int getConstSumPoints(FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            return optionsQuestionDetails.getPoints();
+        }
+        return ((FeedbackConstantSumRecipientsQuestionDetails) questionDetails).getPoints();
+    }
+
+    private String getConstSumDistributePointsFor(FeedbackQuestionDetails questionDetails) {
+        if (questionDetails instanceof FeedbackConstantSumOptionsQuestionDetails optionsQuestionDetails) {
+            return optionsQuestionDetails.getDistributePointsFor();
+        }
+        return ((FeedbackConstantSumRecipientsQuestionDetails) questionDetails).getDistributePointsFor();
     }
 
     public void verifyContributionQuestion(int qnNumber, FeedbackContributionQuestionDetails questionDetails) {
@@ -585,10 +633,15 @@ public class FeedbackSubmitPage extends AppPage {
 
     private WebElement getQuestionForm(int qnNumber) {
         By questionFormId = By.id("question-submission-form-qn-" + qnNumber);
-        waitForElementPresence(questionFormId);
-        WebElement questionForm = browser.driver.findElement(questionFormId);
-        // Scroll to the question to ensure that the details are fully loaded
-        scrollElementToCenter(questionForm);
+        WebElement questionForm = waitFor(driver -> {
+            try {
+                WebElement element = driver.findElement(questionFormId);
+                return element.isDisplayed() ? element : null;
+            } catch (NoSuchElementException | StaleElementReferenceException e) {
+                return null;
+            }
+        });
+
         waitForPageToLoad();
         return questionForm;
     }
@@ -602,27 +655,38 @@ public class FeedbackSubmitPage extends AppPage {
         if (feedbackQuestion.getShowResponsesTo().isEmpty()) {
             verifyVisibilityStringPresent(qnNumber, "No-one can see your responses");
         }
-        if (feedbackQuestion.getRecipientType() == FeedbackParticipantType.SELF) {
+        if (feedbackQuestion.getRecipientType() == QuestionRecipientType.SELF) {
             verifyVisibilityStringPresent(qnNumber, "You can see your own feedback in the results page later on.");
         }
-        for (FeedbackParticipantType viewerType : feedbackQuestion.getShowResponsesTo()) {
+        for (ViewerType viewerType : feedbackQuestion.getShowResponsesTo()) {
             verifyVisibilityStringPresent(qnNumber, getVisibilityString(feedbackQuestion, viewerType));
         }
     }
 
     private void verifyVisibilityStringPresent(int qnNumber, String expectedString) {
-        List<WebElement> visibilityStrings = getQuestionForm(qnNumber).findElement(By.className("visibility-list"))
-                .findElements(By.tagName("li"));
-        for (WebElement visibilityString : visibilityStrings) {
-            if (visibilityString.getText().equals(expectedString)) {
-                return;
-            }
+        try {
+            waitFor(driver -> {
+                try {
+                    List<WebElement> visibilityStrings = getQuestionForm(qnNumber)
+                            .findElement(By.className("visibility-list"))
+                            .findElements(By.tagName("li"));
+                    for (WebElement visibilityString : visibilityStrings) {
+                        if (visibilityString.getText().equals(expectedString)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                } catch (NoSuchElementException | StaleElementReferenceException e) {
+                    return false;
+                }
+            });
+        } catch (TimeoutException e) {
+            fail("Expected visibility string not found: " + qnNumber + ": " + expectedString);
         }
-        fail("Expected visibility string not found: " + qnNumber + ": " + expectedString);
     }
 
     private String getVisibilityString(FeedbackQuestion feedbackQuestion,
-                                       FeedbackParticipantType viewerType) {
+                                       ViewerType viewerType) {
         if (!feedbackQuestion.getShowResponsesTo().contains(viewerType)) {
             return "";
         }
@@ -646,7 +710,7 @@ public class FeedbackSubmitPage extends AppPage {
         return message.toString();
     }
 
-    private String getViewerString(FeedbackParticipantType viewerType, FeedbackParticipantType recipientType) {
+    private String getViewerString(ViewerType viewerType, QuestionRecipientType recipientType) {
         switch (viewerType) {
         case RECEIVER:
             return "The receiving " + getRecipientString(recipientType);
@@ -661,17 +725,13 @@ public class FeedbackSubmitPage extends AppPage {
         }
     }
 
-    private String getRecipientString(FeedbackParticipantType recipientType) {
+    private String getRecipientString(QuestionRecipientType recipientType) {
         switch (recipientType) {
-        case TEAMS:
-        case TEAMS_EXCLUDING_SELF:
-        case TEAMS_IN_SAME_SECTION:
+        case TEAMS, TEAMS_EXCLUDING_SELF, TEAMS_IN_SAME_SECTION:
             return "teams";
         case OWN_TEAM_MEMBERS:
             return "student";
-        case STUDENTS:
-        case STUDENTS_EXCLUDING_SELF:
-        case STUDENTS_IN_SAME_SECTION:
+        case STUDENTS, STUDENTS_EXCLUDING_SELF, STUDENTS_IN_SAME_SECTION:
             return "students";
         case INSTRUCTORS:
             return "instructors";
@@ -699,11 +759,12 @@ public class FeedbackSubmitPage extends AppPage {
 
     private WebElement getCommentSection(int qnNumber, String recipient) {
         int recipientIndex = getRecipientIndex(qnNumber, recipient);
-        return getQuestionForm(qnNumber).findElement(By.id("comment-section-qn-" + qnNumber + "-idx-" + recipientIndex));
+        String commentSectionSelector = "[data-testid='comment-section-qn-" + qnNumber + "-idx-" + recipientIndex + "']";
+        return getQuestionForm(qnNumber)
+                .findElement(By.cssSelector(commentSectionSelector));
     }
 
     private void writeToCommentEditor(WebElement commentSection, String comment) {
-        scrollElementToCenter(commentSection);
         waitForElementPresence(By.tagName("editor"));
         writeToRichTextEditor(commentSection.findElement(By.tagName("editor")), comment);
     }
@@ -746,9 +807,7 @@ public class FeedbackSubmitPage extends AppPage {
     private WebElement getTextResponseEditor(int qnNumber, String recipient) {
         int recipientIndex = getRecipientIndex(qnNumber, recipient);
         WebElement questionForm = getQuestionForm(qnNumber);
-        WebElement editor = questionForm.findElements(By.tagName("tm-rich-text-editor")).get(recipientIndex);
-        scrollElementToCenter(editor);
-        return editor;
+        return questionForm.findElements(By.tagName("tm-rich-text-editor")).get(recipientIndex);
     }
 
     private String getResponseLengthText(int qnNumber, String recipient) {

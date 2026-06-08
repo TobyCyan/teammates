@@ -20,10 +20,10 @@
         {{ teamInfo[isGrq ? 'giver' : 'recipient'] }}
       </div>
       <div class="top-padded">
-        @if (!isGrq && responses[0].allResponses[0].relatedGiverEmail) {
+        @if (!isGrq && responses[0].allResponses[0].userIdForModeration) {
           <tm-response-moderation-button
             [session]="session"
-            [relatedGiverEmail]="responses[0].allResponses[0].relatedGiverEmail"
+            [userIdForModeration]="responses[0].allResponses[0].userIdForModeration"
             [isGiverInstructor]="responses[0].feedbackQuestion.giverType === 'INSTRUCTORS'"
             btnStyle="LIGHT"
           ></tm-response-moderation-button>
@@ -67,7 +67,10 @@
               </div>
               @if (response.allResponses[0].participantComment) {
                 <tm-comment-row
-                  [model]="response.allResponses[0].participantComment | commentToCommentRowModel: session.timeZone"
+                  [model]="
+                    response.allResponses[0].participantComment
+                      | giverCommentToCommentRowModel: response.feedbackQuestion.showResponsesTo
+                  "
                   [questionShowResponsesTo]="response.feedbackQuestion.showResponsesTo"
                   [isDisabled]="true"
                   [isVisibilityOptionEnabled]="false"

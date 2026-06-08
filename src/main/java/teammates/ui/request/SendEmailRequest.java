@@ -3,6 +3,7 @@ package teammates.ui.request;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 import teammates.common.util.EmailWrapper;
+import teammates.ui.exception.InvalidHttpRequestBodyException;
 
 /**
  * The request of sending an email.
@@ -21,12 +22,12 @@ public class SendEmailRequest extends BasicRequest {
 
     @Override
     public void validate() throws InvalidHttpRequestBodyException {
-        assertTrue(email != null, "Email cannot be null");
-        assertTrue(email.getContent() != null, "Email content cannot be null");
-        assertTrue(email.getRecipient() != null, "Email recipient's address cannot be null");
-        assertTrue(email.getSenderEmail() != null, "Email sender's address cannot be null");
-        assertTrue(email.getReplyTo() != null, "Email reply-to address cannot be null");
-        assertTrue(email.getSubject() != null, "Email subject cannot be null");
+        validateTrue(email != null, "Email cannot be null");
+        validateTrue(email.getContent() != null, "Email content cannot be null");
+        validateTrue(email.getRecipient() != null, "Email recipient's address cannot be null");
+        validateTrue(email.getSenderEmail() != null, "Email sender's address cannot be null");
+        validateTrue(email.getReplyTo() != null, "Email reply-to address cannot be null");
+        validateTrue(email.getSubject() != null, "Email subject cannot be null");
     }
 
 }

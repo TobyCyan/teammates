@@ -5,7 +5,10 @@ import { createBuilder } from '../../../../test-helpers/generic-builder';
 import { FeedbackContributionResponseDetails } from '../../../../types/api-output';
 import { FeedbackQuestionType } from '../../../../types/api-request';
 import { CONTRIBUTION_POINT_NOT_SUBMITTED } from '../../../../types/feedback-response-details';
-import { FeedbackResponseRecipientSubmissionFormModel } from '../../question-submission-form/question-submission-form-model';
+import {
+  FeedbackResponseRecipientSubmissionFormModel,
+  ResponseSubmissionStatus,
+} from '../../question-submission-form/question-submission-form-model';
 
 describe('ContributionQuestionConstraintComponent', () => {
   let component: ContributionQuestionConstraintComponent;
@@ -14,6 +17,7 @@ describe('ContributionQuestionConstraintComponent', () => {
   const formBuilder = createBuilder<FeedbackResponseRecipientSubmissionFormModel>({
     responseId: '123',
     recipientIdentifier: 'recipient123',
+    status: ResponseSubmissionStatus.SAVED,
     isValid: true,
     responseDetails: { questionType: FeedbackQuestionType.CONTRIB },
   });

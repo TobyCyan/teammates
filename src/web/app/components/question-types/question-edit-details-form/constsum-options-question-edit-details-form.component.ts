@@ -2,15 +2,14 @@ import { CdkDragDrop, moveItemInArray, CdkDropList, CdkDrag, CdkDragHandle } fro
 
 import { Component, Input, OnChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { ConstsumOptionsFieldComponent } from './constsum-options-field/constsum-options-field.component';
 import { QuestionEditDetailsFormComponent } from './question-edit-details-form.component';
 import { StatusMessageService } from '../../../../services/status-message.service';
 import {
   FeedbackConstantSumDistributePointsType,
-  FeedbackConstantSumQuestionDetails,
+  FeedbackConstantSumOptionsQuestionDetails,
 } from '../../../../types/api-output';
-import { DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 
 /**
  * Question details edit form component for constsum options question.
@@ -22,21 +21,22 @@ import { DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS } from '../../../../types/def
   imports: [CdkDropList, CdkDrag, CdkDragHandle, ConstsumOptionsFieldComponent, FormsModule, NgbTooltip],
 })
 export class ConstsumOptionsQuestionEditDetailsFormComponent
-  extends QuestionEditDetailsFormComponent<FeedbackConstantSumQuestionDetails>
+  extends QuestionEditDetailsFormComponent<FeedbackConstantSumOptionsQuestionDetails>
   implements OnChanges
 {
   private statusMessageService = inject(StatusMessageService);
 
   // enum
-  FeedbackConstantSumDistributePointsType: typeof FeedbackConstantSumDistributePointsType =
-    FeedbackConstantSumDistributePointsType;
-
-  constructor() {
-    super(DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS());
-  }
+  FeedbackConstantSumDistributePointsType!: typeof FeedbackConstantSumDistributePointsType;
 
   @Input() questionNumber = 0;
   pointsRadioGroupName = '';
+
+  constructor() {
+    super();
+    this.FeedbackConstantSumDistributePointsType = FeedbackConstantSumDistributePointsType;
+  }
+
   ngOnChanges(): void {
     this.pointsRadioGroupName = `constsum-options-${this.questionNumber}`;
   }

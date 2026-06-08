@@ -1,16 +1,15 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AdminAccountSearchTableComponent should display account requests with no reset or expand links button 1`] = `
+exports[`AdminAccountSearchTableComponent > should display account requests with no reset or expand links button 1`] = `
 <tm-admin-account-search-table
   accountRequests={[Function Array]}
-  accountService={[Function AccountService]}
+  accountService={[Function _AccountService]}
   isApprovingAccount={[Function Array]}
   isRejectingAccount={[Function Array]}
-  isResettingAccount={[Function Array]}
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   searchString=""
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
 >
   <div
     class="card bg-light top-padded"
@@ -176,7 +175,6 @@ exports[`AdminAccountSearchTableComponent should display account requests with n
                    Approve 
                 </button>
                 <span
-                  class="dropdown"
                   container="body"
                   ngbdropdown=""
                 >
@@ -207,19 +205,28 @@ exports[`AdminAccountSearchTableComponent should display account requests with n
                     </button>
                   </div>
                 </span>
-                <div
-                  class="ngb-tooltip-class"
-                  placement="top"
-                >
-                  <button
-                    class="btn btn-primary"
-                    disabled=""
-                    id="reset-account-request-0"
-                  >
-                     Reset 
-                  </button>
-                </div>
               </div>
+            </td>
+          </tr>
+          <tr>
+            <td
+              colspan="100"
+            >
+              <ul
+                class="list-group collapse"
+              >
+                <li
+                  class="list-group-item list-group-item-info"
+                >
+                  <strong>
+                    Account Registration Link
+                  </strong>
+                  <input
+                    class="form-control"
+                    disabled=""
+                  />
+                </li>
+              </ul>
             </td>
           </tr>
           <tr>
@@ -319,7 +326,6 @@ exports[`AdminAccountSearchTableComponent should display account requests with n
                    Approve 
                 </button>
                 <span
-                  class="dropdown"
                   container="body"
                   ngbdropdown=""
                 >
@@ -350,19 +356,28 @@ exports[`AdminAccountSearchTableComponent should display account requests with n
                     </button>
                   </div>
                 </span>
-                <div
-                  class="ngb-tooltip-class"
-                  placement="top"
-                >
-                  <button
-                    class="btn btn-primary"
-                    disabled=""
-                    id="reset-account-request-1"
-                  >
-                     Reset 
-                  </button>
-                </div>
               </div>
+            </td>
+          </tr>
+          <tr>
+            <td
+              colspan="100"
+            >
+              <ul
+                class="list-group collapse"
+              >
+                <li
+                  class="list-group-item list-group-item-info"
+                >
+                  <strong>
+                    Account Registration Link
+                  </strong>
+                  <input
+                    class="form-control"
+                    disabled=""
+                  />
+                </li>
+              </ul>
             </td>
           </tr>
         </tbody>
@@ -372,17 +387,16 @@ exports[`AdminAccountSearchTableComponent should display account requests with n
 </tm-admin-account-search-table>
 `;
 
-exports[`AdminAccountSearchTableComponent should display account requests with reset button and expandable links buttons 1`] = `
+exports[`AdminAccountSearchTableComponent > should display account requests with reset button and expandable links buttons 1`] = `
 <tm-admin-account-search-table
   accountRequests={[Function Array]}
-  accountService={[Function AccountService]}
+  accountService={[Function _AccountService]}
   isApprovingAccount={[Function Array]}
   isRejectingAccount={[Function Array]}
-  isResettingAccount={[Function Array]}
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   searchString={[Function String]}
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
 >
   <div
     class="card bg-light top-padded"
@@ -549,7 +563,6 @@ exports[`AdminAccountSearchTableComponent should display account requests with r
                    Approve 
                 </button>
                 <span
-                  class="dropdown"
                   container="body"
                   ngbdropdown=""
                 >
@@ -581,19 +594,28 @@ exports[`AdminAccountSearchTableComponent should display account requests with r
                     </button>
                   </div>
                 </span>
-                <div
-                  class="ngb-tooltip-class"
-                  placement="top"
-                >
-                  <button
-                    class="btn btn-primary"
-                    disabled=""
-                    id="reset-account-request-0"
-                  >
-                     Reset 
-                  </button>
-                </div>
               </div>
+            </td>
+          </tr>
+          <tr>
+            <td
+              colspan="100"
+            >
+              <ul
+                class="list-group collapse"
+              >
+                <li
+                  class="list-group-item list-group-item-info"
+                >
+                  <strong>
+                    Account Registration Link
+                  </strong>
+                  <input
+                    class="form-control"
+                    disabled=""
+                  />
+                </li>
+              </ul>
             </td>
           </tr>
           <tr>
@@ -694,7 +716,6 @@ exports[`AdminAccountSearchTableComponent should display account requests with r
                    Approve 
                 </button>
                 <span
-                  class="dropdown"
                   container="body"
                   ngbdropdown=""
                 >
@@ -726,19 +747,28 @@ exports[`AdminAccountSearchTableComponent should display account requests with r
                     </button>
                   </div>
                 </span>
-                <div
-                  class="ngb-tooltip-class"
-                  placement="top"
-                >
-                  <button
-                    class="btn btn-primary"
-                    disabled=""
-                    id="reset-account-request-1"
-                  >
-                     Reset 
-                  </button>
-                </div>
               </div>
+            </td>
+          </tr>
+          <tr>
+            <td
+              colspan="100"
+            >
+              <ul
+                class="list-group collapse"
+              >
+                <li
+                  class="list-group-item list-group-item-info"
+                >
+                  <strong>
+                    Account Registration Link
+                  </strong>
+                  <input
+                    class="form-control"
+                    disabled=""
+                  />
+                </li>
+              </ul>
             </td>
           </tr>
         </tbody>
@@ -748,17 +778,16 @@ exports[`AdminAccountSearchTableComponent should display account requests with r
 </tm-admin-account-search-table>
 `;
 
-exports[`AdminAccountSearchTableComponent should snap with an expanded account requests table 1`] = `
+exports[`AdminAccountSearchTableComponent > should snap with an expanded account requests table 1`] = `
 <tm-admin-account-search-table
   accountRequests={[Function Array]}
-  accountService={[Function AccountService]}
+  accountService={[Function _AccountService]}
   isApprovingAccount={[Function Array]}
   isRejectingAccount={[Function Array]}
-  isResettingAccount={[Function Array]}
-  ngbModal={[Function _NgbModal]}
+  ngbModal={[Function NgbModal]}
   searchString=""
-  simpleModalService={[Function SimpleModalService]}
-  statusMessageService={[Function StatusMessageService]}
+  simpleModalService={[Function _SimpleModalService]}
+  statusMessageService={[Function _StatusMessageService]}
 >
   <div
     class="card bg-light top-padded"
@@ -924,7 +953,6 @@ exports[`AdminAccountSearchTableComponent should snap with an expanded account r
                    Approve 
                 </button>
                 <span
-                  class="dropdown"
                   container="body"
                   ngbdropdown=""
                 >
@@ -955,19 +983,28 @@ exports[`AdminAccountSearchTableComponent should snap with an expanded account r
                     </button>
                   </div>
                 </span>
-                <div
-                  class="ngb-tooltip-class"
-                  placement="top"
-                >
-                  <button
-                    class="btn btn-primary"
-                    disabled=""
-                    id="reset-account-request-0"
-                  >
-                     Reset 
-                  </button>
-                </div>
               </div>
+            </td>
+          </tr>
+          <tr>
+            <td
+              colspan="100"
+            >
+              <ul
+                class="list-group collapse"
+              >
+                <li
+                  class="list-group-item list-group-item-info"
+                >
+                  <strong>
+                    Account Registration Link
+                  </strong>
+                  <input
+                    class="form-control"
+                    disabled=""
+                  />
+                </li>
+              </ul>
             </td>
           </tr>
         </tbody>

@@ -3,22 +3,20 @@ package teammates.ui.output;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
-import teammates.common.datatransfer.FeedbackQuestionRecipient;
+import teammates.storage.entity.ResponseRecipient;
 
 /**
  * API output for Feedback Question Recipients, which is a collection of {@link FeedbackQuestionRecipientData}.
  */
-public class FeedbackQuestionRecipientsData extends ApiOutput {
+public class FeedbackQuestionRecipientsData implements ApiOutput {
     private List<FeedbackQuestionRecipientData> recipients;
 
-    public FeedbackQuestionRecipientsData(Map<String, FeedbackQuestionRecipient> recipients) {
+    public FeedbackQuestionRecipientsData(Set<ResponseRecipient> recipients) {
         this.recipients = new ArrayList<>();
 
-        recipients.forEach((identifier, recipient) -> {
-            this.recipients.add(new FeedbackQuestionRecipientData(recipient));
-        });
+        recipients.forEach(recipient -> this.recipients.add(new FeedbackQuestionRecipientData(recipient)));
 
         // sort by name
         this.recipients.sort(Comparator.comparing(FeedbackQuestionRecipientData::getName));

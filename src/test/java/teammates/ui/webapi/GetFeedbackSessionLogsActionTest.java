@@ -1,14 +1,17 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import teammates.common.datatransfer.InstructorPermissionRole;
 import teammates.common.datatransfer.InstructorPrivileges;
 import teammates.common.datatransfer.logs.FeedbackSessionLogType;
 import teammates.common.util.Const;
@@ -18,7 +21,6 @@ import teammates.storage.entity.FeedbackSessionLog;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Student;
 import teammates.ui.output.FeedbackSessionLogData;
-import teammates.ui.output.FeedbackSessionLogEntryData;
 import teammates.ui.output.FeedbackSessionLogsData;
 
 /**
@@ -32,6 +34,7 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
     private Student student2;
 
     private FeedbackSession fs1;
+    private FeedbackSession fs2;
 
     private long startTime;
     private long endTime;
@@ -50,7 +53,6 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
 
     @BeforeMethod
     void setUp() {
-        FeedbackSession fs2;
         endTime = Instant.now().toEpochMilli();
         startTime = endTime - (Const.STUDENT_ACTIVITY_LOGS_RETENTION_PERIOD.toDays() - 1) * 24 * 60 * 60 * 1000;
 
@@ -76,6 +78,8 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
         when(mockLogic.getFeedbackSession(fs1.getId())).thenReturn(fs1);
         when(mockLogic.getStudent(student1.getId())).thenReturn(student1);
         when(mockLogic.getStudent(student2.getId())).thenReturn(student2);
+        when(mockLogic.getUser(student1.getId())).thenReturn(student1);
+        when(mockLogic.getUser(student2.getId())).thenReturn(student2);
 
         List<FeedbackSession> feedbackSessions = new ArrayList<>();
         feedbackSessions.add(fs1);
@@ -145,7 +149,7 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
         ______TS("Failure case: invalid course id");
         String[] paramsInvalid1 = {
                 Const.ParamsNames.COURSE_ID, "fake-course-id",
-                Const.ParamsNames.STUDENT_SQL_ID, student1.getId().toString(),
+                Const.ParamsNames.USER_ID, student1.getId().toString(),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_STARTTIME, String.valueOf(startTime),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_ENDTIME, String.valueOf(endTime),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_TYPE, FeedbackSessionLogType.ACCESS.toString(),
@@ -155,7 +159,7 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
         ______TS("Failure case: invalid student id");
         String[] paramsInvalid2 = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.STUDENT_SQL_ID, "00000000-0000-0000-0000-000000000000",
+                Const.ParamsNames.USER_ID, "00000000-0000-0000-0000-000000000000",
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_STARTTIME, String.valueOf(startTime),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_ENDTIME, String.valueOf(endTime),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_TYPE, FeedbackSessionLogType.ACCESS.toString(),
@@ -192,32 +196,32 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
         actionOutput = getJsonResult(getAction(paramsSuccessful1));
 
         FeedbackSessionLogsData fslData = (FeedbackSessionLogsData) actionOutput.getOutput();
-        List<FeedbackSessionLogData> fsLogs = fslData.getFeedbackSessionLogs();
+        Map<String, List<FeedbackSessionLogData>> fsLogs = fslData.getFeedbackSessionLogs();
 
         // Course has 2 feedback sessions
         assertEquals(fsLogs.size(), 2);
 
-        List<FeedbackSessionLogEntryData> fsLogEntries1 = fsLogs.get(0).getFeedbackSessionLogEntries();
-        List<FeedbackSessionLogEntryData> fsLogEntries2 = fsLogs.get(1).getFeedbackSessionLogEntries();
+        List<FeedbackSessionLogData> fsLogEntries1 = fsLogs.get(fs1.getId().toString());
+        List<FeedbackSessionLogData> fsLogEntries2 = fsLogs.get(fs2.getId().toString());
 
         assertEquals(fsLogEntries1.size(), 3);
-        assertEquals(fsLogEntries1.get(0).getStudentData().getEmail(), student1.getEmail());
+        assertEquals(fsLogEntries1.get(0).getUser().getEmail(), student1.getEmail());
         assertEquals(fsLogEntries1.get(0).getFeedbackSessionLogType(), FeedbackSessionLogType.ACCESS);
-        assertEquals(fsLogEntries1.get(1).getStudentData().getEmail(), student2.getEmail());
+        assertEquals(fsLogEntries1.get(1).getUser().getEmail(), student2.getEmail());
         assertEquals(fsLogEntries1.get(1).getFeedbackSessionLogType(), FeedbackSessionLogType.ACCESS);
-        assertEquals(fsLogEntries1.get(2).getStudentData().getEmail(), student2.getEmail());
+        assertEquals(fsLogEntries1.get(2).getUser().getEmail(), student2.getEmail());
         assertEquals(fsLogEntries1.get(2).getFeedbackSessionLogType(), FeedbackSessionLogType.SUBMISSION);
 
         assertEquals(fsLogEntries2.size(), 2);
-        assertEquals(fsLogEntries2.get(0).getStudentData().getEmail(), student1.getEmail());
+        assertEquals(fsLogEntries2.get(0).getUser().getEmail(), student1.getEmail());
         assertEquals(fsLogEntries2.get(0).getFeedbackSessionLogType(), FeedbackSessionLogType.ACCESS);
-        assertEquals(fsLogEntries2.get(1).getStudentData().getEmail(), student1.getEmail());
+        assertEquals(fsLogEntries2.get(1).getUser().getEmail(), student1.getEmail());
         assertEquals(fsLogEntries2.get(1).getFeedbackSessionLogType(), FeedbackSessionLogType.SUBMISSION);
 
         ______TS("Success case: should accept optional student id");
         String[] paramsSuccessful2 = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.STUDENT_SQL_ID, student1.getId().toString(),
+                Const.ParamsNames.USER_ID, student1.getId().toString(),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_STARTTIME, String.valueOf(startTime),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_ENDTIME, String.valueOf(endTime),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_TYPE, FeedbackSessionLogType.ACCESS.toString(),
@@ -230,17 +234,17 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
 
         assertEquals(fsLogs.size(), 2);
 
-        fsLogEntries1 = fsLogs.get(0).getFeedbackSessionLogEntries();
-        fsLogEntries2 = fsLogs.get(1).getFeedbackSessionLogEntries();
+        fsLogEntries1 = fsLogs.get(fs1.getId().toString());
+        fsLogEntries2 = fsLogs.get(fs2.getId().toString());
 
         assertEquals(fsLogEntries1.size(), 1);
-        assertEquals(fsLogEntries1.get(0).getStudentData().getEmail(), student1.getEmail());
+        assertEquals(fsLogEntries1.get(0).getUser().getEmail(), student1.getEmail());
         assertEquals(fsLogEntries1.get(0).getFeedbackSessionLogType(), FeedbackSessionLogType.ACCESS);
 
         assertEquals(fsLogEntries2.size(), 2);
-        assertEquals(fsLogEntries2.get(0).getStudentData().getEmail(), student1.getEmail());
+        assertEquals(fsLogEntries2.get(0).getUser().getEmail(), student1.getEmail());
         assertEquals(fsLogEntries2.get(0).getFeedbackSessionLogType(), FeedbackSessionLogType.ACCESS);
-        assertEquals(fsLogEntries2.get(1).getStudentData().getEmail(), student1.getEmail());
+        assertEquals(fsLogEntries2.get(1).getUser().getEmail(), student1.getEmail());
         assertEquals(fsLogEntries2.get(1).getFeedbackSessionLogType(), FeedbackSessionLogType.SUBMISSION);
 
         ______TS("Success case: should accept optional feedback session");
@@ -257,23 +261,22 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
         fslData = (FeedbackSessionLogsData) actionOutput.getOutput();
         fsLogs = fslData.getFeedbackSessionLogs();
 
-        assertEquals(fsLogs.size(), 2);
-        assertEquals(fsLogs.get(1).getFeedbackSessionLogEntries().size(), 0);
+        assertEquals(fsLogs.size(), 1);
 
-        fsLogEntries1 = fsLogs.get(0).getFeedbackSessionLogEntries();
+        fsLogEntries1 = fsLogs.get(fs1.getId().toString());
 
         assertEquals(fsLogEntries1.size(), 3);
-        assertEquals(fsLogEntries1.get(0).getStudentData().getEmail(), student1.getEmail());
+        assertEquals(fsLogEntries1.get(0).getUser().getEmail(), student1.getEmail());
         assertEquals(fsLogEntries1.get(0).getFeedbackSessionLogType(), FeedbackSessionLogType.ACCESS);
-        assertEquals(fsLogEntries1.get(1).getStudentData().getEmail(), student2.getEmail());
+        assertEquals(fsLogEntries1.get(1).getUser().getEmail(), student2.getEmail());
         assertEquals(fsLogEntries1.get(1).getFeedbackSessionLogType(), FeedbackSessionLogType.ACCESS);
-        assertEquals(fsLogEntries1.get(2).getStudentData().getEmail(), student2.getEmail());
+        assertEquals(fsLogEntries1.get(2).getUser().getEmail(), student2.getEmail());
         assertEquals(fsLogEntries1.get(2).getFeedbackSessionLogType(), FeedbackSessionLogType.SUBMISSION);
 
         ______TS("Success case: should accept all optional params");
         String[] paramsSuccessful4 = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.STUDENT_SQL_ID, student1.getId().toString(),
+                Const.ParamsNames.USER_ID, student1.getId().toString(),
                 Const.ParamsNames.FEEDBACK_SESSION_ID, fs1.getId().toString(),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_STARTTIME, String.valueOf(startTime),
                 Const.ParamsNames.FEEDBACK_SESSION_LOG_ENDTIME, String.valueOf(endTime),
@@ -285,13 +288,12 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
         fslData = (FeedbackSessionLogsData) actionOutput.getOutput();
         fsLogs = fslData.getFeedbackSessionLogs();
 
-        assertEquals(fsLogs.size(), 2);
-        assertEquals(fsLogs.get(1).getFeedbackSessionLogEntries().size(), 0);
+        assertEquals(fsLogs.size(), 1);
 
-        fsLogEntries1 = fsLogs.get(0).getFeedbackSessionLogEntries();
+        fsLogEntries1 = fsLogs.get(fs1.getId().toString());
 
         assertEquals(fsLogEntries1.size(), 1);
-        assertEquals(fsLogEntries1.get(0).getStudentData().getEmail(), student1.getEmail());
+        assertEquals(fsLogEntries1.get(0).getUser().getEmail(), student1.getEmail());
         assertEquals(fsLogEntries1.get(0).getFeedbackSessionLogType(), FeedbackSessionLogType.ACCESS);
     }
 
@@ -299,7 +301,7 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
     void testSpecificAccessControl_instructorWithInvalidPermission_cannotAccess() {
 
         Instructor instructor = new Instructor(course, "name", "instructoremail@tm.tmt",
-                false, "", null, new InstructorPrivileges());
+                false, "", InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM, new InstructorPrivileges());
 
         loginAsInstructor(googleId);
         when(mockLogic.getCourse(course.getId())).thenReturn(course);
@@ -319,7 +321,7 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
         instructorPrivileges.updatePrivilege(Const.InstructorPermissions.CAN_MODIFY_STUDENT, true);
         instructorPrivileges.updatePrivilege(Const.InstructorPermissions.CAN_MODIFY_INSTRUCTOR, true);
         Instructor instructor = new Instructor(course, "name", "instructoremail@tm.tmt",
-                false, "", null, instructorPrivileges);
+                false, "", InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM, instructorPrivileges);
 
         loginAsInstructor(googleId);
         when(mockLogic.getCourse(course.getId())).thenReturn(course);
@@ -337,6 +339,8 @@ public class GetFeedbackSessionLogsActionTest extends BaseActionTest<GetFeedback
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
         };
+
+        when(mockLogic.getInstructorByGoogleId(course.getId(), googleId)).thenReturn(null);
         loginAsStudent(googleId);
         verifyCannotAccess(params);
 

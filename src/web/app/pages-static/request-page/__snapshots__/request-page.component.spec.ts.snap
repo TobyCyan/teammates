@@ -1,10 +1,8 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RequestPageComponent should render correctly after form is submitted 1`] = `
+exports[`RequestPageComponent > should render correctly after form is submitted 1`] = `
 <tm-request-page
-  accountRequestFormUrl="null"
   isDeclarationDone="false"
-  sanitizer={[Function _DomSanitizerImpl]}
   submittedFormData={[Function Object]}
 >
   <h1
@@ -96,11 +94,9 @@ exports[`RequestPageComponent should render correctly after form is submitted 1`
 </tm-request-page>
 `;
 
-exports[`RequestPageComponent should render correctly after instructor declaration is done 1`] = `
+exports[`RequestPageComponent > should render correctly after instructor declaration is done 1`] = `
 <tm-request-page
-  accountRequestFormUrl="null"
   isDeclarationDone={[Function Boolean]}
-  sanitizer={[Function _DomSanitizerImpl]}
   submittedFormData="null"
 >
   <h1
@@ -311,11 +307,9 @@ exports[`RequestPageComponent should render correctly after instructor declarati
 </tm-request-page>
 `;
 
-exports[`RequestPageComponent should render correctly before instructor declaration is done 1`] = `
+exports[`RequestPageComponent > should render correctly before instructor declaration is done 1`] = `
 <tm-request-page
-  accountRequestFormUrl="null"
   isDeclarationDone="false"
-  sanitizer={[Function _DomSanitizerImpl]}
   submittedFormData="null"
 >
   <h1

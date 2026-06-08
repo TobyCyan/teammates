@@ -101,7 +101,7 @@ public class AdminSearchPage extends AppPage {
     }
 
     public void verifyRegenerateStudentKey(Student student, String originalJoinLink) {
-        verifyStatusMessage("Student's key for this course has been successfully regenerated,"
+        verifyStatusMessage("User's key for this course has been successfully regenerated,"
                 + " and the email has been sent.");
 
         String regeneratedJoinLink = getStudentJoinLink(student);
@@ -285,7 +285,8 @@ public class AdminSearchPage extends AppPage {
         List<WebElement> rows = browser.driver.findElements(By.cssSelector("tm-admin-account-search-table tbody tr"));
         for (WebElement row : rows) {
             List<WebElement> columns = row.findElements(By.tagName("td"));
-            if (removeSpanFromText(columns.get(ACCOUNT_REQUEST_COL_EMAIL - 1)
+            if (columns.size() >= ACCOUNT_REQUEST_COL_INSTITUTE
+                    && removeSpanFromText(columns.get(ACCOUNT_REQUEST_COL_EMAIL - 1)
                     .getAttribute("innerHTML")).contains(email)
                     && removeSpanFromText(columns.get(ACCOUNT_REQUEST_COL_INSTITUTE - 1)
                     .getAttribute("innerHTML")).contains(institute)) {
@@ -654,7 +655,7 @@ public class AdminSearchPage extends AppPage {
     }
 
     public void verifyRegenerateInstructorKey(Instructor instructor, String originalJoinLink) {
-        verifyStatusMessage("Instructor's key for this course has been successfully regenerated,"
+        verifyStatusMessage("User's key for this course has been successfully regenerated,"
                 + " and the email has been sent.");
 
         String regeneratedJoinLink = getInstructorJoinLink(instructor);

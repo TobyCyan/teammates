@@ -1,12 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap/modal';
 import { finalize } from 'rxjs/operators';
 import { ErrorReportComponent } from './components/error-report/error-report.component';
 import { SimpleModalType } from './components/simple-modal/simple-modal-type';
 import { ErrorMessageOutput } from './error-message-output';
 import { environment } from '../environments/environment';
-import { AccountService } from '../services/account.service';
 import { AuthService } from '../services/auth.service';
 import { CourseService } from '../services/course.service';
 import { NavigationService } from '../services/navigation.service';
@@ -25,7 +24,6 @@ import { LoadingSpinnerDirective } from './components/loading-spinner/loading-sp
 })
 export class UserJoinPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
-  private accountService = inject(AccountService);
   private courseService = inject(CourseService);
   private navigationService = inject(NavigationService);
   private authService = inject(AuthService);
@@ -55,7 +53,7 @@ export class UserJoinPageComponent implements OnInit {
       }
 
       const nextUrl = `${window.location.pathname}${window.location.search.replace(/&/g, '%26')}`;
-      this.authService.getAuthUser(undefined, nextUrl).subscribe((auth: AuthInfo) => {
+      this.authService.getAuthUser(nextUrl).subscribe((auth: AuthInfo) => {
         if (!auth.user) {
           this.isLoading = false;
           window.location.href = `${this.backendUrl}${auth.loginUrl}`;
@@ -63,7 +61,7 @@ export class UserJoinPageComponent implements OnInit {
         }
         this.userId = auth.user.id;
 
-        this.courseService.getJoinCourseStatus(this.key, this.entityType, this.isCreatingAccount).subscribe({
+        this.courseService.getJoinCourseStatus(this.key, this.isCreatingAccount).subscribe({
           next: (resp: JoinStatus) => {
             this.hasJoined = resp.hasJoined;
             if (this.hasJoined) {
@@ -81,7 +79,7 @@ export class UserJoinPageComponent implements OnInit {
               return;
             }
             const modalRef: any = this.ngbModal.open(ErrorReportComponent);
-            modalRef.componentInstance.requestId = resp.error.requestId;
+            modalRef.componentInstance.requestId = resp.headers?.get('X-Request-Id');
             modalRef.componentInstance.errorMessage = resp.error.message;
           },
         });
@@ -93,7 +91,7 @@ export class UserJoinPageComponent implements OnInit {
    * Joins the course.
    */
   joinCourse(): void {
-    this.courseService.joinCourse(this.key, this.entityType).subscribe({
+    this.courseService.joinCourse({ key: this.key }).subscribe({
       next: () => {
         this.navigationService.navigateByURL(`/web/${this.entityType}`);
       },
@@ -102,7 +100,7 @@ export class UserJoinPageComponent implements OnInit {
 
         if (resp.status >= 500) {
           const modalRef: any = this.ngbModal.open(ErrorReportComponent);
-          modalRef.componentInstance.requestId = resp.error.requestId;
+          modalRef.componentInstance.requestId = resp.headers?.get('X-Request-Id');
           modalRef.componentInstance.errorMessage = errorMessage;
         } else {
           this.simpleModalService.openInformationModal('ERROR', SimpleModalType.DANGER, errorMessage);
@@ -112,13 +110,13 @@ export class UserJoinPageComponent implements OnInit {
   }
 
   /**
-   * Creates an account.
-   * Account is only created after instructor joins for the first time.
+   * Creates a demo course.
+   * Demo course is only created after instructor joins for the first time.
    */
-  createAccount(): void {
+  createDemoCourse(): void {
     this.isLoading = true;
-    this.accountService
-      .createAccount(this.key, this.timezoneService.guessTimezone())
+    this.courseService
+      .createDemoCourse(this.key, this.timezoneService.guessTimezone())
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -133,7 +131,7 @@ export class UserJoinPageComponent implements OnInit {
             this.validUrl = false;
           } else {
             const modalRef: any = this.ngbModal.open(ErrorReportComponent);
-            modalRef.componentInstance.requestId = resp.error.requestId;
+            modalRef.componentInstance.requestId = resp.headers?.get('X-Request-Id');
             modalRef.componentInstance.errorMessage = resp.error.message;
           }
         },

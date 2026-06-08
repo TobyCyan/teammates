@@ -1,20 +1,21 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap/modal';
 import { of } from 'rxjs';
 import { FeedbackSessionTabModel, QuestionToCopyCandidate } from './copy-questions-from-other-sessions-modal-model';
 import { CopyQuestionsFromOtherSessionsModalComponent } from './copy-questions-from-other-sessions-modal.component';
 import { FeedbackQuestionsService } from '../../../../services/feedback-questions.service';
 import {
   FeedbackMcqQuestionDetails,
-  FeedbackParticipantType,
   FeedbackQuestion,
   FeedbackQuestions,
   FeedbackQuestionType,
   FeedbackRankRecipientsQuestionDetails,
   FeedbackVisibilityType,
   NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionGiverType,
+  QuestionRecipientType,
 } from '../../../../types/api-output';
 import { SortBy, SortOrder } from '../../../../types/sort-properties';
 
@@ -29,8 +30,8 @@ describe('CopyQuestionsFromOtherSessionsModalComponent', () => {
       questionType: FeedbackQuestionType.TEXT,
       questionText: 'question text',
     },
-    giverType: FeedbackParticipantType.STUDENTS,
-    recipientType: FeedbackParticipantType.INSTRUCTORS,
+    giverType: QuestionGiverType.STUDENTS,
+    recipientType: QuestionRecipientType.INSTRUCTORS,
     numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
     customNumberOfEntitiesToGiveFeedbackTo: 5,
     showResponsesTo: [FeedbackVisibilityType.GIVER_TEAM_MEMBERS, FeedbackVisibilityType.INSTRUCTORS],
@@ -49,8 +50,8 @@ describe('CopyQuestionsFromOtherSessionsModalComponent', () => {
       questionText: 'question text',
       mcqChoices: ['choice 1', 'choice 2', 'choice 3'],
     } as FeedbackMcqQuestionDetails,
-    giverType: FeedbackParticipantType.STUDENTS,
-    recipientType: FeedbackParticipantType.INSTRUCTORS,
+    giverType: QuestionGiverType.STUDENTS,
+    recipientType: QuestionRecipientType.INSTRUCTORS,
     numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
     customNumberOfEntitiesToGiveFeedbackTo: 5,
     showResponsesTo: [FeedbackVisibilityType.GIVER_TEAM_MEMBERS, FeedbackVisibilityType.INSTRUCTORS],
@@ -71,8 +72,8 @@ describe('CopyQuestionsFromOtherSessionsModalComponent', () => {
       maxOptionsToBeRanked: 5,
       areDuplicatesAllowed: true,
     } as FeedbackRankRecipientsQuestionDetails,
-    giverType: FeedbackParticipantType.STUDENTS,
-    recipientType: FeedbackParticipantType.INSTRUCTORS,
+    giverType: QuestionGiverType.STUDENTS,
+    recipientType: QuestionRecipientType.INSTRUCTORS,
     numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
     customNumberOfEntitiesToGiveFeedbackTo: 5,
     showResponsesTo: [FeedbackVisibilityType.GIVER_TEAM_MEMBERS, FeedbackVisibilityType.INSTRUCTORS],
@@ -127,13 +128,11 @@ describe('CopyQuestionsFromOtherSessionsModalComponent', () => {
   let fixture: ComponentFixture<CopyQuestionsFromOtherSessionsModalComponent>;
   let feedbackQuestionsService: FeedbackQuestionsService;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [NgbActiveModal, provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(CopyQuestionsFromOtherSessionsModalComponent);
     feedbackQuestionsService = TestBed.inject(FeedbackQuestionsService);
     component = fixture.componentInstance;
@@ -183,7 +182,7 @@ describe('CopyQuestionsFromOtherSessionsModalComponent', () => {
     const feedbackQuestions: FeedbackQuestions = {
       questions: [testFeedbackQuestion1, testFeedbackQuestion2],
     };
-    jest.spyOn(feedbackQuestionsService, 'getFeedbackQuestions').mockReturnValue(of(feedbackQuestions));
+    vi.spyOn(feedbackQuestionsService, 'getFeedbackQuestions').mockReturnValue(of(feedbackQuestions));
     component.feedbackSessionTabModels = [testFeedbackSessionTabModel1];
 
     component.loadQuestions(testFeedbackSessionTabModel1);
@@ -222,7 +221,7 @@ describe('CopyQuestionsFromOtherSessionsModalComponent', () => {
     component.feedbackSessionTabModels = [testFeedbackSessionTabModel1, testFeedbackSessionTabModel2];
     fixture.detectChanges();
 
-    jest.spyOn(component.activeModal, 'close').mockImplementation((questions: FeedbackQuestion[]) => {
+    vi.spyOn(component.activeModal, 'close').mockImplementation((questions: FeedbackQuestion[]) => {
       expect(questions.length).toBe(3);
       expect(questions[0].feedbackQuestionId).toBe(testFeedbackQuestion1.feedbackQuestionId);
       expect(questions[1].feedbackQuestionId).toBe(testFeedbackQuestion2.feedbackQuestionId);

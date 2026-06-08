@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
 import moment from 'moment-timezone';
 import { finalize } from 'rxjs/operators';
 import {
@@ -42,7 +42,7 @@ export class AdminNotificationsPageComponent implements OnInit {
   private tableComparatorService = inject(TableComparatorService);
   private timezoneService = inject(TimezoneService);
 
-  NotificationEditFormMode = NotificationEditFormMode;
+  NotificationEditFormMode!: typeof NotificationEditFormMode;
 
   currentNotificationEditFormMode = NotificationEditFormMode.ADD;
   isNotificationLoading = false;
@@ -52,7 +52,6 @@ export class AdminNotificationsPageComponent implements OnInit {
 
   notificationEditFormModel: NotificationEditFormModel = {
     notificationId: '',
-    shown: false,
 
     startTime: getDefaultTimeFormat(),
     startDate: getDefaultDateFormat(),
@@ -75,6 +74,10 @@ export class AdminNotificationsPageComponent implements OnInit {
 
   guessTimezone = 'UTC';
 
+  constructor() {
+    this.NotificationEditFormMode = NotificationEditFormMode;
+  }
+
   ngOnInit(): void {
     this.initNotificationEditFormModel();
     this.loadNotifications();
@@ -91,7 +94,6 @@ export class AdminNotificationsPageComponent implements OnInit {
     const tomorrow: moment.Moment = moment().add(1, 'days');
     this.notificationEditFormModel = {
       notificationId: '',
-      shown: false,
 
       startTime: {
         minute: nearFuture.hour() === 0 ? 59 : 0, // for 00:00 midnight, we use 23:59
@@ -128,7 +130,14 @@ export class AdminNotificationsPageComponent implements OnInit {
   loadNotifications(): void {
     this.isNotificationLoading = true;
     this.notificationService
-      .getNotifications()
+      .getNotifications({
+        targetUsers: [
+          NotificationTargetUser.STUDENT,
+          NotificationTargetUser.INSTRUCTOR,
+          NotificationTargetUser.GENERAL,
+        ],
+        isFetchingActive: false,
+      })
       .pipe(
         finalize(() => {
           this.isNotificationLoading = false;
@@ -196,7 +205,6 @@ export class AdminNotificationsPageComponent implements OnInit {
     const endTime = moment(notification.endTimestamp);
     this.notificationEditFormModel = {
       notificationId: notification.notificationId,
-      shown: notification.shown,
 
       startTime: {
         minute: startTime.hour() === 0 ? 59 : 0, // for 00:00 midnight, we use 23:59

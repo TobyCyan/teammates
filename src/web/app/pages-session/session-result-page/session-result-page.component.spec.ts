@@ -1,14 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import SpyInstance = jest.SpyInstance;
 import { FeedbackQuestionModel } from './feedback-question.model';
 import { SessionResultPageComponent } from './session-result-page.component';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
-import { FeedbackQuestionsService } from '../../../services/feedback-questions.service';
 import { FeedbackSessionsService } from '../../../services/feedback-sessions.service';
 import { LogService } from '../../../services/log.service';
 import { NavigationService } from '../../../services/navigation.service';
@@ -16,14 +14,16 @@ import { StudentService } from '../../../services/student.service';
 import {
   AuthInfo,
   FeedbackMcqQuestionDetails,
-  FeedbackParticipantType,
   FeedbackQuestion,
-  FeedbackQuestions,
   FeedbackQuestionType,
   FeedbackSession,
+  FeedbackSessionView,
   FeedbackSessionPublishStatus,
   FeedbackSessionSubmissionStatus,
   NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionGiverType,
+  QuestionRecipientType,
+  SessionResults,
   RegkeyValidity,
   ResponseVisibleSetting,
   SessionVisibleSetting,
@@ -32,6 +32,7 @@ import { Intent } from '../../../types/api-request';
 
 describe('SessionResultPageComponent', () => {
   const testFeedbackSession: FeedbackSession = {
+    feedbackSessionId: 'test-session-id',
     feedbackSessionName: 'First Session',
     courseId: 'CS1231',
     timeZone: 'Asia/Singapore',
@@ -47,8 +48,12 @@ describe('SessionResultPageComponent', () => {
     isPublishedEmailEnabled: true,
     createdAtTimestamp: 0,
   };
+  const testFeedbackSessionView: FeedbackSessionView = {
+    feedbackSession: testFeedbackSession,
+  };
 
   const testInfo: AuthInfo = {
+    loginUrl: '/login',
     masquerade: false,
     user: {
       id: 'user-id',
@@ -56,6 +61,7 @@ describe('SessionResultPageComponent', () => {
       isInstructor: true,
       isStudent: false,
       isMaintainer: false,
+      accountId: 'account-id',
     },
   };
 
@@ -76,8 +82,8 @@ describe('SessionResultPageComponent', () => {
       questionText: 'How well did team member perform?',
     } as FeedbackMcqQuestionDetails,
     questionType: FeedbackQuestionType.MCQ,
-    giverType: FeedbackParticipantType.STUDENTS,
-    recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+    giverType: QuestionGiverType.STUDENTS,
+    recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
     numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.UNLIMITED,
     showResponsesTo: [],
     showGiverNameTo: [],
@@ -90,19 +96,17 @@ describe('SessionResultPageComponent', () => {
   let authService: AuthService;
   let navService: NavigationService;
   let studentService: StudentService;
-  let feedbackQuestionsService: FeedbackQuestionsService;
   let feedbackSessionService: FeedbackSessionsService;
   let logService: LogService;
 
   const testQueryParams: Record<string, string> = {
-    courseid: 'CS3281',
-    fsname: 'Peer Feedback',
+    fsid: 'test-session-id',
     key: 'reg-key',
     previewas: '',
   };
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         provideHttpClient(),
@@ -123,14 +127,11 @@ describe('SessionResultPageComponent', () => {
         },
       ],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(SessionResultPageComponent);
     authService = TestBed.inject(AuthService);
     navService = TestBed.inject(NavigationService);
     studentService = TestBed.inject(StudentService);
-    feedbackQuestionsService = TestBed.inject(FeedbackQuestionsService);
     feedbackSessionService = TestBed.inject(FeedbackSessionsService);
     logService = TestBed.inject(LogService);
     component = fixture.componentInstance;
@@ -138,6 +139,7 @@ describe('SessionResultPageComponent', () => {
     component.isCourseLoading = false;
     component.isFeedbackSessionDetailsLoading = false;
     component.isFeedbackSessionResultsLoading = false;
+    vi.spyOn(feedbackSessionService, 'getUserSessionResults').mockReturnValue(of({ questions: [] }));
     fixture.detectChanges();
   });
 
@@ -192,6 +194,7 @@ describe('SessionResultPageComponent', () => {
 
   it('should snap with an open feedback session with no questions', () => {
     component.session = {
+      feedbackSessionId: 'test-session-id',
       courseId: 'CS3281',
       timeZone: 'UTC',
       feedbackSessionName: 'Peer Review 1',
@@ -225,12 +228,11 @@ describe('SessionResultPageComponent', () => {
   });
 
   it('should fetch auth info on init', () => {
-    jest.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
+    vi.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
 
     component.ngOnInit();
 
-    expect(component.courseId).toEqual('CS3281');
-    expect(component.feedbackSessionName).toEqual('Peer Feedback');
+    expect(component.feedbackSessionId).toEqual('test-session-id');
     expect(component.regKey).toEqual('reg-key');
     expect(component.loggedInUser).toEqual('user-id');
   });
@@ -241,38 +243,42 @@ describe('SessionResultPageComponent', () => {
       isUsed: true,
       isValid: false,
     };
-    jest.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
-    jest.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
-    const navSpy: SpyInstance = jest.spyOn(navService, 'navigateByURLWithParamEncoding').mockImplementation();
+    vi.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
+    vi.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
+    const navSpy = vi.spyOn(navService, 'navigateByURLWithParamEncoding').mockResolvedValue(true);
 
     component.ngOnInit();
 
     expect(navSpy).toHaveBeenCalledTimes(1);
     expect(navSpy).toHaveBeenLastCalledWith('/web/student/sessions/result', {
-      courseid: 'CS3281',
-      fsname: 'Peer Feedback',
+      fsid: 'test-session-id',
     });
   });
 
-  it('should load info and create log for unused reg key that is allowed', () => {
+  it('should load info and create log', () => {
     const testValidity: RegkeyValidity = {
       isAllowedAccess: true,
       isUsed: false,
       isValid: false,
     };
-    jest.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
-    jest.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
-    jest.spyOn(studentService, 'getStudent').mockReturnValue(
+    vi.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
+    vi.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
+    vi.spyOn(studentService, 'getStudent').mockReturnValue(
       of({
         name: 'student-name',
         email: 'student@tmt.tmt',
         courseId: '',
+        courseName: '',
+        institute: '',
+        userId: 'student-name-id',
         sectionName: '',
+        sectionId: '',
         teamName: '',
+        teamId: '',
       }),
     );
-    jest.spyOn(feedbackSessionService, 'getFeedbackSession').mockReturnValue(of(testFeedbackSession));
-    const logSpy: SpyInstance = jest.spyOn(logService, 'createFeedbackSessionLog').mockReturnValue(of('log created'));
+    vi.spyOn(feedbackSessionService, 'getFeedbackSession').mockReturnValue(of(testFeedbackSessionView));
+    const logSpy = vi.spyOn(logService, 'createFeedbackSessionLog').mockReturnValue(of('log created'));
 
     component.ngOnInit();
 
@@ -287,9 +293,9 @@ describe('SessionResultPageComponent', () => {
       isUsed: false,
       isValid: true,
     };
-    jest.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
-    jest.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
-    const navSpy: SpyInstance = jest.spyOn(navService, 'navigateWithErrorMessage').mockImplementation();
+    vi.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
+    vi.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
+    const navSpy = vi.spyOn(navService, 'navigateWithErrorMessage').mockResolvedValue();
 
     component.ngOnInit();
 
@@ -310,9 +316,9 @@ describe('SessionResultPageComponent', () => {
       isUsed: false,
       isValid: false,
     };
-    jest.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
-    jest.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
-    const navSpy: SpyInstance = jest.spyOn(navService, 'navigateWithErrorMessage').mockImplementation();
+    vi.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
+    vi.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
+    const navSpy = vi.spyOn(navService, 'navigateWithErrorMessage').mockResolvedValue();
 
     component.ngOnInit();
 
@@ -321,12 +327,12 @@ describe('SessionResultPageComponent', () => {
   });
 
   it('should navigate away when error occurs', () => {
-    jest.spyOn(authService, 'getAuthUser').mockReturnValue(
+    vi.spyOn(authService, 'getAuthUser').mockReturnValue(
       throwError(() => ({
         error: { message: 'This is error' },
       })),
     );
-    const navSpy: SpyInstance = jest.spyOn(navService, 'navigateWithErrorMessage').mockImplementation();
+    const navSpy = vi.spyOn(navService, 'navigateWithErrorMessage').mockResolvedValue();
 
     fixture.detectChanges();
     component.ngOnInit();
@@ -338,7 +344,7 @@ describe('SessionResultPageComponent', () => {
   it('should navigate to join course when user click on join course link', () => {
     component.regKey = 'reg-key';
     component.loggedInUser = 'user';
-    const navSpy: SpyInstance = jest.spyOn(navService, 'navigateByURL').mockImplementation();
+    const navSpy = vi.spyOn(navService, 'navigateByURL').mockResolvedValue(true);
 
     fixture.detectChanges();
 
@@ -349,38 +355,47 @@ describe('SessionResultPageComponent', () => {
     expect(navSpy).toHaveBeenLastCalledWith('/web/join', { entitytype: 'student', key: 'reg-key' });
   });
 
-  it('should load feedback questions', () => {
+  it('should load session results and hydrate questions', () => {
     const testValidity: RegkeyValidity = {
       isAllowedAccess: true,
       isUsed: false,
       isValid: false,
     };
-    const testFeedbackQuestions: FeedbackQuestions = {
-      questions: [testFeedbackQuestion],
-    };
     const testFeedbackQuestionModel: FeedbackQuestionModel = {
       feedbackQuestion: testFeedbackQuestion,
-      questionStatistics: '',
+      questionStatistics: 'stats',
       allResponses: [],
       responsesToSelf: [],
       responsesFromSelf: [],
       otherResponses: [],
       isLoading: false,
-      isLoaded: false,
-      hasResponse: false,
+      isLoaded: true,
       hasResponseButNotVisibleForPreview: false,
       hasCommentNotVisibleForPreview: false,
     };
-
-    jest.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
-    jest.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
-    jest.spyOn(feedbackSessionService, 'getFeedbackSession').mockReturnValue(of(testFeedbackSession));
-    const getQuestionsSpy: SpyInstance = jest
-      .spyOn(feedbackQuestionsService, 'getFeedbackQuestions')
-      .mockReturnValue(of(testFeedbackQuestions));
+    const testSessionResults: SessionResults = {
+      questions: [
+        {
+          feedbackQuestion: testFeedbackQuestion,
+          questionStatistics: 'stats',
+          allResponses: [],
+          hasResponseButNotVisibleForPreview: false,
+          hasCommentNotVisibleForPreview: false,
+          responsesToSelf: [],
+          responsesFromSelf: [],
+          otherResponses: [],
+        },
+      ],
+    };
+    vi.spyOn(authService, 'getAuthUser').mockReturnValue(of(testInfo));
+    vi.spyOn(authService, 'getAuthRegkeyValidity').mockReturnValue(of(testValidity));
+    vi.spyOn(feedbackSessionService, 'getFeedbackSession').mockReturnValue(of(testFeedbackSessionView));
+    const getResultsSpy = vi
+      .spyOn(feedbackSessionService, 'getUserSessionResults')
+      .mockReturnValue(of(testSessionResults));
 
     component.ngOnInit();
-    expect(getQuestionsSpy).toHaveBeenLastCalledWith({
+    expect(getResultsSpy).toHaveBeenLastCalledWith({
       feedbackSessionId: testQueryParams['fsid'],
       intent: Intent.STUDENT_RESULT,
       key: testQueryParams['key'],

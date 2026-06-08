@@ -1,19 +1,18 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`StudentHomePageComponent should snap when courses are still loading 1`] = `
+exports[`StudentHomePageComponent > should snap when courses are still loading 1`] = `
 <tm-student-home-page
   SortBy={[Function Object]}
   allStudentFeedbackSessionsNotReturned={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   courses={[Function Array]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  formatDateDetailPipe={[Function FormatDateDetailPipe]}
+  dateFormatService={[Function _DateFormatService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasCoursesLoadingFailed="false"
   isCoursesLoading={[Function Boolean]}
   route={[Function ActivatedRoute]}
-  sessionSubmissionStatusPipe={[Function SubmissionStatusPipe]}
   sortBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentFeedbackSessionStatusAwaiting={[Function String]}
   studentFeedbackSessionStatusClosed={[Function String]}
   studentFeedbackSessionStatusExtension={[Function String]}
@@ -21,8 +20,8 @@ exports[`StudentHomePageComponent should snap when courses are still loading 1`]
   studentFeedbackSessionStatusPending={[Function String]}
   studentFeedbackSessionStatusPublished={[Function String]}
   studentFeedbackSessionStatusSubmitted={[Function String]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <tm-loading-retry>
     <div
@@ -47,20 +46,19 @@ exports[`StudentHomePageComponent should snap when courses are still loading 1`]
 </tm-student-home-page>
 `;
 
-exports[`StudentHomePageComponent should snap when there is course loading failed 1`] = `
+exports[`StudentHomePageComponent > should snap when there is course loading failed 1`] = `
 <tm-student-home-page
   SortBy={[Function Object]}
   allStudentFeedbackSessionsNotReturned={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   courses={[Function Array]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  formatDateDetailPipe={[Function FormatDateDetailPipe]}
+  dateFormatService={[Function _DateFormatService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasCoursesLoadingFailed={[Function Boolean]}
   isCoursesLoading="false"
   route={[Function ActivatedRoute]}
-  sessionSubmissionStatusPipe={[Function SubmissionStatusPipe]}
   sortBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentFeedbackSessionStatusAwaiting={[Function String]}
   studentFeedbackSessionStatusClosed={[Function String]}
   studentFeedbackSessionStatusExtension={[Function String]}
@@ -68,8 +66,8 @@ exports[`StudentHomePageComponent should snap when there is course loading faile
   studentFeedbackSessionStatusPending={[Function String]}
   studentFeedbackSessionStatusPublished={[Function String]}
   studentFeedbackSessionStatusSubmitted={[Function String]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <tm-loading-retry>
     <div
@@ -97,20 +95,19 @@ exports[`StudentHomePageComponent should snap when there is course loading faile
 </tm-student-home-page>
 `;
 
-exports[`StudentHomePageComponent should snap with all feedback sessions over 2 courses 1`] = `
+exports[`StudentHomePageComponent > should snap with all feedback sessions over 2 courses 1`] = `
 <tm-student-home-page
   SortBy={[Function Object]}
   allStudentFeedbackSessionsNotReturned={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   courses={[Function Array]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  formatDateDetailPipe={[Function FormatDateDetailPipe]}
+  dateFormatService={[Function _DateFormatService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasCoursesLoadingFailed="false"
   isCoursesLoading="false"
   route={[Function ActivatedRoute]}
-  sessionSubmissionStatusPipe={[Function SubmissionStatusPipe]}
   sortBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentFeedbackSessionStatusAwaiting={[Function String]}
   studentFeedbackSessionStatusClosed={[Function String]}
   studentFeedbackSessionStatusExtension={[Function String]}
@@ -118,8 +115,8 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
   studentFeedbackSessionStatusPending={[Function String]}
   studentFeedbackSessionStatusPublished={[Function String]}
   studentFeedbackSessionStatusSubmitted={[Function String]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <tm-loading-retry>
     <div
@@ -267,7 +264,7 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
                     >
                       <a
                         class="btn btn-light btn-sm btn-margin-right custom-button disabled"
-                        href="/web/student/sessions/result?courseid=CS1231&fsname=First%20Session"
+                        href="/web/student/sessions/result?fsid=test-feedback-session-id-001"
                         id="view-responses-btn-0"
                         tmrouterlink="/web/student/sessions/result"
                       >
@@ -275,7 +272,7 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
                       </a>
                       <a
                         class="btn btn-light btn-sm custom-button"
-                        href="/web/student/sessions/submission?courseid=CS1231&fsname=First%20Session"
+                        href="/web/student/sessions/submission?fsid=test-feedback-session-id-001"
                         id="edit-submit-btn-0"
                         tmrouterlink="/web/student/sessions/submission"
                       >
@@ -313,7 +310,7 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
                     >
                       <a
                         class="btn btn-light btn-sm btn-margin-right custom-button disabled"
-                        href="/web/student/sessions/result?courseid=CS1231&fsname=Second%20Session"
+                        href="/web/student/sessions/result?fsid=test-feedback-session-id-002"
                         id="view-responses-btn-1"
                         tmrouterlink="/web/student/sessions/result"
                       >
@@ -321,7 +318,7 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
                       </a>
                       <a
                         class="btn btn-light btn-sm custom-button"
-                        href="/web/student/sessions/submission?courseid=CS1231&fsname=Second%20Session"
+                        href="/web/student/sessions/submission?fsid=test-feedback-session-id-002"
                         id="view-submit-btn-1"
                         tmrouterlink="/web/student/sessions/submission"
                       >
@@ -435,7 +432,7 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
                     >
                       <a
                         class="btn btn-light btn-sm btn-margin-right custom-button disabled"
-                        href="/web/student/sessions/result?courseid=LSM1306&fsname=Third%20Session"
+                        href="/web/student/sessions/result?fsid=test-feedback-session-id-003"
                         id="view-responses-btn-0"
                         tmrouterlink="/web/student/sessions/result"
                       >
@@ -443,7 +440,7 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
                       </a>
                       <a
                         class="btn btn-light btn-sm custom-button"
-                        href="/web/student/sessions/submission?courseid=LSM1306&fsname=Third%20Session"
+                        href="/web/student/sessions/submission?fsid=test-feedback-session-id-003"
                         id="edit-submit-btn-0"
                         tmrouterlink="/web/student/sessions/submission"
                       >
@@ -481,7 +478,7 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
                     >
                       <a
                         class="btn btn-light btn-sm btn-margin-right custom-button disabled"
-                        href="/web/student/sessions/result?courseid=LSM1306&fsname=Fourth%20Session"
+                        href="/web/student/sessions/result?fsid=test-feedback-session-id-004"
                         id="view-responses-btn-1"
                         tmrouterlink="/web/student/sessions/result"
                       >
@@ -489,7 +486,7 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
                       </a>
                       <a
                         class="btn btn-light btn-sm custom-button"
-                        href="/web/student/sessions/submission?courseid=LSM1306&fsname=Fourth%20Session"
+                        href="/web/student/sessions/submission?fsid=test-feedback-session-id-004"
                         id="view-submit-btn-1"
                         tmrouterlink="/web/student/sessions/submission"
                       >
@@ -508,20 +505,19 @@ exports[`StudentHomePageComponent should snap with all feedback sessions over 2 
 </tm-student-home-page>
 `;
 
-exports[`StudentHomePageComponent should snap with default fields 1`] = `
+exports[`StudentHomePageComponent > should snap with default fields 1`] = `
 <tm-student-home-page
   SortBy={[Function Object]}
   allStudentFeedbackSessionsNotReturned={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   courses={[Function Array]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  formatDateDetailPipe={[Function FormatDateDetailPipe]}
+  dateFormatService={[Function _DateFormatService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasCoursesLoadingFailed="false"
   isCoursesLoading={[Function Boolean]}
   route={[Function ActivatedRoute]}
-  sessionSubmissionStatusPipe={[Function SubmissionStatusPipe]}
   sortBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentFeedbackSessionStatusAwaiting={[Function String]}
   studentFeedbackSessionStatusClosed={[Function String]}
   studentFeedbackSessionStatusExtension={[Function String]}
@@ -529,8 +525,8 @@ exports[`StudentHomePageComponent should snap with default fields 1`] = `
   studentFeedbackSessionStatusPending={[Function String]}
   studentFeedbackSessionStatusPublished={[Function String]}
   studentFeedbackSessionStatusSubmitted={[Function String]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <tm-loading-retry>
     <div
@@ -555,20 +551,19 @@ exports[`StudentHomePageComponent should snap with default fields 1`] = `
 </tm-student-home-page>
 `;
 
-exports[`StudentHomePageComponent should snap with feedback sessions 1`] = `
+exports[`StudentHomePageComponent > should snap with feedback sessions 1`] = `
 <tm-student-home-page
   SortBy={[Function Object]}
   allStudentFeedbackSessionsNotReturned={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   courses={[Function Array]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  formatDateDetailPipe={[Function FormatDateDetailPipe]}
+  dateFormatService={[Function _DateFormatService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasCoursesLoadingFailed="false"
   isCoursesLoading="false"
   route={[Function ActivatedRoute]}
-  sessionSubmissionStatusPipe={[Function SubmissionStatusPipe]}
   sortBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentFeedbackSessionStatusAwaiting={[Function String]}
   studentFeedbackSessionStatusClosed={[Function String]}
   studentFeedbackSessionStatusExtension={[Function String]}
@@ -576,8 +571,8 @@ exports[`StudentHomePageComponent should snap with feedback sessions 1`] = `
   studentFeedbackSessionStatusPending={[Function String]}
   studentFeedbackSessionStatusPublished={[Function String]}
   studentFeedbackSessionStatusSubmitted={[Function String]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <tm-loading-retry>
     <div
@@ -684,7 +679,7 @@ exports[`StudentHomePageComponent should snap with feedback sessions 1`] = `
                     >
                       <a
                         class="btn btn-light btn-sm btn-margin-right custom-button"
-                        href="/web/student/sessions/result?courseid=CS2103&fsname=First%20Session"
+                        href="/web/student/sessions/result?fsid=test-feedback-session-id-019"
                         id="view-responses-btn-0"
                         tmrouterlink="/web/student/sessions/result"
                       >
@@ -692,7 +687,7 @@ exports[`StudentHomePageComponent should snap with feedback sessions 1`] = `
                       </a>
                       <a
                         class="btn btn-light btn-sm custom-button"
-                        href="/web/student/sessions/submission?courseid=CS2103&fsname=First%20Session"
+                        href="/web/student/sessions/submission?fsid=test-feedback-session-id-019"
                         id="edit-submit-btn-0"
                         tmrouterlink="/web/student/sessions/submission"
                       >
@@ -730,7 +725,7 @@ exports[`StudentHomePageComponent should snap with feedback sessions 1`] = `
                     >
                       <a
                         class="btn btn-light btn-sm btn-margin-right custom-button disabled"
-                        href="/web/student/sessions/result?courseid=CS2103&fsname=Second%20Session"
+                        href="/web/student/sessions/result?fsid=test-feedback-session-id-020"
                         id="view-responses-btn-1"
                         tmrouterlink="/web/student/sessions/result"
                       >
@@ -738,7 +733,7 @@ exports[`StudentHomePageComponent should snap with feedback sessions 1`] = `
                       </a>
                       <a
                         class="btn btn-light btn-sm custom-button"
-                        href="/web/student/sessions/submission?courseid=CS2103&fsname=Second%20Session"
+                        href="/web/student/sessions/submission?fsid=test-feedback-session-id-020"
                         id="start-submit-btn-1"
                         tmrouterlink="/web/student/sessions/submission"
                       >
@@ -757,20 +752,19 @@ exports[`StudentHomePageComponent should snap with feedback sessions 1`] = `
 </tm-student-home-page>
 `;
 
-exports[`StudentHomePageComponent should snap with no course 1`] = `
+exports[`StudentHomePageComponent > should snap with no course 1`] = `
 <tm-student-home-page
   SortBy={[Function Object]}
   allStudentFeedbackSessionsNotReturned={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   courses={[Function Array]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  formatDateDetailPipe={[Function FormatDateDetailPipe]}
+  dateFormatService={[Function _DateFormatService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasCoursesLoadingFailed="false"
   isCoursesLoading="false"
   route={[Function ActivatedRoute]}
-  sessionSubmissionStatusPipe={[Function SubmissionStatusPipe]}
   sortBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentFeedbackSessionStatusAwaiting={[Function String]}
   studentFeedbackSessionStatusClosed={[Function String]}
   studentFeedbackSessionStatusExtension={[Function String]}
@@ -778,8 +772,8 @@ exports[`StudentHomePageComponent should snap with no course 1`] = `
   studentFeedbackSessionStatusPending={[Function String]}
   studentFeedbackSessionStatusPublished={[Function String]}
   studentFeedbackSessionStatusSubmitted={[Function String]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <tm-loading-retry>
     <div
@@ -802,20 +796,19 @@ exports[`StudentHomePageComponent should snap with no course 1`] = `
 </tm-student-home-page>
 `;
 
-exports[`StudentHomePageComponent should snap with no feedback session over 2 courses 1`] = `
+exports[`StudentHomePageComponent > should snap with no feedback session over 2 courses 1`] = `
 <tm-student-home-page
   SortBy={[Function Object]}
   allStudentFeedbackSessionsNotReturned={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   courses={[Function Array]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  formatDateDetailPipe={[Function FormatDateDetailPipe]}
+  dateFormatService={[Function _DateFormatService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasCoursesLoadingFailed="false"
   isCoursesLoading="false"
   route={[Function ActivatedRoute]}
-  sessionSubmissionStatusPipe={[Function SubmissionStatusPipe]}
   sortBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentFeedbackSessionStatusAwaiting={[Function String]}
   studentFeedbackSessionStatusClosed={[Function String]}
   studentFeedbackSessionStatusExtension={[Function String]}
@@ -823,8 +816,8 @@ exports[`StudentHomePageComponent should snap with no feedback session over 2 co
   studentFeedbackSessionStatusPending={[Function String]}
   studentFeedbackSessionStatusPublished={[Function String]}
   studentFeedbackSessionStatusSubmitted={[Function String]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <tm-loading-retry>
     <div
@@ -977,20 +970,19 @@ exports[`StudentHomePageComponent should snap with no feedback session over 2 co
 </tm-student-home-page>
 `;
 
-exports[`StudentHomePageComponent should snap with no feedback sessions 1`] = `
+exports[`StudentHomePageComponent > should snap with no feedback sessions 1`] = `
 <tm-student-home-page
   SortBy={[Function Object]}
   allStudentFeedbackSessionsNotReturned={[Function String]}
-  courseService={[Function CourseService]}
+  courseService={[Function _CourseService]}
   courses={[Function Array]}
-  feedbackSessionsService={[Function FeedbackSessionsService]}
-  formatDateDetailPipe={[Function FormatDateDetailPipe]}
+  dateFormatService={[Function _DateFormatService]}
+  feedbackSessionsService={[Function _FeedbackSessionsService]}
   hasCoursesLoadingFailed="false"
   isCoursesLoading="false"
   route={[Function ActivatedRoute]}
-  sessionSubmissionStatusPipe={[Function SubmissionStatusPipe]}
   sortBy={[Function Number]}
-  statusMessageService={[Function StatusMessageService]}
+  statusMessageService={[Function _StatusMessageService]}
   studentFeedbackSessionStatusAwaiting={[Function String]}
   studentFeedbackSessionStatusClosed={[Function String]}
   studentFeedbackSessionStatusExtension={[Function String]}
@@ -998,8 +990,8 @@ exports[`StudentHomePageComponent should snap with no feedback sessions 1`] = `
   studentFeedbackSessionStatusPending={[Function String]}
   studentFeedbackSessionStatusPublished={[Function String]}
   studentFeedbackSessionStatusSubmitted={[Function String]}
-  tableComparatorService={[Function TableComparatorService]}
-  timezoneService={[Function TimezoneService]}
+  tableComparatorService={[Function _TableComparatorService]}
+  timezoneService={[Function _TimezoneService]}
 >
   <tm-loading-retry>
     <div

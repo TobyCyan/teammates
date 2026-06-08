@@ -3,25 +3,25 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConstsumOptionsQuestionEditAnswerFormComponent } from './constsum-options-question-edit-answer-form.component';
 import { createBuilder } from '../../../../test-helpers/generic-builder';
 import {
-  FeedbackConstantSumQuestionDetails,
-  FeedbackConstantSumResponseDetails,
+  FeedbackConstantSumOptionsQuestionDetails,
+  FeedbackConstantSumOptionsResponseDetails,
   FeedbackQuestionType,
 } from '../../../../types/api-output';
+import { DEFAULT_CONSTSUM_OPTIONS_RESPONSE_DETAILS } from '../../../../types/default-question-structs';
 
 describe('ConstsumOptionsQuestionEditAnswerFormComponent', () => {
   let component: ConstsumOptionsQuestionEditAnswerFormComponent;
   let fixture: ComponentFixture<ConstsumOptionsQuestionEditAnswerFormComponent>;
 
-  const feedbackConstantSumResponseDetailsBuilder = createBuilder<FeedbackConstantSumResponseDetails>({
+  const feedbackConstantSumResponseDetailsBuilder = createBuilder<FeedbackConstantSumOptionsResponseDetails>({
     questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
     answers: [],
   });
 
-  const feedbackConstantSumQuestionDetailsBuilder = createBuilder<FeedbackConstantSumQuestionDetails>({
+  const feedbackConstantSumQuestionDetailsBuilder = createBuilder<FeedbackConstantSumOptionsQuestionDetails>({
     questionType: FeedbackQuestionType.CONSTSUM_OPTIONS,
     questionText: '',
     constSumOptions: [],
-    distributeToRecipients: false,
     pointsPerOption: false,
     forceUnevenDistribution: false,
     distributePointsFor: '',
@@ -31,6 +31,10 @@ describe('ConstsumOptionsQuestionEditAnswerFormComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(ConstsumOptionsQuestionEditAnswerFormComponent);
     component = fixture.componentInstance;
+    component.responseDetails = DEFAULT_CONSTSUM_OPTIONS_RESPONSE_DETAILS();
+    component.questionDetails = feedbackConstantSumQuestionDetailsBuilder
+      .constSumOptions(['Option 1', 'Option 2'])
+      .build();
     fixture.detectChanges();
   });
 
@@ -39,7 +43,7 @@ describe('ConstsumOptionsQuestionEditAnswerFormComponent', () => {
   });
 
   it('triggerResponse: should round up event in newAnswers when setting new number for index', () => {
-    const triggerResponseDetailsChangeSpy = jest.spyOn(component, 'triggerResponseDetailsChange');
+    const triggerResponseDetailsChangeSpy = vi.spyOn(component, 'triggerResponseDetailsChange');
     component.responseDetails = feedbackConstantSumResponseDetailsBuilder.answers([0, 0, 0]).build();
     component.questionDetails = feedbackConstantSumQuestionDetailsBuilder.constSumOptions(['1', '2', '3']).build();
 
@@ -52,7 +56,7 @@ describe('ConstsumOptionsQuestionEditAnswerFormComponent', () => {
     'triggerResponse: should set newAnswers to be array of 0s when response answers is' +
       'not the same length as question options',
     () => {
-      const triggerResponseDetailsChangeSpy = jest.spyOn(component, 'triggerResponseDetailsChange');
+      const triggerResponseDetailsChangeSpy = vi.spyOn(component, 'triggerResponseDetailsChange');
       component.responseDetails = feedbackConstantSumResponseDetailsBuilder.answers([5, 5]).build();
       component.questionDetails = feedbackConstantSumQuestionDetailsBuilder.constSumOptions(['1', '2', '3']).build();
 
@@ -186,7 +190,11 @@ describe('ConstsumOptionsQuestionEditAnswerFormComponent', () => {
       component.responseDetails = feedbackConstantSumResponseDetailsBuilder.answers([1, 2, 4]).build();
 
       // totalRequiredPoints = answers.length * points = 3 (calculated in component.totalRequirePoints)
-      component.questionDetails = feedbackConstantSumQuestionDetailsBuilder.points(1).build();
+      component.questionDetails = feedbackConstantSumQuestionDetailsBuilder
+        .pointsPerOption(true)
+        .points(1)
+        .constSumOptions(['1', '2', '3'])
+        .build();
 
       expect(component.isAnyPointAboveMaximum).toBeTruthy();
     },
@@ -199,7 +207,11 @@ describe('ConstsumOptionsQuestionEditAnswerFormComponent', () => {
       component.responseDetails = feedbackConstantSumResponseDetailsBuilder.answers([1, 2, 3]).build();
 
       // totalRequiredPoints = answers.length * points = 3 (calculated in component.totalRequirePoints)
-      component.questionDetails = feedbackConstantSumQuestionDetailsBuilder.points(1).build();
+      component.questionDetails = feedbackConstantSumQuestionDetailsBuilder
+        .pointsPerOption(true)
+        .points(1)
+        .constSumOptions(['1', '2', '3'])
+        .build();
 
       expect(component.isAnyPointAboveMaximum).toBeFalsy();
     },

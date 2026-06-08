@@ -1,7 +1,6 @@
 package teammates.ui.webapi;
 
 import teammates.common.util.Const;
-import teammates.storage.entity.Instructor;
 import teammates.ui.exception.UnauthorizedAccessException;
 
 /**
@@ -16,22 +15,16 @@ public class DeleteStudentsAction extends Action {
 
     @Override
     void checkSpecificAccessControl() throws UnauthorizedAccessException {
-        if (!userInfo.isInstructor) {
-            throw new UnauthorizedAccessException("Instructor privilege is required to delete students from course.");
-        }
-
         String courseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
 
-        Instructor instructor = logic.getInstructorByGoogleId(courseId, userInfo.id);
-        gateKeeper.verifyAccessible(
-                    instructor, logic.getCourse(courseId), Const.InstructorPermissions.CAN_MODIFY_STUDENT);
+        gateKeeper.verifyInstructorHasPrivilege(requestContext, courseId, Const.InstructorPermissions.CAN_MODIFY_STUDENT);
     }
 
     @Override
     public JsonResult execute() {
         var courseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
 
-        logic.deleteStudentsInCourseCascade(courseId);
+        logic.deleteStudentsInCourse(courseId);
 
         return new JsonResult("Successful");
     }

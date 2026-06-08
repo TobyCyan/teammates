@@ -3,10 +3,7 @@ import { Component, Input, inject } from '@angular/core';
 import { QuestionEditAnswerFormComponent } from './question-edit-answer-form';
 import { SimpleModalService } from '../../../../services/simple-modal.service';
 import { FeedbackRubricQuestionDetails, FeedbackRubricResponseDetails } from '../../../../types/api-output';
-import {
-  DEFAULT_RUBRIC_QUESTION_DETAILS,
-  DEFAULT_RUBRIC_RESPONSE_DETAILS,
-} from '../../../../types/default-question-structs';
+import { DEFAULT_RUBRIC_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 import { RUBRIC_ANSWER_NOT_CHOSEN } from '../../../../types/feedback-response-details';
 import { SimpleModalType } from '../../simple-modal/simple-modal-type';
 
@@ -19,10 +16,9 @@ import { SimpleModalType } from '../../simple-modal/simple-modal-type';
   styleUrls: ['./rubric-question-edit-answer-form.component.scss'],
   imports: [NgClass],
 })
-export class RubricQuestionEditAnswerFormComponent extends QuestionEditAnswerFormComponent<
-  FeedbackRubricQuestionDetails,
-  FeedbackRubricResponseDetails
-> {
+export class RubricQuestionEditAnswerFormComponent extends QuestionEditAnswerFormComponent<FeedbackRubricResponseDetails> {
+  @Input() questionDetails: FeedbackRubricQuestionDetails = DEFAULT_RUBRIC_QUESTION_DETAILS();
+
   private simpleModalService = inject(SimpleModalService);
 
   /**
@@ -34,10 +30,11 @@ export class RubricQuestionEditAnswerFormComponent extends QuestionEditAnswerFor
   id = '';
 
   // constant
-  readonly RUBRIC_ANSWER_NOT_CHOSEN: number = RUBRIC_ANSWER_NOT_CHOSEN;
+  readonly RUBRIC_ANSWER_NOT_CHOSEN: number;
 
   constructor() {
-    super(DEFAULT_RUBRIC_QUESTION_DETAILS(), DEFAULT_RUBRIC_RESPONSE_DETAILS());
+    super();
+    this.RUBRIC_ANSWER_NOT_CHOSEN = RUBRIC_ANSWER_NOT_CHOSEN;
   }
 
   /**

@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NgbModalRef, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { Observable, of } from 'rxjs';
 import { concatMap, finalize } from 'rxjs/operators';
 import { InstructorSessionNoResponsePanelComponent } from './instructor-session-no-response-panel.component';
@@ -11,7 +12,12 @@ import { InstructorSessionResultRgqViewComponent } from './instructor-session-re
 import { InstructorSessionResultRqgViewComponent } from './instructor-session-result-rqg-view.component';
 import { InstructorSessionResultSectionType } from './instructor-session-result-section-type.enum';
 import { InstructorSessionResultViewType } from './instructor-session-result-view-type.enum';
-import { SectionTabModel, QuestionTabModel } from './instructor-session-tab.model';
+import {
+  SectionTabModel,
+  QuestionTabModel,
+  DEFAULT_SECTION_ID,
+  DEFAULT_SECTION_NAME,
+} from './instructor-session-tab.model';
 import { CourseService } from '../../../services/course.service';
 import { FeedbackQuestionsService } from '../../../services/feedback-questions.service';
 import { FeedbackSessionActionsService } from '../../../services/feedback-session-actions.service';
@@ -25,12 +31,15 @@ import { StatusMessageService } from '../../../services/status-message.service';
 import { StudentService } from '../../../services/student.service';
 import { TimezoneService } from '../../../services/timezone.service';
 import {
-  CourseSectionNames,
+  ContributionStatistics,
+  ContributionStatisticsEntry,
   FeedbackQuestions,
   FeedbackSession,
+  FeedbackSessionView,
   FeedbackSessionPublishStatus,
   FeedbackSessionSubmissionStatus,
   FeedbackSessionSubmittedGiverSet,
+  FeedbackVisibilityType,
   Instructor,
   Instructors,
   QuestionOutput,
@@ -48,12 +57,12 @@ import { CommentsToCommentTableModelPipe } from '../../components/comment-box/co
 import { LoadingRetryComponent } from '../../components/loading-retry/loading-retry.component';
 import { LoadingSpinnerDirective } from '../../components/loading-spinner/loading-spinner.directive';
 import { PreviewSessionResultPanelComponent } from '../../components/preview-session-result-panel/preview-session-result-panel.component';
-import { QuestionStatistics } from '../../components/question-types/question-statistics/question-statistics';
 import { ReminderResponseModel } from '../../components/sessions-table/send-reminders-to-respondents-modal/send-reminders-to-respondents-model';
 import { SimpleModalType } from '../../components/simple-modal/simple-modal-type';
 import { TeammatesRouterDirective } from '../../components/teammates-router/teammates-router.directive';
 import { ViewResultsPanelComponent } from '../../components/view-results-panel/view-results-panel.component';
 import { ErrorMessageOutput } from '../../error-message-output';
+import { commentToReadOnlyComment } from '../../utils/comment-to-comment-table.util';
 
 const TIME_FORMAT = 'ddd, DD MMM, YYYY, hh:mm A zz';
 
@@ -82,24 +91,23 @@ const TIME_FORMAT = 'ddd, DD MMM, YYYY, hh:mm A zz';
   providers: [CommentsToCommentTableModelPipe],
 })
 export class InstructorSessionResultPageComponent implements OnInit {
-  private feedbackSessionsService = inject(FeedbackSessionsService);
-  private feedbackSessionActionsService = inject(FeedbackSessionActionsService);
-  private feedbackQuestionsService = inject(FeedbackQuestionsService);
-  private courseService = inject(CourseService);
-  private fileSaveService = inject(FileSaveService);
-  private studentService = inject(StudentService);
-  private instructorService = inject(InstructorService);
-  private route = inject(ActivatedRoute);
-  private timezoneService = inject(TimezoneService);
-  private simpleModalService = inject(SimpleModalService);
-  private commentsToCommentTableModel = inject(CommentsToCommentTableModelPipe);
-  private navigationService = inject(NavigationService);
-  private statusMessageService = inject(StatusMessageService);
-  private commentService = inject(InstructorCommentService);
+  private readonly feedbackSessionsService = inject(FeedbackSessionsService);
+  private readonly feedbackSessionActionsService = inject(FeedbackSessionActionsService);
+  private readonly feedbackQuestionsService = inject(FeedbackQuestionsService);
+  private readonly courseService = inject(CourseService);
+  private readonly fileSaveService = inject(FileSaveService);
+  private readonly studentService = inject(StudentService);
+  private readonly instructorService = inject(InstructorService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly timezoneService = inject(TimezoneService);
+  private readonly simpleModalService = inject(SimpleModalService);
+  private readonly navigationService = inject(NavigationService);
+  private readonly statusMessageService = inject(StatusMessageService);
+  private readonly commentService = inject(InstructorCommentService);
 
   // enum
-  InstructorSessionResultSectionType: typeof InstructorSessionResultSectionType = InstructorSessionResultSectionType;
-  InstructorSessionResultViewType: typeof InstructorSessionResultViewType = InstructorSessionResultViewType;
+  InstructorSessionResultSectionType!: typeof InstructorSessionResultSectionType;
+  InstructorSessionResultViewType!: typeof InstructorSessionResultViewType;
 
   formattedSessionOpeningTime = '';
   formattedSessionClosingTime = '';
@@ -115,7 +123,6 @@ export class InstructorSessionResultPageComponent implements OnInit {
   showStatistics = true;
   indicateMissingResponses = true;
 
-  currInstructorName?: string;
   instructorCommentTableModel: Record<string, CommentTableModel> = {};
 
   // below are two models contain similar and duplicate data
@@ -137,11 +144,11 @@ export class InstructorSessionResultPageComponent implements OnInit {
   hasNoResponseLoadingFailed = false;
 
   allStudentsInCourse: Student[] = [];
-  emailOfStudentToPreview = '';
+  userIdOfStudentToPreview = '';
   allInstructorsInCourse: Instructor[] = [];
-  emailOfInstructorToPreview = '';
+  userIdOfInstructorToPreview = '';
 
-  FeedbackSessionPublishStatus: typeof FeedbackSessionPublishStatus = FeedbackSessionPublishStatus;
+  FeedbackSessionPublishStatus!: typeof FeedbackSessionPublishStatus;
   isExpandAll = false;
 
   session: FeedbackSession = {
@@ -165,19 +172,20 @@ export class InstructorSessionResultPageComponent implements OnInit {
   @ViewChild(InstructorSessionNoResponsePanelComponent) noResponsePanel?: InstructorSessionNoResponsePanelComponent;
 
   constructor() {
+    this.InstructorSessionResultSectionType = InstructorSessionResultSectionType;
+    this.InstructorSessionResultViewType = InstructorSessionResultViewType;
+    this.FeedbackSessionPublishStatus = FeedbackSessionPublishStatus;
     this.timezoneService.getTzVersion(); // import timezone service to load timezone data
   }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((queryParams: any) => {
-      this.courseId = queryParams.courseid;
-      this.fsName = queryParams.fsname;
       this.feedbackSessionId = queryParams.fsid;
-      this.loadFeedbackSessionResults(this.courseId, this.feedbackSessionId);
+      this.loadFeedbackSessionResults(this.feedbackSessionId);
     });
   }
 
-  loadFeedbackSessionResults(courseId: string, feedbackSessionId: string): void {
+  loadFeedbackSessionResults(feedbackSessionId: string): void {
     this.hasQuestionsLoadingFailed = false;
     this.hasSectionsLoadingFailed = false;
     this.hasFeedbackSessionLoadingFailed = false;
@@ -185,12 +193,15 @@ export class InstructorSessionResultPageComponent implements OnInit {
     this.feedbackSessionsService
       .getFeedbackSession({
         feedbackSessionId,
-        intent: Intent.INSTRUCTOR_RESULT,
+        intent: Intent.FULL_DETAIL,
       })
       .subscribe({
-        next: (feedbackSession: FeedbackSession) => {
+        next: (feedbackSessionView: FeedbackSessionView) => {
+          const feedbackSession = feedbackSessionView.feedbackSession;
           this.session = feedbackSession;
           this.feedbackSessionId = feedbackSession.feedbackSessionId!;
+          this.courseId = feedbackSession.courseId;
+          this.fsName = feedbackSession.feedbackSessionName;
           this.formattedSessionOpeningTime = this.timezoneService.formatToString(
             this.session.submissionStartTimestamp,
             this.session.timeZone,
@@ -227,15 +238,20 @@ export class InstructorSessionResultPageComponent implements OnInit {
           this.isFeedbackSessionLoading = false;
 
           // load section tabs
-          this.courseService.getCourseSectionNames(courseId).subscribe({
-            next: (courseSectionNames: CourseSectionNames) => {
-              this.sectionsModel['None'] = {
+          this.courseService.getCourseSections(this.courseId).subscribe({
+            next: (courseSections) => {
+              this.sectionsModel[DEFAULT_SECTION_ID] = {
+                section: {
+                  sectionId: DEFAULT_SECTION_ID,
+                  sectionName: DEFAULT_SECTION_NAME,
+                },
                 questions: [],
                 hasPopulated: false,
                 isTabExpanded: false,
               };
-              for (const sectionName of courseSectionNames.sectionNames) {
-                this.sectionsModel[sectionName] = {
+              for (const section of courseSections.sections) {
+                this.sectionsModel[section.sectionId] = {
+                  section,
                   questions: [],
                   hasPopulated: false,
                   isTabExpanded: false,
@@ -253,7 +269,7 @@ export class InstructorSessionResultPageComponent implements OnInit {
           this.feedbackQuestionsService
             .getFeedbackQuestions({
               feedbackSessionId,
-              intent: Intent.INSTRUCTOR_RESULT,
+              intent: Intent.FULL_DETAIL,
             })
             .subscribe({
               next: (feedbackQuestions: FeedbackQuestions) => {
@@ -277,7 +293,7 @@ export class InstructorSessionResultPageComponent implements OnInit {
           // load all students in course
           this.studentService
             .getStudentsFromCourse({
-              courseId,
+              courseId: this.courseId,
             })
             .subscribe({
               next: (allStudents: Students) => {
@@ -294,7 +310,7 @@ export class InstructorSessionResultPageComponent implements OnInit {
 
                 // select the first student
                 if (this.allStudentsInCourse.length >= 1) {
-                  this.emailOfStudentToPreview = this.allStudentsInCourse[0].email;
+                  this.userIdOfStudentToPreview = this.allStudentsInCourse[0].userId;
                 }
 
                 this.loadNoResponseStudents(feedbackSessionId);
@@ -321,22 +337,12 @@ export class InstructorSessionResultPageComponent implements OnInit {
 
                 // select the first instructor
                 if (this.allInstructorsInCourse.length >= 1) {
-                  this.emailOfInstructorToPreview = this.allInstructorsInCourse[0].email;
+                  this.userIdOfInstructorToPreview = this.allInstructorsInCourse[0].userId;
                 }
               },
               error: (resp: ErrorMessageOutput) => {
                 this.statusMessageService.showErrorToast(resp.error.message);
               },
-            });
-
-          // load current instructor name
-          this.instructorService
-            .getInstructor({
-              courseId,
-              intent: Intent.FULL_DETAIL,
-            })
-            .subscribe((instructor: Instructor) => {
-              this.currInstructorName = instructor.name;
             });
         },
         error: (resp: ErrorMessageOutput) => {
@@ -356,9 +362,8 @@ export class InstructorSessionResultPageComponent implements OnInit {
       })
       .subscribe({
         next: (feedbackSessionSubmittedGiverSet: FeedbackSessionSubmittedGiverSet) => {
-          // TODO team is missing
-          this.noResponseStudents = this.allStudentsInCourse.filter(
-            (student: Student) => !feedbackSessionSubmittedGiverSet.giverIdentifiers.includes(student.email),
+          this.noResponseStudents = this.allStudentsInCourse.filter((student: Student) =>
+            feedbackSessionSubmittedGiverSet.studentNonGivers.includes(student.userId),
           );
           this.isNoResponseStudentsLoaded = true;
         },
@@ -398,13 +403,12 @@ export class InstructorSessionResultPageComponent implements OnInit {
     }
     of(...Object.keys(this.sectionsModel))
       .pipe(
-        concatMap((sectionName: string) => {
-          return this.feedbackSessionsService.getFeedbackSessionResults({
+        concatMap((sectionId: string) => {
+          return this.feedbackSessionsService.getCourseSessionResults({
             questionId,
             feedbackSessionId: this.session.feedbackSessionId,
-            intent: Intent.FULL_DETAIL,
-            groupBySection: sectionName,
-            sectionByGiverReceiver: 'both',
+            groupBySection: this.isDefaultSection(sectionId) ? undefined : sectionId,
+            isDefaultSection: this.isDefaultSection(sectionId),
           });
         }),
       )
@@ -419,12 +423,12 @@ export class InstructorSessionResultPageComponent implements OnInit {
               ? missingRespMap.set(response.responseId, response)
               : tmpMap.set(response.responseId, response),
           );
-          this.questionsModel[questionId].statistics = QuestionStatistics.appendStats(
+          this.questionsModel[questionId].statistics = this.mergeStatistics(
             this.questionsModel[questionId].statistics,
             responses.questionStatistics,
           );
 
-          this.preprocessComments(responses.allResponses);
+          this.preprocessComments(responses.allResponses, responses.feedbackQuestion.showResponsesTo);
         },
         complete: () => {
           tmpMap.forEach((response: ResponseOutput) => this.questionsModel[questionId].responses.push(response));
@@ -444,30 +448,30 @@ export class InstructorSessionResultPageComponent implements OnInit {
   /**
    * Toggles the section tab in per section view.
    */
-  toggleSectionTab(sectionName: string): void {
-    this.sectionsModel[sectionName].isTabExpanded = !this.sectionsModel[sectionName].isTabExpanded;
-    if (this.sectionsModel[sectionName].isTabExpanded) {
-      this.loadSectionTab(sectionName);
+  toggleSectionTab(sectionId: string): void {
+    this.sectionsModel[sectionId].isTabExpanded = !this.sectionsModel[sectionId].isTabExpanded;
+    if (this.sectionsModel[sectionId].isTabExpanded) {
+      this.loadSectionTab(sectionId);
     }
   }
 
   /**
    * Loads all the responses and response statistics for the specified section.
    */
-  loadSectionTab(sectionName: string): void {
-    if (this.sectionsModel[sectionName].hasPopulated) {
+  loadSectionTab(sectionId: string): void {
+    if (this.sectionsModel[sectionId].hasPopulated) {
       // Do not re-fetch data
       return;
     }
     this.feedbackSessionsService
-      .getFeedbackSessionResults({
+      .getCourseSessionResults({
         feedbackSessionId: this.session.feedbackSessionId,
-        intent: Intent.FULL_DETAIL,
-        groupBySection: sectionName,
+        groupBySection: this.isDefaultSection(sectionId) ? undefined : sectionId,
+        isDefaultSection: this.isDefaultSection(sectionId),
       })
       .subscribe({
         next: (resp: SessionResults) => {
-          this.sectionsModel[sectionName].questions = resp.questions;
+          this.sectionsModel[sectionId].questions = resp.questions;
 
           // sort questions by question number
           resp.questions.sort(
@@ -475,18 +479,30 @@ export class InstructorSessionResultPageComponent implements OnInit {
               a.feedbackQuestion.questionNumber - b.feedbackQuestion.questionNumber,
           );
           resp.questions.forEach((question: QuestionOutput) => {
-            this.preprocessComments(question.allResponses);
+            this.preprocessComments(question.allResponses, question.feedbackQuestion.showResponsesTo);
           });
         },
         complete: () => {
-          this.sectionsModel[sectionName].hasPopulated = true;
-          this.sectionsModel[sectionName].errorMessage = '';
+          this.sectionsModel[sectionId].hasPopulated = true;
+          this.sectionsModel[sectionId].errorMessage = '';
         },
         error: (resp: ErrorMessageOutput) => {
-          this.sectionsModel[sectionName].errorMessage = resp.error.message;
+          this.sectionsModel[sectionId].errorMessage = resp.error.message;
           this.statusMessageService.showErrorToast(resp.error.message);
         },
       });
+  }
+
+  get selectedSectionName(): string {
+    return this.section.length === 0 ? '' : this.getSectionName(this.section);
+  }
+
+  private getSectionName(sectionId: string): string {
+    return this.sectionsModel[sectionId]?.section.sectionName ?? sectionId;
+  }
+
+  private isDefaultSection(sectionId: string): boolean {
+    return sectionId === DEFAULT_SECTION_ID;
   }
 
   /**
@@ -495,12 +511,13 @@ export class InstructorSessionResultPageComponent implements OnInit {
    * <p>The instructor comment will be moved to map {@code instructorCommentTableModel}. The original
    * instructor comments associated with the response will be deleted.
    */
-  preprocessComments(responses: ResponseOutput[]): void {
+  preprocessComments(responses: ResponseOutput[], questionShowResponsesTo: FeedbackVisibilityType[]): void {
     responses.forEach((response: ResponseOutput) => {
-      this.instructorCommentTableModel[response.responseId] = this.commentsToCommentTableModel.transform(
+      this.instructorCommentTableModel[response.responseId] = commentToReadOnlyComment(
         response.instructorComments,
         false,
         this.session.timeZone,
+        questionShowResponsesTo,
       );
       this.commentService.sortComments(this.instructorCommentTableModel[response.responseId]);
       // clear the original comments for safe as instructorCommentTableModel will become the single point of truth
@@ -516,7 +533,6 @@ export class InstructorSessionResultPageComponent implements OnInit {
       responseId,
       timezone: this.session.timeZone,
       instructorCommentTableModel: this.instructorCommentTableModel,
-      currInstructorName: this.currInstructorName,
     });
   }
 
@@ -538,7 +554,6 @@ export class InstructorSessionResultPageComponent implements OnInit {
       data,
       timezone: this.session.timeZone,
       instructorCommentTableModel: this.instructorCommentTableModel,
-      currInstructorName: this.currInstructorName,
     });
   }
 
@@ -602,7 +617,7 @@ export class InstructorSessionResultPageComponent implements OnInit {
    * Handle print view button event.
    */
   printViewHandler(): void {
-    window.print();
+    globalThis.print();
   }
 
   /**
@@ -615,12 +630,16 @@ export class InstructorSessionResultPageComponent implements OnInit {
         this.courseId,
         this.session.feedbackSessionName,
         this.session.feedbackSessionId,
-        Intent.FULL_DETAIL,
         this.indicateMissingResponses,
         this.showStatistics,
         Object.values(this.questionsModel).map((questionTabModel: QuestionTabModel) => questionTabModel.question),
-        this.section.length === 0 ? undefined : this.section,
-        this.section.length === 0 ? undefined : this.sectionType,
+        this.section.length === 0
+          ? undefined
+          : {
+              groupBySectionId: this.section,
+              sectionDetail: this.sectionType,
+              sectionNameForCsv: this.selectedSectionName,
+            },
       ),
     )
       .pipe(
@@ -637,7 +656,6 @@ export class InstructorSessionResultPageComponent implements OnInit {
     this.feedbackSessionsService
       .downloadSessionResults(
         this.session.feedbackSessionId,
-        Intent.FULL_DETAIL,
         this.indicateMissingResponses,
         this.showStatistics,
         question.questionId,
@@ -682,9 +700,9 @@ export class InstructorSessionResultPageComponent implements OnInit {
       return;
     }
 
-    for (const sectionName of Object.keys(this.sectionsModel)) {
-      this.sectionsModel[sectionName].isTabExpanded = true;
-      this.loadSectionTab(sectionName);
+    for (const sectionId of Object.keys(this.sectionsModel)) {
+      this.sectionsModel[sectionId].isTabExpanded = true;
+      this.loadSectionTab(sectionId);
     }
   }
 
@@ -705,8 +723,8 @@ export class InstructorSessionResultPageComponent implements OnInit {
       return;
     }
 
-    for (const sectionName of Object.keys(this.sectionsModel)) {
-      this.sectionsModel[sectionName].isTabExpanded = false;
+    for (const sectionId of Object.keys(this.sectionsModel)) {
+      this.sectionsModel[sectionId].isTabExpanded = false;
     }
   }
 
@@ -732,10 +750,39 @@ export class InstructorSessionResultPageComponent implements OnInit {
       });
   }
 
+  /**
+   * Merges the existing statistics with the new statistics.
+   *
+   * Since only statistics for contribution question is calculated on the backend,
+   * the merging logic is based on contribution question statistics only.
+   */
+  private mergeStatistics(prevStats: string, newStats: string): string {
+    if (prevStats === '') {
+      return newStats;
+    }
+    if (newStats === '') {
+      return prevStats;
+    }
+
+    // Only statistics for contribution question is calculated on the backend.
+    const prevStatsJSON: ContributionStatistics = JSON.parse(prevStats);
+    const newStatsJSON: ContributionStatistics = JSON.parse(newStats);
+    for (const email of Object.keys(newStatsJSON.results)) {
+      const newStatsEntryForEmail: ContributionStatisticsEntry = newStatsJSON.results[email];
+      const { claimed }: { claimed: number } = newStatsEntryForEmail;
+      const { perceived }: { perceived: number } = newStatsEntryForEmail;
+      if (claimed < 0 && perceived < 0) {
+        continue;
+      }
+      // If new entry has submitted stats, overwrite the old data
+      prevStatsJSON.results[email] = newStatsEntryForEmail;
+    }
+
+    return JSON.stringify(prevStatsJSON);
+  }
+
   navigateToIndividualSessionResultPage(): void {
     this.navigationService.navigateByURL('/web/instructor/sessions/result', {
-      courseid: this.courseId,
-      fsname: this.fsName,
       fsid: this.feedbackSessionId,
     });
   }

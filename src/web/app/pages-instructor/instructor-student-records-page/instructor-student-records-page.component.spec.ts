@@ -1,6 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { InstructorStudentRecordsPageComponent } from './instructor-student-records-page.component';
@@ -9,23 +9,21 @@ describe('InstructorStudentRecordsPageComponent', () => {
   let component: InstructorStudentRecordsPageComponent;
   let fixture: ComponentFixture<InstructorStudentRecordsPageComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         {
           provide: ActivatedRoute,
           useValue: {
-            queryParams: of({ courseid: 'su1337', studentemail: 'punk@punk.com' }),
+            queryParams: of({ courseid: 'su1337', userid: '00000000-0000-4000-9000-000000000001' }),
           },
         },
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(InstructorStudentRecordsPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

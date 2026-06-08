@@ -5,12 +5,14 @@ import java.util.List;
 
 import org.testng.annotations.Test;
 
-import teammates.common.datatransfer.questions.FeedbackConstantSumQuestionDetails;
-import teammates.common.datatransfer.questions.FeedbackConstantSumResponseDetails;
+import teammates.common.datatransfer.questions.FeedbackConstantSumOptionsQuestionDetails;
+import teammates.common.datatransfer.questions.FeedbackConstantSumOptionsResponseDetails;
 import teammates.e2e.pageobjects.FeedbackSubmitPage;
 import teammates.e2e.pageobjects.InstructorFeedbackEditPage;
 import teammates.storage.entity.FeedbackQuestion;
 import teammates.storage.entity.FeedbackResponse;
+import teammates.storage.entity.ResponseGiver;
+import teammates.storage.entity.ResponseRecipient;
 import teammates.storage.entity.Team;
 
 /**
@@ -49,8 +51,8 @@ public class FeedbackConstSumOptionQuestionE2ETest extends BaseFeedbackQuestionE
         FeedbackQuestion loadedQuestion = testData.feedbackQuestions.get("qn1ForFirstSession")
                 .makeDeepCopy();
         feedbackSession.addFeedbackQuestion(loadedQuestion);
-        FeedbackConstantSumQuestionDetails questionDetails =
-                (FeedbackConstantSumQuestionDetails) loadedQuestion.getQuestionDetailsCopy();
+        FeedbackConstantSumOptionsQuestionDetails questionDetails =
+                (FeedbackConstantSumOptionsQuestionDetails) loadedQuestion.getQuestionDetailsCopy();
         feedbackEditPage.verifyConstSumQuestionDetails(1, questionDetails);
 
         ______TS("add new question");
@@ -63,9 +65,10 @@ public class FeedbackConstSumOptionQuestionE2ETest extends BaseFeedbackQuestionE
 
         ______TS("copy question");
         FeedbackQuestion copiedQuestion = testData.feedbackQuestions.get("qn1ForSecondSession");
-        questionDetails = (FeedbackConstantSumQuestionDetails) copiedQuestion.getQuestionDetailsCopy();
+        questionDetails = (FeedbackConstantSumOptionsQuestionDetails) copiedQuestion.getQuestionDetailsCopy();
         feedbackEditPage.copyQuestion(copiedQuestion.getCourseId(),
                 copiedQuestion.getQuestionDetailsCopy().getQuestionText());
+        feedbackEditPage.waitForPageToLoad();
         copiedQuestion.getFeedbackSession().setCourse(course);
         copiedQuestion.setFeedbackSession(feedbackSession);
         copiedQuestion.setQuestionNumber(3);
@@ -74,7 +77,7 @@ public class FeedbackConstSumOptionQuestionE2ETest extends BaseFeedbackQuestionE
         verifyPresentInDatabase(copiedQuestion);
 
         ______TS("edit question");
-        questionDetails = (FeedbackConstantSumQuestionDetails) loadedQuestion.getQuestionDetailsCopy();
+        questionDetails = (FeedbackConstantSumOptionsQuestionDetails) loadedQuestion.getQuestionDetailsCopy();
         List<String> options = questionDetails.getConstSumOptions();
         options.add("Edited option.");
         questionDetails.setConstSumOptions(options);
@@ -96,7 +99,7 @@ public class FeedbackConstSumOptionQuestionE2ETest extends BaseFeedbackQuestionE
         ______TS("verify loaded question");
         FeedbackQuestion question = testData.feedbackQuestions.get("qn1ForFirstSession");
         feedbackSubmitPage.verifyConstSumQuestion(1, "",
-                (FeedbackConstantSumQuestionDetails) question.getQuestionDetailsCopy());
+                (FeedbackConstantSumOptionsQuestionDetails) question.getQuestionDetailsCopy());
 
         ______TS("submit response");
         FeedbackResponse response = getResponse(question, Arrays.asList(50, 20, 30));
@@ -120,10 +123,11 @@ public class FeedbackConstSumOptionQuestionE2ETest extends BaseFeedbackQuestionE
     }
 
     private FeedbackResponse getResponse(FeedbackQuestion question, List<Integer> answers) {
-        FeedbackConstantSumResponseDetails details = new FeedbackConstantSumResponseDetails();
+        FeedbackConstantSumOptionsResponseDetails details = new FeedbackConstantSumOptionsResponseDetails();
         details.setAnswers(answers);
-        FeedbackResponse response = FeedbackResponse.makeResponse(student.getEmail(),
-                student.getSection(), otherTeam.getName(), student.getSection(), details);
+        ResponseGiver giver = new ResponseGiver(student);
+        ResponseRecipient recipient = new ResponseRecipient(otherTeam);
+        FeedbackResponse response = FeedbackResponse.makeResponse(giver, recipient, details);
         question.addFeedbackResponse(response);
         return response;
     }

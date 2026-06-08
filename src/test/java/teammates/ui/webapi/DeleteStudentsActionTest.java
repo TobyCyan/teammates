@@ -1,7 +1,6 @@
 package teammates.ui.webapi;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -10,6 +9,7 @@ import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import teammates.common.datatransfer.InstructorPermissionRole;
 import teammates.common.datatransfer.InstructorPrivileges;
 import teammates.common.util.Const;
 import teammates.storage.entity.Course;
@@ -20,8 +20,6 @@ import teammates.ui.output.MessageOutput;
  * SUT: {@link DeleteStudentsAction}.
  */
 public class DeleteStudentsActionTest extends BaseActionTest<DeleteStudentsAction> {
-
-    private static final int DELETE_LIMIT = 3;
     private Course course;
     private Instructor instructor;
     private String instructorId = "instructor-googleId";
@@ -52,16 +50,15 @@ public class DeleteStudentsActionTest extends BaseActionTest<DeleteStudentsActio
     }
 
     @Test
-    void testExecute_deleteLimitedStudents_success() {
+    void testExecute_deleteAllStudents_success() {
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.LIMIT, String.valueOf(DELETE_LIMIT),
         };
 
         DeleteStudentsAction action = getAction(params);
         MessageOutput actionOutput = (MessageOutput) getJsonResult(action).getOutput();
 
-        verify(mockLogic, times(1)).deleteStudentsInCourseCascade(course.getId());
+        verify(mockLogic, times(1)).deleteStudentsInCourse(course.getId());
         assertEquals("Successful", actionOutput.getMessage());
     }
 
@@ -71,15 +68,12 @@ public class DeleteStudentsActionTest extends BaseActionTest<DeleteStudentsActio
 
         String[] params = {
                 Const.ParamsNames.COURSE_ID, "RANDOM_ID",
-                Const.ParamsNames.LIMIT, String.valueOf(DELETE_LIMIT),
         };
 
         DeleteStudentsAction action = getAction(params);
         MessageOutput actionOutput = (MessageOutput) getJsonResult(action).getOutput();
 
-        verify(mockLogic, times(1)).deleteStudentsInCourseCascade("RANDOM_ID");
-        verify(mockLogic, times(1)).deleteStudentsInCourseCascade(any());
-        verify(mockLogic, never()).deleteStudentsInCourseCascade(course.getId());
+        verify(mockLogic, times(1)).deleteStudentsInCourse("RANDOM_ID");
         assertEquals("Successful", actionOutput.getMessage());
     }
 
@@ -99,7 +93,6 @@ public class DeleteStudentsActionTest extends BaseActionTest<DeleteStudentsActio
 
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.LIMIT, String.valueOf(DELETE_LIMIT),
         };
 
         verifyCanAccess(params);
@@ -109,13 +102,13 @@ public class DeleteStudentsActionTest extends BaseActionTest<DeleteStudentsActio
     void testSpecificAccessControl_instructorWithInvalidPermission_cannotAccess() {
         InstructorPrivileges instructorPrivileges = new InstructorPrivileges();
         instructorPrivileges.updatePrivilege(Const.InstructorPermissions.CAN_MODIFY_STUDENT, false);
+        instructor.setRole(InstructorPermissionRole.INSTRUCTOR_PERMISSION_ROLE_CUSTOM);
         instructor.setPrivileges(instructorPrivileges);
 
         loginAsInstructor(instructorId);
 
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.LIMIT, String.valueOf(DELETE_LIMIT),
         };
 
         verifyCannotAccess(params);
@@ -127,7 +120,6 @@ public class DeleteStudentsActionTest extends BaseActionTest<DeleteStudentsActio
 
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.LIMIT, String.valueOf(DELETE_LIMIT),
         };
 
         verifyCannotAccess(params);
@@ -139,7 +131,6 @@ public class DeleteStudentsActionTest extends BaseActionTest<DeleteStudentsActio
 
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.LIMIT, String.valueOf(DELETE_LIMIT),
         };
 
         verifyCannotAccess(params);
@@ -151,7 +142,6 @@ public class DeleteStudentsActionTest extends BaseActionTest<DeleteStudentsActio
 
         String[] params = {
                 Const.ParamsNames.COURSE_ID, course.getId(),
-                Const.ParamsNames.LIMIT, String.valueOf(DELETE_LIMIT),
         };
 
         verifyCannotAccess(params);

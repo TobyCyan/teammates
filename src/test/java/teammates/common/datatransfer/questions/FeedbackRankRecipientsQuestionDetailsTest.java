@@ -1,5 +1,9 @@
 package teammates.common.datatransfer.questions;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,7 +11,8 @@ import java.util.List;
 
 import org.testng.annotations.Test;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.participanttypes.QuestionGiverType;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
 import teammates.storage.entity.FeedbackQuestion;
 import teammates.storage.entity.questions.FeedbackRankRecipientsQuestion;
 import teammates.test.BaseTestCase;
@@ -181,7 +186,7 @@ public class FeedbackRankRecipientsQuestionDetailsTest extends BaseTestCase {
                 new FeedbackRankRecipientsQuestionDetails();
         FeedbackQuestion feedbackQuestion = new FeedbackRankRecipientsQuestion(
                 1, null,
-                FeedbackParticipantType.STUDENTS, FeedbackParticipantType.OWN_TEAM_MEMBERS,
+                QuestionGiverType.STUDENTS, QuestionRecipientType.OWN_TEAM_MEMBERS,
                 1, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
                 new FeedbackRankRecipientsQuestionDetails());
         assertEquals("", feedbackRankRecipientsQuestionDetails.validateGiverRecipientVisibility(feedbackQuestion));

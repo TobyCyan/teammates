@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.SessionResultsBundle;
+import teammates.common.datatransfer.participanttypes.QuestionRecipientType;
 import teammates.storage.entity.FeedbackQuestion;
 
 /**
@@ -31,7 +32,7 @@ public class FeedbackMcqQuestionDetails extends FeedbackQuestionDetails {
     private List<String> mcqChoices;
     private boolean otherEnabled;
     private boolean questionDropdownEnabled;
-    private FeedbackParticipantType generateOptionsFor;
+    private QuestionRecipientType generateOptionsFor;
 
     public FeedbackMcqQuestionDetails() {
         this(null);
@@ -45,7 +46,14 @@ public class FeedbackMcqQuestionDetails extends FeedbackQuestionDetails {
         this.otherEnabled = false;
         this.questionDropdownEnabled = false;
         this.mcqOtherWeight = 0;
-        this.generateOptionsFor = FeedbackParticipantType.NONE;
+        this.generateOptionsFor = QuestionRecipientType.NONE;
+    }
+
+    @Override
+    public String getQuestionResultStatisticsJson(
+            FeedbackQuestion question, String studentEmail, SessionResultsBundle bundle) {
+        // Statistics are calculated in the frontend as they depend on the responses being filtered.
+        return "";
     }
 
     @Override
@@ -68,7 +76,7 @@ public class FeedbackMcqQuestionDetails extends FeedbackQuestionDetails {
     @Override
     public List<String> validateQuestionDetails() {
         List<String> errors = new ArrayList<>();
-        if (generateOptionsFor == FeedbackParticipantType.NONE) {
+        if (generateOptionsFor == QuestionRecipientType.NONE) {
 
             if (mcqChoices.size() < MCQ_MIN_NUM_OF_CHOICES) {
                 errors.add(MCQ_ERROR_NOT_ENOUGH_CHOICES
@@ -204,11 +212,11 @@ public class FeedbackMcqQuestionDetails extends FeedbackQuestionDetails {
         this.questionDropdownEnabled = questionDropdownEnabled;
     }
 
-    public FeedbackParticipantType getGenerateOptionsFor() {
+    public QuestionRecipientType getGenerateOptionsFor() {
         return generateOptionsFor;
     }
 
-    public void setGenerateOptionsFor(FeedbackParticipantType generateOptionsFor) {
+    public void setGenerateOptionsFor(QuestionRecipientType generateOptionsFor) {
         this.generateOptionsFor = generateOptionsFor;
     }
 

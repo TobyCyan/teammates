@@ -1,15 +1,16 @@
 package teammates.e2e.cases;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.testng.annotations.Test;
 
-import teammates.common.datatransfer.FeedbackParticipantType;
 import teammates.common.datatransfer.questions.FeedbackMcqResponseDetails;
 import teammates.common.util.AppUrl;
 import teammates.common.util.Const;
@@ -17,10 +18,12 @@ import teammates.e2e.pageobjects.FeedbackSubmitPage;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.FeedbackQuestion;
 import teammates.storage.entity.FeedbackResponse;
-import teammates.storage.entity.FeedbackResponseComment;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Instructor;
+import teammates.storage.entity.ResponseGiver;
+import teammates.storage.entity.ResponseRecipient;
 import teammates.storage.entity.Student;
+import teammates.storage.entity.Team;
 import teammates.storage.entity.User;
 
 /**
@@ -33,6 +36,7 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
     private FeedbackSession openSession;
     private FeedbackSession closedSession;
     private FeedbackSession gracePeriodSession;
+    private Team team2;
 
     @Override
     protected void prepareTestData() {
@@ -46,15 +50,14 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
         openSession = testData.feedbackSessions.get("Open Session");
         closedSession = testData.feedbackSessions.get("Closed Session");
         gracePeriodSession = testData.feedbackSessions.get("Grace Period Session");
+        team2 = testData.teams.get("team2InSectionNone");
     }
 
     @Test
     @Override
     public void testAll() {
         AppUrl url = createFrontendUrl(Const.WebPageURIs.INSTRUCTOR_SESSION_SUBMISSION_PAGE)
-                .withCourseId(openSession.getCourseId())
-                .withFeedbackSessionId(openSession.getId().toString())
-                .withSessionName(openSession.getName());
+                .withFeedbackSessionId(openSession.getId().toString());
         FeedbackSubmitPage submitPage = loginToPage(url, FeedbackSubmitPage.class, instructor.getGoogleId());
 
         ______TS("verify loaded session data");
@@ -66,7 +69,7 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
 
         ______TS("questions with giver type students");
         logout();
-        submitPage = loginToPage(getStudentSubmitPageUrl(student, openSession), FeedbackSubmitPage.class,
+        submitPage = loginToPage(getStudentSubmitPageUrl(openSession), FeedbackSubmitPage.class,
                 student.getGoogleId());
 
         submitPage.verifyNumQuestions(4);
@@ -92,28 +95,28 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
         submitPage.verifyWarningMessageForPartialResponse(unansweredQuestions);
 
         ______TS("cannot submit in closed session");
-        AppUrl closedSessionUrl = getStudentSubmitPageUrl(student, closedSession);
+        AppUrl closedSessionUrl = getStudentSubmitPageUrl(closedSession);
         submitPage = getNewPageInstance(closedSessionUrl, FeedbackSubmitPage.class);
         submitPage.verifyCannotSubmit();
 
         ______TS("can submit in grace period");
-        AppUrl gracePeriodSessionUrl = getStudentSubmitPageUrl(student, gracePeriodSession);
+        AppUrl gracePeriodSessionUrl = getStudentSubmitPageUrl(gracePeriodSession);
         submitPage = getNewPageInstance(gracePeriodSessionUrl, FeedbackSubmitPage.class);
         FeedbackQuestion question = testData.feedbackQuestions.get("qn1InGracePeriodSession");
-        String recipient = "Team 2";
+        Team recipient = team2;
         FeedbackResponse response = getMcqResponse(question, recipient, false, "UI");
-        submitPage.fillMcqResponse(1, recipient, response);
+        submitPage.fillMcqResponse(1, recipient.getName(), response);
         submitPage.clickSubmitAllQuestionsButton();
         verifyPresentInDatabase(response);
 
         ______TS("can submit only one question");
 
         response = getMcqResponse(question, recipient, false, "Algo");
-        submitPage.fillMcqResponse(1, recipient, response);
+        submitPage.fillMcqResponse(1, recipient.getName(), response);
 
         FeedbackQuestion question2 = testData.feedbackQuestions.get("qn2InGracePeriodSession");
         FeedbackResponse response2 = getMcqResponse(question2, recipient, false, "Teammates Test");
-        submitPage.fillMcqResponse(2, recipient, response2);
+        submitPage.fillMcqResponse(2, recipient.getName(), response2);
 
         submitPage.clickSubmitQuestionButton(1);
         // Question 2 response should not be persisted as only question 1 is submitted
@@ -126,36 +129,34 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
 
         int qnToComment = 1;
         String comment = "<p>new comment</p>";
-        submitPage.addComment(qnToComment, recipient, comment);
+        submitPage.addComment(qnToComment, recipient.getName(), comment);
         submitPage.clickSubmitAllQuestionsButton();
 
         verifyPresentInDatabase(response2);
 
-        submitPage.verifyComment(qnToComment, recipient, comment);
-        verifyPresentInDatabase(getFeedbackResponseComment(response, comment));
+        submitPage.verifyComment(qnToComment, recipient.getName(), comment);
+        assertEquals(comment, getFeedbackResponse(response).getGiverComment());
 
         ______TS("edit comment");
         comment = "<p>edited comment</p>";
-        submitPage.editComment(qnToComment, recipient, comment);
+        submitPage.editComment(qnToComment, recipient.getName(), comment);
         submitPage.clickSubmitAllQuestionsButton();
 
-        submitPage.verifyComment(qnToComment, recipient, comment);
-        verifyPresentInDatabase(getFeedbackResponseComment(response, comment));
+        submitPage.verifyComment(qnToComment, recipient.getName(), comment);
+        assertEquals(comment, getFeedbackResponse(response).getGiverComment());
 
         ______TS("delete comment");
-        submitPage.deleteComment(qnToComment, recipient);
+        submitPage.deleteComment(qnToComment, recipient.getName());
 
         submitPage.verifyStatusMessage("Your comment has been deleted!");
-        submitPage.verifyNoCommentPresent(qnToComment, recipient);
-        verifyAbsentInDatabase(getFeedbackResponseComment(response, comment));
+        submitPage.verifyNoCommentPresent(qnToComment, recipient.getName());
+        assertNull(getFeedbackResponse(response).getGiverComment());
 
         ______TS("preview as instructor");
         logout();
         url = createFrontendUrl(Const.WebPageURIs.INSTRUCTOR_SESSION_SUBMISSION_PAGE)
-                .withCourseId(openSession.getCourseId())
                 .withFeedbackSessionId(openSession.getId().toString())
-                .withSessionName(openSession.getName())
-                .withParam("previewas", instructor.getEmail());
+                .withPreviewAs(instructor.getId().toString());
         submitPage = loginToPage(url, FeedbackSubmitPage.class, instructor.getGoogleId());
 
         submitPage.verifyFeedbackSessionDetails(openSession, course);
@@ -165,10 +166,8 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
 
         ______TS("preview as student");
         url = createFrontendUrl(Const.WebPageURIs.SESSION_SUBMISSION_PAGE)
-                .withCourseId(openSession.getCourseId())
                 .withFeedbackSessionId(openSession.getId().toString())
-                .withSessionName(openSession.getName())
-                .withParam("previewas", student.getEmail());
+                .withPreviewAs(student.getId().toString());
         submitPage = getNewPageInstance(url, FeedbackSubmitPage.class);
 
         submitPage.verifyFeedbackSessionDetails(openSession, course);
@@ -181,10 +180,8 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
 
         ______TS("moderating instructor cannot see questions without instructor visibility");
         url = createFrontendUrl(Const.WebPageURIs.SESSION_SUBMISSION_PAGE)
-                .withCourseId(gracePeriodSession.getCourseId())
                 .withFeedbackSessionId(gracePeriodSession.getId().toString())
-                .withSessionName(gracePeriodSession.getName())
-                .withParam("moderatedperson", student.getEmail())
+                .withParam("moderatedperson", student.getId().toString())
                 .withParam("moderatedquestionId", question.getId().toString());
         submitPage = getNewPageInstance(url, FeedbackSubmitPage.class);
 
@@ -195,17 +192,15 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
 
         ______TS("submit moderated response");
         response = getMcqResponse(question, recipient, false, "UI");
-        submitPage.fillMcqResponse(1, recipient, response);
+        submitPage.fillMcqResponse(1, recipient.getName(), response);
         submitPage.clickSubmitQuestionButton(1);
 
         verifyPresentInDatabase(response);
     }
 
-    private AppUrl getStudentSubmitPageUrl(Student student, FeedbackSession session) {
+    private AppUrl getStudentSubmitPageUrl(FeedbackSession session) {
         return createFrontendUrl(Const.WebPageURIs.STUDENT_SESSION_SUBMISSION_PAGE)
-                .withCourseId(student.getCourseId())
-                .withFeedbackSessionId(session.getId().toString())
-                .withSessionName(session.getName());
+                .withFeedbackSessionId(session.getId().toString());
     }
 
     private List<String> getOtherStudents(Student currentStudent) {
@@ -235,7 +230,7 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
                 .collect(Collectors.toSet()));
     }
 
-    private FeedbackResponse getMcqResponse(FeedbackQuestion question, String recipient, boolean isOther, String answer) {
+    private FeedbackResponse getMcqResponse(FeedbackQuestion question, Team recipient, boolean isOther, String answer) {
         FeedbackMcqResponseDetails details = new FeedbackMcqResponseDetails();
         if (isOther) {
             details.setOther(true);
@@ -243,17 +238,10 @@ public class FeedbackSubmitPageE2ETest extends BaseE2ETestCase {
         } else {
             details.setAnswer(answer);
         }
-        FeedbackResponse response = FeedbackResponse.makeResponse(student.getEmail(), student.getSection(),
-                recipient, student.getSection(), details);
+        FeedbackResponse response = FeedbackResponse.makeResponse(new ResponseGiver(student),
+                new ResponseRecipient(recipient), details);
         question.addFeedbackResponse(response);
         return response;
     }
 
-    private FeedbackResponseComment getFeedbackResponseComment(FeedbackResponse response, String comment) {
-        FeedbackResponseComment feedbackResponseComment = new FeedbackResponseComment(student.getEmail(),
-                FeedbackParticipantType.STUDENTS, student.getSection(), student.getSection(), comment,
-                true, true, Collections.emptyList(), Collections.emptyList(), student.getEmail());
-        response.addFeedbackResponseComment(feedbackResponseComment);
-        return feedbackResponseComment;
-    }
 }

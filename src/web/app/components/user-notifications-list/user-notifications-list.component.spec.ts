@@ -1,11 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import moment from 'moment-timezone';
 import { of } from 'rxjs';
-import SpyInstance = jest.SpyInstance;
 import { NotificationTab, UserNotificationsListComponent } from './user-notifications-list.component';
 import { NotificationService } from '../../../services/notification.service';
 import { StatusMessageService } from '../../../services/status-message.service';
@@ -28,7 +26,6 @@ describe('UserNotificationsListComponent', () => {
     targetUser: NotificationTargetUser.GENERAL,
     title: 'valid title 1',
     message: 'valid message 1',
-    shown: false,
   };
 
   const testNotificationTwo: Notification = {
@@ -40,7 +37,6 @@ describe('UserNotificationsListComponent', () => {
     targetUser: NotificationTargetUser.GENERAL,
     title: 'valid title 2',
     message: 'valid message 2',
-    shown: false,
   };
 
   const timezone = 'UTC';
@@ -61,14 +57,11 @@ describe('UserNotificationsListComponent', () => {
     return notificationTabs;
   };
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [BrowserAnimationsModule],
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(UserNotificationsListComponent);
     notificationService = TestBed.inject(NotificationService);
     statusMessageService = TestBed.inject(StatusMessageService);
@@ -86,26 +79,49 @@ describe('UserNotificationsListComponent', () => {
 
   it('should load notifications from APIs correctly', () => {
     // two notifications, only first one has been read
-    const getNotificationSpy = jest.spyOn(notificationService, 'getAllNotificationsForTargetUser').mockReturnValue(
+    const getNotificationSpy = vi.spyOn(notificationService, 'getNotifications').mockReturnValue(
       of({
         notifications: [testNotificationOne, testNotificationTwo],
       }),
     );
-    const getReadNotificationSpy = jest.spyOn(notificationService, 'getReadNotifications').mockReturnValue(
+    const getReadNotificationSpy = vi.spyOn(notificationService, 'getReadNotifications').mockReturnValue(
       of({
         readNotifications: [testNotificationOne.notificationId],
       }),
     );
+    component.userType = NotificationTargetUser.STUDENT;
     component.loadNotifications();
-    expect(getNotificationSpy).toHaveBeenCalledTimes(1);
+    expect(getNotificationSpy).toHaveBeenCalledWith({
+      targetUsers: [NotificationTargetUser.STUDENT, NotificationTargetUser.GENERAL],
+      isFetchingActive: true,
+    });
     expect(getReadNotificationSpy).toHaveBeenCalledTimes(1);
     expect(component.notificationTabs).toEqual(
       getNotificationTabs([testNotificationOne, testNotificationTwo], [testNotificationOne.notificationId]),
     );
   });
 
+  it('should not duplicate general target user when loading general notifications', () => {
+    const getNotificationSpy = vi.spyOn(notificationService, 'getNotifications').mockReturnValue(
+      of({
+        notifications: [testNotificationOne],
+      }),
+    );
+    vi.spyOn(notificationService, 'getReadNotifications').mockReturnValue(
+      of({
+        readNotifications: [],
+      }),
+    );
+    component.userType = NotificationTargetUser.GENERAL;
+    component.loadNotifications();
+    expect(getNotificationSpy).toHaveBeenCalledWith({
+      targetUsers: [NotificationTargetUser.GENERAL],
+      isFetchingActive: true,
+    });
+  });
+
   it('should mark notification as read when button is clicked', () => {
-    const apiSpy: SpyInstance = jest
+    const apiSpy = vi
       .spyOn(notificationService, 'markNotificationAsRead')
       .mockImplementation((request: MarkNotificationAsReadRequest) => {
         expect(request.notificationId).toEqual(testNotificationOne.notificationId);
@@ -113,11 +129,9 @@ describe('UserNotificationsListComponent', () => {
           readNotifications: [request.notificationId],
         });
       });
-    const messageSpy: SpyInstance = jest
-      .spyOn(statusMessageService, 'showSuccessToast')
-      .mockImplementation((args: string) => {
-        expect(args).toEqual('Notification marked as read.');
-      });
+    const messageSpy = vi.spyOn(statusMessageService, 'showSuccessToast').mockImplementation((args: string) => {
+      expect(args).toEqual('Notification marked as read.');
+    });
 
     component.notificationTabs = getNotificationTabs([testNotificationOne]);
     fixture.detectChanges();

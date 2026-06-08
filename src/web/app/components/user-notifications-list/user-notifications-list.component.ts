@@ -1,6 +1,6 @@
 import { NgClass } from '@angular/common';
 import { Component, Input, OnInit, inject } from '@angular/core';
-import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { NotificationService } from '../../../services/notification.service';
@@ -45,8 +45,8 @@ export class UserNotificationsListComponent implements OnInit {
   private tableComparatorService = inject(TableComparatorService);
 
   // enum
-  NotificationTargetUser: typeof NotificationTargetUser = NotificationTargetUser;
-  SortBy: typeof SortBy = SortBy;
+  NotificationTargetUser!: typeof NotificationTargetUser;
+  SortBy!: typeof SortBy;
 
   @Input()
   userType: NotificationTargetUser = NotificationTargetUser.GENERAL;
@@ -62,6 +62,11 @@ export class UserNotificationsListComponent implements OnInit {
 
   DATE_FORMAT = 'DD MMM YYYY';
 
+  constructor() {
+    this.NotificationTargetUser = NotificationTargetUser;
+    this.SortBy = SortBy;
+  }
+
   ngOnInit(): void {
     this.loadNotifications();
   }
@@ -72,7 +77,10 @@ export class UserNotificationsListComponent implements OnInit {
 
     forkJoin({
       readNotifications: this.notificationService.getReadNotifications(),
-      notifications: this.notificationService.getAllNotificationsForTargetUser(this.userType),
+      notifications: this.notificationService.getNotifications({
+        targetUsers: this.getTargetUsers(),
+        isFetchingActive: true,
+      }),
     })
       .pipe(
         finalize(() => {
@@ -98,6 +106,10 @@ export class UserNotificationsListComponent implements OnInit {
           this.statusMessageService.showErrorToast(resp.error.message);
         },
       });
+  }
+
+  private getTargetUsers(): NotificationTargetUser[] {
+    return Array.from(new Set([this.userType, NotificationTargetUser.GENERAL]));
   }
 
   private createNotificationTab(notification: Notification, readNotifications: Set<string>): NotificationTab {

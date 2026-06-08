@@ -1,5 +1,6 @@
 package teammates.storage.entity.responses;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Converter;
@@ -8,7 +9,8 @@ import jakarta.persistence.Entity;
 import teammates.common.datatransfer.questions.FeedbackResponseDetails;
 import teammates.common.datatransfer.questions.FeedbackTextResponseDetails;
 import teammates.storage.entity.FeedbackResponse;
-import teammates.storage.entity.Section;
+import teammates.storage.entity.ResponseGiver;
+import teammates.storage.entity.ResponseRecipient;
 
 /**
  * Represents a text response.
@@ -25,10 +27,10 @@ public class FeedbackTextResponse extends FeedbackResponse {
     }
 
     public FeedbackTextResponse(
-            String giver, Section giverSection, String recipient, Section recipientSection,
-            FeedbackResponseDetails responseDetails
+            ResponseGiver giver, ResponseRecipient recipient,
+            FeedbackResponseDetails responseDetails, @Nullable String giverComment
     ) {
-        super(giver, giverSection, recipient, recipientSection);
+        super(giver, recipient, giverComment);
         this.setAnswer((FeedbackTextResponseDetails) responseDetails);
     }
 
@@ -43,6 +45,11 @@ public class FeedbackTextResponse extends FeedbackResponse {
     @Override
     public FeedbackResponseDetails getFeedbackResponseDetailsCopy() {
         return getAnswer();
+    }
+
+    @Override
+    public void setFeedbackResponseDetails(FeedbackResponseDetails responseDetails) {
+        setAnswer(castResponseDetails(responseDetails, FeedbackTextResponseDetails.class));
     }
 
     @Override

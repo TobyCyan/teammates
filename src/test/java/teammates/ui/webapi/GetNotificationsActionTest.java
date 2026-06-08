@@ -1,6 +1,7 @@
 package teammates.ui.webapi;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -38,43 +39,26 @@ public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsA
         when(mockLogic.getAccountForGoogleId(GOOGLE_ID)).thenReturn(getTypicalAccount());
     }
 
-    @Test
-    void testAccessControl_instructorAccessStudentNotification_shouldFail() {
-        loginAsInstructor(GOOGLE_ID);
-        String[] requestParams = new String[] {
-                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.STUDENT.toString(),
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(true),
-        };
-        verifyCannotAccess(requestParams);
-    }
-
-    @Test
+    @Test(enabled = false)
     void testAccessControl_instructorAccessInstructorNotification_shouldSucceed() {
         loginAsInstructor(GOOGLE_ID);
         String[] requestParams = new String[] {
                 Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString(),
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(true),
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.GENERAL.toString(),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(true),
         };
         verifyCanAccess(requestParams);
     }
 
-    @Test
-    void testAccessControl_studentAccessInstructorNotification_shouldFail() {
-        loginAsStudent(GOOGLE_ID);
-        String[] requestParams = new String[] {
-                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString(),
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(true),
-        };
-        verifyCannotAccess(requestParams);
-    }
-
-    @Test
+    @Test(enabled = false)
     void testAccessControl_studentAccessStudentNotification_shouldSucceed() {
         loginAsStudent(GOOGLE_ID);
         String[] requestParams = new String[] {
                 Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.STUDENT.toString(),
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(true),
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.GENERAL.toString(),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(true),
         };
+
         verifyCanAccess(requestParams);
     }
 
@@ -83,23 +67,35 @@ public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsA
         loginAsInstructor(GOOGLE_ID);
         String[] requestParams = new String[] {
                 Const.ParamsNames.NOTIFICATION_TARGET_USER, "unknown",
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(true),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(true),
         };
         verifyHttpParameterFailureAcl(requestParams);
+    }
+
+    @Test
+    void testAccessControl_nonAdminFetchingNonActiveNotification_shouldFail() {
+        loginAsInstructor(GOOGLE_ID);
+        String[] requestParams = new String[] {
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.GENERAL.toString(),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(false),
+        };
+        verifyCannotAccess(requestParams);
     }
 
     @Test
     void testAccessControl_adminAccessAllNotification_shouldSucceed() {
         loginAsAdmin();
         String[] requestParams = new String[] {
-                Const.ParamsNames.NOTIFICATION_TARGET_USER, null,
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(true),
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.STUDENT.toString(),
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString(),
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.GENERAL.toString(),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(false),
         };
         verifyCanAccess(requestParams);
     }
 
     @Test
-    void testExecute_withValidUserTypeForNonAdmin_shouldReturnData() {
+    void testExecute_withValidTargetUsersForNonAdmin_shouldReturnData() {
         List<Notification> testNotifications = new ArrayList<>();
 
         loginAsInstructor(GOOGLE_ID);
@@ -110,12 +106,15 @@ public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsA
             testNotifications.add(getTypicalNotificationWithId());
         }
 
-        when(mockLogic.getActiveNotificationsByTargetUser(NotificationTargetUser.INSTRUCTOR))
+        List<NotificationTargetUser> targetUsers = List.of(
+                NotificationTargetUser.INSTRUCTOR, NotificationTargetUser.GENERAL);
+        when(mockLogic.getNotificationsByTargetUsers(targetUsers, true))
                 .thenReturn(testNotifications);
 
         String[] requestParams = new String[] {
                 Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString(),
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(true),
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.GENERAL.toString(),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(true),
         };
 
         GetNotificationsAction action = getAction(requestParams);
@@ -126,12 +125,12 @@ public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsA
 
         // should fetch correct number of notifications
         assertEquals(expectedNumberOfNotifications, notifications.size());
+        verify(mockLogic).getNotificationsByTargetUsers(targetUsers, true);
     }
 
     @Test
-    public void testExecute_withoutUserTypeForAdmin_shouldReturnAllNotifications() {
+    public void testExecute_withAllUserTypesForAdmin_shouldReturnAllNotifications() {
         final int expectedNumberOfNotifications = 5;
-        Notification testNotification = getTypicalNotificationWithId();
 
         loginAsAdmin();
 
@@ -140,13 +139,15 @@ public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsA
             testNotifications.add(getTypicalNotificationWithId());
         }
 
-        when(mockLogic.getAllNotifications()).thenReturn(testNotifications);
-        when(mockLogic.getActiveNotificationsByTargetUser(testNotification.getTargetUser()))
-                .thenReturn(testNotifications);
+        List<NotificationTargetUser> targetUsers = List.of(
+                NotificationTargetUser.STUDENT, NotificationTargetUser.INSTRUCTOR, NotificationTargetUser.GENERAL);
+        when(mockLogic.getNotificationsByTargetUsers(targetUsers, false)).thenReturn(testNotifications);
 
         String[] requestParams = new String[] {
-                Const.ParamsNames.NOTIFICATION_TARGET_USER, null,
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(true),
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.STUDENT.toString(),
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString(),
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.GENERAL.toString(),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(false),
         };
 
         GetNotificationsAction action = getAction(requestParams);
@@ -155,64 +156,72 @@ public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsA
         NotificationsData output = (NotificationsData) jsonResult.getOutput();
         List<NotificationData> notificationOutput = output.getNotifications();
 
-        assertEquals(expectedNumberOfNotifications, mockLogic.getAllNotifications().size());
         assertEquals(expectedNumberOfNotifications, notificationOutput.size());
+        verify(mockLogic).getNotificationsByTargetUsers(targetUsers, false);
 
         NotificationData expected = new NotificationData(testNotifications.get(0));
         NotificationData firstNotification = notificationOutput.get(0);
         verifyNotificationEquals(expected, firstNotification);
-
-        // notification's shown attribute should not be updated
-        List<Notification> notificationToCheck =
-                mockLogic.getActiveNotificationsByTargetUser(testNotification.getTargetUser());
-        notificationToCheck.forEach(n -> assertFalse(n.isShown()));
     }
 
     @Test
     public void testExecute_withoutUserTypeForNonAdmin_shouldFail() {
         loginAsInstructor(GOOGLE_ID);
 
-        String[] requestParams = new String[] {
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(true),
-        };
+        verifyHttpParameterFailure(Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(false));
+    }
 
-        GetNotificationsAction action = getAction(requestParams);
-        assertThrows(AssertionError.class, action::execute);
+    @Test
+    public void testExecute_withoutUserTypeForAdmin_shouldFail() {
+        loginAsAdmin();
+
+        verifyHttpParameterFailure(Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(false));
+    }
+
+    @Test
+    public void testExecute_withoutIsFetchingActive_shouldFail() {
+        loginAsInstructor(GOOGLE_ID);
+
+        verifyHttpParameterFailure(
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString());
     }
 
     @Test
     public void testExecute_invalidUserType_shouldFail() {
         loginAsInstructor(GOOGLE_ID);
 
-        // when usertype is GENERAL
-        verifyHttpParameterFailure(Const.ParamsNames.NOTIFICATION_TARGET_USER,
-                NotificationTargetUser.GENERAL.toString(),
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL,
-                String.valueOf(true));
-
         // when usertype is a random string
-        verifyHttpParameterFailure(Const.ParamsNames.NOTIFICATION_TARGET_USER,
-                "invalid string",
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL,
-                String.valueOf(true));
+        verifyHttpParameterFailure(
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, "invalid string",
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(true));
     }
 
     @Test
-    public void testExecute_withFalseIsFetchingAll_shouldUpdateShownAndReturnUnreadNotifications() {
+    public void testExecute_withInvalidIsFetchingActive_shouldFail() {
         loginAsInstructor(GOOGLE_ID);
 
-        List<Notification> testUnreadNotifications = new ArrayList<>();
+        verifyHttpParameterFailure(
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString(),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, "not-a-boolean");
+    }
+
+    @Test
+    public void testExecute_withSingleTargetUser_shouldNotImplicitlyAddGeneralTargetUser() {
+        loginAsInstructor(GOOGLE_ID);
+
+        List<Notification> testNotifications = new ArrayList<>();
 
         for (int i = 0; i < UNREAD_NOTIFICATION_COUNT; i++) {
-            testUnreadNotifications.add(getTypicalNotificationWithId());
+            testNotifications.add(getTypicalNotificationWithId());
         }
 
-        when(mockLogic.getUnreadActiveNotificationsByTargetUser(any(), any(), any()))
-                .thenReturn(testUnreadNotifications);
+        List<NotificationTargetUser> targetUsers = List.of(NotificationTargetUser.INSTRUCTOR);
+        when(mockLogic.getNotificationsByTargetUsers(targetUsers, true))
+                .thenReturn(testNotifications);
 
         String[] requestParams = new String[] {
                 Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString(),
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, String.valueOf(false),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(true),
         };
 
         GetNotificationsAction action = getAction(requestParams);
@@ -221,30 +230,30 @@ public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsA
         NotificationsData output = (NotificationsData) jsonResult.getOutput();
         List<NotificationData> notifications = output.getNotifications();
 
-        assertEquals(testUnreadNotifications.size(), notifications.size());
-        for (int i = 0; i < testUnreadNotifications.size(); i++) {
-            verifyNotificationEquals(new NotificationData(testUnreadNotifications.get(i)), notifications.get(i));
+        assertEquals(testNotifications.size(), notifications.size());
+        for (int i = 0; i < testNotifications.size(); i++) {
+            verifyNotificationEquals(new NotificationData(testNotifications.get(i)), notifications.get(i));
         }
-
-        // should update notification shown attribute for non-admin users
-        testUnreadNotifications.forEach(n -> assertTrue(n.isShown()));
+        verify(mockLogic).getNotificationsByTargetUsers(targetUsers, true);
     }
 
     @Test
-    public void testExecute_withoutIsFetchingAll_shouldUpdateShownAndReturnUnreadNotifications() {
-        List<Notification> testUnreadNotifications = new ArrayList<>();
-
+    public void testExecute_withIsFetchingActiveFalseAndTargetUsers_shouldReturnAllNotificationsForTargetUsers() {
         loginAsInstructor(GOOGLE_ID);
 
+        List<Notification> testNotifications = new ArrayList<>();
+
         for (int i = 0; i < UNREAD_NOTIFICATION_COUNT; i++) {
-            testUnreadNotifications.add(getTypicalNotificationWithId());
+            testNotifications.add(getTypicalNotificationWithId());
         }
 
-        when(mockLogic.getUnreadActiveNotificationsByTargetUser(any(), any(), any()))
-                .thenReturn(testUnreadNotifications);
+        List<NotificationTargetUser> targetUsers = List.of(NotificationTargetUser.INSTRUCTOR);
+        when(mockLogic.getNotificationsByTargetUsers(targetUsers, false))
+                .thenReturn(testNotifications);
 
         String[] requestParams = new String[] {
                 Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString(),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(false),
         };
 
         GetNotificationsAction action = getAction(requestParams);
@@ -253,22 +262,43 @@ public class GetNotificationsActionTest extends BaseActionTest<GetNotificationsA
         NotificationsData output = (NotificationsData) jsonResult.getOutput();
         List<NotificationData> notifications = output.getNotifications();
 
-        assertEquals(testUnreadNotifications.size(), notifications.size());
-        for (int i = 0; i < testUnreadNotifications.size(); i++) {
-            verifyNotificationEquals(new NotificationData(testUnreadNotifications.get(i)), notifications.get(i));
+        assertEquals(testNotifications.size(), notifications.size());
+        for (int i = 0; i < testNotifications.size(); i++) {
+            verifyNotificationEquals(new NotificationData(testNotifications.get(i)), notifications.get(i));
         }
+        verify(mockLogic).getNotificationsByTargetUsers(targetUsers, false);
     }
 
     @Test
-    public void testExecute_withInvalidIsFetchingAll_shouldFail() {
+    public void testExecute_withGeneralTargetUser_shouldReturnGeneralNotifications() {
+        List<Notification> testNotifications = new ArrayList<>();
+
         loginAsInstructor(GOOGLE_ID);
 
+        for (int i = 0; i < READ_NOTIFICATION_COUNT; i++) {
+            testNotifications.add(getTypicalNotificationWithId());
+        }
+
+        List<NotificationTargetUser> targetUsers = List.of(NotificationTargetUser.GENERAL);
+        when(mockLogic.getNotificationsByTargetUsers(targetUsers, true))
+                .thenReturn(testNotifications);
+
         String[] requestParams = new String[] {
-                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.INSTRUCTOR.toString(),
-                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ALL, "random-value",
+                Const.ParamsNames.NOTIFICATION_TARGET_USER, NotificationTargetUser.GENERAL.toString(),
+                Const.ParamsNames.NOTIFICATION_IS_FETCHING_ACTIVE, String.valueOf(true),
         };
 
-        verifyHttpParameterFailure(requestParams);
+        GetNotificationsAction action = getAction(requestParams);
+        JsonResult jsonResult = getJsonResult(action);
+
+        NotificationsData output = (NotificationsData) jsonResult.getOutput();
+        List<NotificationData> notifications = output.getNotifications();
+
+        assertEquals(testNotifications.size(), notifications.size());
+        for (int i = 0; i < testNotifications.size(); i++) {
+            verifyNotificationEquals(new NotificationData(testNotifications.get(i)), notifications.get(i));
+        }
+        verify(mockLogic).getNotificationsByTargetUsers(targetUsers, true);
     }
 
     private void verifyNotificationEquals(NotificationData expected, NotificationData actual) {

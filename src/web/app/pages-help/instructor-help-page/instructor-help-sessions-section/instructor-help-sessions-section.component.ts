@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
 import {
   EXAMPLE_COMMENT_EDIT_FORM_MODEL,
   EXAMPLE_COURSE_CANDIDATES,
@@ -20,10 +20,8 @@ import { environment } from '../../../../environments/environment';
 import { TemplateSession } from '../../../../services/feedback-sessions.service';
 import { Course, FeedbackSession, Instructor, ResponseOutput, Student } from '../../../../types/api-output';
 import { AddingQuestionPanelComponent } from '../../../components/adding-question-panel/adding-question-panel.component';
-import {
-  CommentEditFormModel,
-  CommentEditFormComponent,
-} from '../../../components/comment-box/comment-edit-form/comment-edit-form.component';
+import type { CommentEditFormModel } from '../../../components/comment-box/comment.model';
+import { CommentEditFormComponent } from '../../../components/comment-box/comment-edit-form/comment-edit-form.component';
 import { CommentRowMode } from '../../../components/comment-box/comment-row/comment-row.mode';
 import { CommentTableModel } from '../../../components/comment-box/comment-table/comment-table.model';
 import { FeedbackPathPanelComponent } from '../../../components/feedback-path-panel/feedback-path-panel.component';
@@ -81,12 +79,12 @@ import { Sections } from '../sections';
 })
 export class InstructorHelpSessionsSectionComponent extends InstructorHelpSectionComponent implements OnInit {
   // enums
-  CommentRowMode: typeof CommentRowMode = CommentRowMode;
-  SessionEditFormMode: typeof SessionEditFormMode = SessionEditFormMode;
-  InstructorSessionResultViewType: typeof InstructorSessionResultViewType = InstructorSessionResultViewType;
-  InstructorSessionResultSectionType: typeof InstructorSessionResultSectionType = InstructorSessionResultSectionType;
-  SessionsSectionQuestions: typeof SessionsSectionQuestions = SessionsSectionQuestions;
-  Sections: typeof Sections = Sections;
+  CommentRowMode!: typeof CommentRowMode;
+  SessionEditFormMode!: typeof SessionEditFormMode;
+  InstructorSessionResultViewType!: typeof InstructorSessionResultViewType;
+  InstructorSessionResultSectionType!: typeof InstructorSessionResultSectionType;
+  SessionsSectionQuestions!: typeof SessionsSectionQuestions;
+  Sections!: typeof Sections;
 
   readonly supportEmail: string = environment.supportEmail;
   readonly frontendUrl: string = environment.frontendUrl;
@@ -131,6 +129,16 @@ export class InstructorHelpSessionsSectionComponent extends InstructorHelpSectio
     SessionsSectionQuestions.PERMANENT_DEL_SESSION,
     SessionsSectionQuestions.RESTORE_DEL_ALL,
   ];
+
+  constructor() {
+    super();
+    this.CommentRowMode = CommentRowMode;
+    this.SessionEditFormMode = SessionEditFormMode;
+    this.InstructorSessionResultViewType = InstructorSessionResultViewType;
+    this.InstructorSessionResultSectionType = InstructorSessionResultSectionType;
+    this.SessionsSectionQuestions = SessionsSectionQuestions;
+    this.Sections = Sections;
+  }
 
   getQuestionsOrder(): string[] {
     return this.questionsOrder;

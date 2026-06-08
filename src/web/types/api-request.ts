@@ -32,6 +32,7 @@ export interface CourseBasicRequest extends BasicRequest {
 
 export interface CourseCreateRequest extends CourseBasicRequest {
   courseId: string;
+  institute: string;
 }
 
 export interface CourseUpdateRequest extends CourseBasicRequest {
@@ -59,7 +60,11 @@ export interface ErrorReportRequest extends BasicRequest {
   content: string;
 }
 
-export interface FeedbackConstantSumResponseDetails extends FeedbackResponseDetails {
+export interface FeedbackConstantSumOptionsResponseDetails extends FeedbackResponseDetails {
+  answers: number[];
+}
+
+export interface FeedbackConstantSumRecipientsResponseDetails extends FeedbackResponseDetails {
   answers: number[];
 }
 
@@ -89,8 +94,8 @@ export interface FeedbackQuestionBasicRequest extends BasicRequest {
   questionDescription: string;
   questionDetails: { [index: string]: any };
   questionType: FeedbackQuestionType;
-  giverType: FeedbackParticipantType;
-  recipientType: FeedbackParticipantType;
+  giverType: QuestionGiverType;
+  recipientType: QuestionRecipientType;
   numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting;
   customNumberOfEntitiesToGiveFeedbackTo: number;
   showResponsesTo: FeedbackVisibilityType[];
@@ -112,29 +117,19 @@ export interface FeedbackRankRecipientsResponseDetails extends FeedbackResponseD
   answer: number;
 }
 
-export interface FeedbackResponseCommentBasicRequest extends BasicRequest {
-  commentText: string;
-  showCommentTo: CommentVisibilityType[];
-  showGiverNameTo: CommentVisibilityType[];
-}
-
-export interface FeedbackResponseCommentCreateRequest extends FeedbackResponseCommentBasicRequest {
-}
-
-export interface FeedbackResponseCommentUpdateRequest extends FeedbackResponseCommentBasicRequest {
-}
-
 export interface FeedbackResponseDetails {
   questionType: FeedbackQuestionType;
 }
 
 export interface FeedbackResponseRequest extends BasicRequest {
+  responseId?: string;
   recipient: string;
   responseDetails: FeedbackResponseDetails;
+  giverComment: string;
 }
 
 export interface FeedbackResponsesRequest extends BasicRequest {
-  responses: FeedbackResponseRequest[];
+  questionResponses: { [index: string]: FeedbackResponseRequest[] };
 }
 
 export interface FeedbackRubricResponseDetails extends FeedbackResponseDetails {
@@ -181,12 +176,12 @@ export interface FeedbackTextResponseDetails extends FeedbackResponseDetails {
 }
 
 export interface InstructorCreateRequest extends BasicRequest {
-  id?: string;
   name: string;
   email: string;
   role: InstructorPermissionRole;
   displayName?: string;
   isDisplayedToStudent: boolean;
+  privileges?: InstructorPrivileges;
 }
 
 export interface InstructorPermissionSet {
@@ -206,8 +201,14 @@ export interface InstructorPrivileges {
   sessionLevel: { [index: string]: { [index: string]: InstructorPermissionSet } };
 }
 
-export interface InstructorPrivilegeUpdateRequest extends BasicRequest {
-  privileges: InstructorPrivileges;
+export interface InstructorUpdateRequest extends BasicRequest {
+  id: string;
+  name: string;
+  email: string;
+  role: InstructorPermissionRole;
+  displayName?: string;
+  isDisplayedToStudent: boolean;
+  privileges?: InstructorPrivileges;
 }
 
 export interface MarkNotificationAsReadRequest extends BasicRequest {
@@ -227,6 +228,22 @@ export interface NotificationCreateRequest extends NotificationBasicRequest {
 }
 
 export interface NotificationUpdateRequest extends NotificationBasicRequest {
+}
+
+export interface RegKeyRequest extends BasicRequest {
+  key: string;
+}
+
+export interface ResponseInstructorCommentBasicRequest extends BasicRequest {
+  commentText: string;
+  showCommentTo: CommentVisibilityType[];
+  showGiverNameTo: CommentVisibilityType[];
+}
+
+export interface ResponseInstructorCommentCreateRequest extends ResponseInstructorCommentBasicRequest {
+}
+
+export interface ResponseInstructorCommentUpdateRequest extends ResponseInstructorCommentBasicRequest {
 }
 
 export interface SendEmailRequest extends BasicRequest {
@@ -298,30 +315,11 @@ export enum EmailType {
   LOGIN = "LOGIN",
 }
 
-export enum FeedbackParticipantType {
-  SELF = "SELF",
-  STUDENTS = "STUDENTS",
-  STUDENTS_IN_SAME_SECTION = "STUDENTS_IN_SAME_SECTION",
-  STUDENTS_EXCLUDING_SELF = "STUDENTS_EXCLUDING_SELF",
-  INSTRUCTORS = "INSTRUCTORS",
-  TEAMS = "TEAMS",
-  TEAMS_IN_SAME_SECTION = "TEAMS_IN_SAME_SECTION",
-  TEAMS_EXCLUDING_SELF = "TEAMS_EXCLUDING_SELF",
-  OWN_TEAM = "OWN_TEAM",
-  OWN_TEAM_MEMBERS = "OWN_TEAM_MEMBERS",
-  OWN_TEAM_MEMBERS_INCLUDING_SELF = "OWN_TEAM_MEMBERS_INCLUDING_SELF",
-  RECEIVER = "RECEIVER",
-  RECEIVER_TEAM_MEMBERS = "RECEIVER_TEAM_MEMBERS",
-  NONE = "NONE",
-  GIVER = "GIVER",
-}
-
 export enum FeedbackQuestionType {
   TEXT = "TEXT",
   MCQ = "MCQ",
   MSQ = "MSQ",
   NUMSCALE = "NUMSCALE",
-  CONSTSUM = "CONSTSUM",
   CONSTSUM_OPTIONS = "CONSTSUM_OPTIONS",
   CONSTSUM_RECIPIENTS = "CONSTSUM_RECIPIENTS",
   CONTRIB = "CONTRIB",
@@ -374,6 +372,28 @@ export enum NotificationTargetUser {
 export enum NumberOfEntitiesToGiveFeedbackToSetting {
   CUSTOM = "CUSTOM",
   UNLIMITED = "UNLIMITED",
+}
+
+export enum QuestionGiverType {
+  SESSION_CREATOR = "SESSION_CREATOR",
+  STUDENTS = "STUDENTS",
+  INSTRUCTORS = "INSTRUCTORS",
+  TEAMS = "TEAMS",
+}
+
+export enum QuestionRecipientType {
+  SELF = "SELF",
+  STUDENTS = "STUDENTS",
+  STUDENTS_IN_SAME_SECTION = "STUDENTS_IN_SAME_SECTION",
+  STUDENTS_EXCLUDING_SELF = "STUDENTS_EXCLUDING_SELF",
+  INSTRUCTORS = "INSTRUCTORS",
+  TEAMS = "TEAMS",
+  TEAMS_IN_SAME_SECTION = "TEAMS_IN_SAME_SECTION",
+  TEAMS_EXCLUDING_SELF = "TEAMS_EXCLUDING_SELF",
+  OWN_TEAM = "OWN_TEAM",
+  OWN_TEAM_MEMBERS = "OWN_TEAM_MEMBERS",
+  OWN_TEAM_MEMBERS_INCLUDING_SELF = "OWN_TEAM_MEMBERS_INCLUDING_SELF",
+  NONE = "NONE",
 }
 
 export enum ResponseVisibleSetting {

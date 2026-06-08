@@ -123,7 +123,7 @@ public class InstructorCourseEditPage extends AppPage {
             assertEquals("(This instructor will NOT be displayed to students)", getInstructorDisplayName(instrNum));
         }
         assertEquals(instructor.getRole().getRoleName(), getInstructorRole(instrNum));
-        if (Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_CUSTOM.equals(instructor.getRole().getRoleName())
+        if (Const.InstructorPermissionRoleNames.CUSTOM.equals(instructor.getRole().getRoleName())
                 && getEditInstructorButton(instrNum).isEnabled()) {
             verifyCustomPrivileges(instrNum, instructor.getPrivileges());
         }
@@ -323,18 +323,19 @@ public class InstructorCourseEditPage extends AppPage {
     }
 
     public void toggleCustomCourseLevelPrivilege(int instrNum, String privilege) {
-        if (!Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_CUSTOM.equals(getInstructorRole(instrNum))) {
+        if (!Const.InstructorPermissionRoleNames.CUSTOM.equals(getInstructorRole(instrNum))) {
             return;
         }
 
         clickEditInstructorButton(instrNum);
         click(getCourseLevelPanelCheckBox(instrNum, getCourseLevelPrivilegeIndex(privilege)));
         clickSaveInstructorButton(instrNum);
+        waitForPageToLoad();
     }
 
     public void toggleCustomSectionLevelPrivilege(int instrNum, int panelNum, String section,
                                                   String privilege) {
-        if (!Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_CUSTOM.equals(getInstructorRole(instrNum))) {
+        if (!Const.InstructorPermissionRoleNames.CUSTOM.equals(getInstructorRole(instrNum))) {
             return;
         }
 
@@ -344,11 +345,12 @@ public class InstructorCourseEditPage extends AppPage {
         click(getSectionSelectionCheckBox(instrNum, panelNum, getSectionIndex(instrNum, section)));
         click(getSectionLevelCheckBox(instrNum, panelNum, getSectionLevelPrivilegeIndex(privilege)));
         clickSaveInstructorButton(instrNum);
+        waitForPageToLoad();
     }
 
     public void toggleCustomSessionLevelPrivilege(int instrNum, int panelNum, String section, String session,
                                                   String privilege) {
-        if (!Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_CUSTOM.equals(getInstructorRole(instrNum))) {
+        if (!Const.InstructorPermissionRoleNames.CUSTOM.equals(getInstructorRole(instrNum))) {
             return;
         }
 
@@ -360,6 +362,7 @@ public class InstructorCourseEditPage extends AppPage {
         click(getSessionLevelCheckbox(instrNum, panelNum, getSessionIndex(instrNum, session),
                 getSessionLevelPrivilegeIndex(privilege)));
         clickSaveInstructorButton(instrNum);
+        waitForPageToLoad(true);
     }
 
     private int getNumInstructors() {
@@ -401,7 +404,7 @@ public class InstructorCourseEditPage extends AppPage {
 
     private void clickSaveInstructorButton(int instrNum) {
         click(getSaveInstructorButton(instrNum));
-        waitForPageToLoad();
+        waitForPageToLoad(true);
     }
 
     private void clickAddSectionPrivilegeLink(int instrNum) {
@@ -585,15 +588,15 @@ public class InstructorCourseEditPage extends AppPage {
 
     private int getRoleIndex(String role) {
         switch (role) {
-        case Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_COOWNER:
+        case Const.InstructorPermissionRoleNames.COOWNER:
             return INSTRUCTOR_TYPE_COOWNER;
-        case Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_MANAGER:
+        case Const.InstructorPermissionRoleNames.MANAGER:
             return INSTRUCTOR_TYPE_MANAGER;
-        case Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_OBSERVER:
+        case Const.InstructorPermissionRoleNames.OBSERVER:
             return INSTRUCTOR_TYPE_OBSERVER;
-        case Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_TUTOR:
+        case Const.InstructorPermissionRoleNames.TUTOR:
             return INSTRUCTOR_TYPE_TUTOR;
-        case Const.InstructorPermissionRoleNames.INSTRUCTOR_PERMISSION_ROLE_CUSTOM:
+        case Const.InstructorPermissionRoleNames.CUSTOM:
             return INSTRUCTOR_TYPE_CUSTOM;
         default:
             return -1;

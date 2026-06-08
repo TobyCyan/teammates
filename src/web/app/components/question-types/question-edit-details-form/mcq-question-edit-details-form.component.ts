@@ -2,11 +2,11 @@ import { CdkDragDrop, moveItemInArray, CdkDropList, CdkDrag, CdkDragHandle } fro
 
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { McqFieldComponent } from './mcq-field/mcq-field.component';
 import { QuestionEditDetailsFormComponent } from './question-edit-details-form.component';
 import { WeightFieldComponent } from './weight-field/weight-field.component';
-import { FeedbackMcqQuestionDetails, FeedbackParticipantType } from '../../../../types/api-output';
+import { FeedbackMcqQuestionDetails, QuestionRecipientType } from '../../../../types/api-output';
 import { DEFAULT_MCQ_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 import { GeneratedChoicePipe } from '../../teammates-common/generated-choice.pipe';
 
@@ -30,13 +30,13 @@ import { GeneratedChoicePipe } from '../../teammates-common/generated-choice.pip
 })
 export class McqQuestionEditDetailsFormComponent extends QuestionEditDetailsFormComponent<FeedbackMcqQuestionDetails> {
   readonly PARTICIPANT_TYPES = [
-    FeedbackParticipantType.STUDENTS,
-    FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
-    FeedbackParticipantType.TEAMS,
-    FeedbackParticipantType.TEAMS_EXCLUDING_SELF,
-    FeedbackParticipantType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
-    FeedbackParticipantType.OWN_TEAM_MEMBERS,
-    FeedbackParticipantType.INSTRUCTORS,
+    QuestionRecipientType.STUDENTS,
+    QuestionRecipientType.STUDENTS_EXCLUDING_SELF,
+    QuestionRecipientType.TEAMS,
+    QuestionRecipientType.TEAMS_EXCLUDING_SELF,
+    QuestionRecipientType.OWN_TEAM_MEMBERS_INCLUDING_SELF,
+    QuestionRecipientType.OWN_TEAM_MEMBERS,
+    QuestionRecipientType.INSTRUCTORS,
   ];
 
   // Used to store and restore user input when user toggles generate option
@@ -44,10 +44,6 @@ export class McqQuestionEditDetailsFormComponent extends QuestionEditDetailsForm
     ...DEFAULT_MCQ_QUESTION_DETAILS(),
     mcqChoices: ['', ''],
   };
-
-  constructor() {
-    super(DEFAULT_MCQ_QUESTION_DETAILS());
-  }
 
   /**
    * Reorders the list on dragging the Mcq options.
@@ -154,7 +150,7 @@ export class McqQuestionEditDetailsFormComponent extends QuestionEditDetailsForm
     if (checked) {
       this.storageModel = this.model;
       this.triggerModelChangeBatch({
-        generateOptionsFor: FeedbackParticipantType.STUDENTS,
+        generateOptionsFor: QuestionRecipientType.STUDENTS,
         mcqChoices: [],
         otherEnabled: false,
         hasAssignedWeights: false,
@@ -170,6 +166,6 @@ export class McqQuestionEditDetailsFormComponent extends QuestionEditDetailsForm
    * Checks if the generatedOptionsFor checkbox is enabled.
    */
   get isGeneratedOptionsEnabled(): boolean {
-    return this.model.generateOptionsFor !== FeedbackParticipantType.NONE;
+    return this.model.generateOptionsFor !== QuestionRecipientType.NONE;
   }
 }

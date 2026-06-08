@@ -1,5 +1,7 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -32,10 +34,11 @@ public class GetReadNotificationsActionTest extends BaseActionTest<GetReadNotifi
 
     @Test
     protected void testExecute_getReadNotificationsAsInstructor_shouldSucceed() {
-        Account account = getTypicalAccount();
+        loginAsInstructor("instructor-google-id");
+        GetReadNotificationsAction action = getAction();
+        Account account = action.getCurrentAccount();
         List<ReadNotification> testReadNotifications = new ArrayList<>();
 
-        loginAsInstructor(account.getGoogleId());
         for (int i = 0; i < READ_NOTIFICATION_COUNT; i++) {
             ReadNotification readNotification = new ReadNotification();
             account.addReadNotification(readNotification);
@@ -43,10 +46,8 @@ public class GetReadNotificationsActionTest extends BaseActionTest<GetReadNotifi
             testReadNotifications.add(readNotification);
         }
 
-        when(mockLogic.getAccountForGoogleId(account.getGoogleId())).thenReturn(account);
         when(mockLogic.getReadNotificationsByAccountId(account.getId())).thenReturn(testReadNotifications);
 
-        GetReadNotificationsAction action = getAction();
         JsonResult jsonResult = getJsonResult(action);
 
         ReadNotificationsData output = (ReadNotificationsData) jsonResult.getOutput();

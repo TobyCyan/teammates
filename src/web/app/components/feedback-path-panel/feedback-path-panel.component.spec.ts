@@ -2,21 +2,26 @@ import { EventEmitter } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FeedbackPathPanelComponent } from './feedback-path-panel.component';
-import { FeedbackParticipantType, NumberOfEntitiesToGiveFeedbackToSetting } from '../../../types/api-output';
+import {
+  NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionGiverType,
+  QuestionRecipientType,
+} from '../../../types/api-output';
+import { Mock } from 'vitest';
 
 describe('FeedbackPathPanelComponent', () => {
   let component: FeedbackPathPanelComponent;
   let fixture: ComponentFixture<FeedbackPathPanelComponent>;
-  let emitSpy: jest.SpyInstance;
+  let emitSpy: Mock;
 
   beforeEach(() => {
     fixture = TestBed.createComponent(FeedbackPathPanelComponent);
     component = fixture.componentInstance;
     component.allowedFeedbackPaths = new Map([
-      [FeedbackParticipantType.TEAMS, [FeedbackParticipantType.OWN_TEAM_MEMBERS, FeedbackParticipantType.STUDENTS]],
+      [QuestionGiverType.TEAMS, [QuestionRecipientType.OWN_TEAM_MEMBERS, QuestionRecipientType.STUDENTS]],
     ]);
     component.triggerModelChangeBatch = new EventEmitter<any>();
-    emitSpy = jest.spyOn(component.triggerModelChangeBatch, 'emit');
+    emitSpy = vi.spyOn(component.triggerModelChangeBatch, 'emit');
     fixture.detectChanges();
   });
 
@@ -25,7 +30,7 @@ describe('FeedbackPathPanelComponent', () => {
   });
 
   it('should toggle sub menu status correctly', () => {
-    const menu = FeedbackParticipantType.STUDENTS;
+    const menu = QuestionGiverType.STUDENTS;
     component.toggleSubMenu(menu);
     const firstToggle = component.isSubMenuOpen(menu);
     expect(firstToggle).toBe(true);
@@ -35,7 +40,7 @@ describe('FeedbackPathPanelComponent', () => {
   });
 
   it('should reset menu', () => {
-    const menu = FeedbackParticipantType.STUDENTS;
+    const menu = QuestionGiverType.STUDENTS;
     component.toggleSubMenu(menu);
     component.resetMenu();
     const isMenuOpen = component.isSubMenuOpen(menu);
@@ -44,7 +49,7 @@ describe('FeedbackPathPanelComponent', () => {
 
   it('should trigger custom number of entities', () => {
     const customNumber = 5;
-    const customNumberOfEntitiesToGiveFeedbackToEmitSpy = jest.spyOn(
+    const customNumberOfEntitiesToGiveFeedbackToEmitSpy = vi.spyOn(
       component.customNumberOfEntitiesToGiveFeedbackTo,
       'emit',
     );
@@ -54,7 +59,7 @@ describe('FeedbackPathPanelComponent', () => {
 
   it('should trigger number of entities setting', () => {
     const setting = NumberOfEntitiesToGiveFeedbackToSetting.CUSTOM;
-    const numberOfEntitiesToGiveFeedbackToSettingEmitSpy = jest.spyOn(
+    const numberOfEntitiesToGiveFeedbackToSettingEmitSpy = vi.spyOn(
       component.numberOfEntitiesToGiveFeedbackToSetting,
       'emit',
     );
@@ -63,38 +68,38 @@ describe('FeedbackPathPanelComponent', () => {
   });
 
   it('should trigger custom feedback path', () => {
-    const customFeedbackPathEmitSpy = jest.spyOn(component.customFeedbackPath, 'emit');
+    const customFeedbackPathEmitSpy = vi.spyOn(component.customFeedbackPath, 'emit');
     component.triggerCustomFeedbackPath();
     expect(customFeedbackPathEmitSpy).toHaveBeenCalledWith(true);
   });
 
   describe('changeGiverRecipientType', () => {
     it('should set default recipientType if recipientType is not allowed for giverType', () => {
-      component.allowedFeedbackPaths.set(FeedbackParticipantType.TEAMS, [
-        FeedbackParticipantType.OWN_TEAM_MEMBERS,
-        FeedbackParticipantType.STUDENTS,
+      component.allowedFeedbackPaths.set(QuestionGiverType.TEAMS, [
+        QuestionRecipientType.OWN_TEAM_MEMBERS,
+        QuestionRecipientType.STUDENTS,
       ]);
-      component.changeGiverRecipientType(FeedbackParticipantType.TEAMS, FeedbackParticipantType.INSTRUCTORS);
-      expect(component.model.recipientType).toEqual(FeedbackParticipantType.OWN_TEAM_MEMBERS);
+      component.changeGiverRecipientType(QuestionGiverType.TEAMS, QuestionRecipientType.INSTRUCTORS);
+      expect(component.model.recipientType).toEqual(QuestionRecipientType.OWN_TEAM_MEMBERS);
     });
 
     it('checks if custom path remains & emits false if input unchanged', () => {
       component.model.isUsingOtherFeedbackPath = true;
-      component.model.giverType = FeedbackParticipantType.TEAMS;
-      component.model.recipientType = FeedbackParticipantType.STUDENTS;
-      component.changeGiverRecipientType(FeedbackParticipantType.TEAMS, FeedbackParticipantType.STUDENTS);
+      component.model.giverType = QuestionGiverType.TEAMS;
+      component.model.recipientType = QuestionRecipientType.STUDENTS;
+      component.changeGiverRecipientType(QuestionGiverType.TEAMS, QuestionRecipientType.STUDENTS);
       expect(emitSpy).toHaveBeenCalledWith({
         isUsingOtherFeedbackPath: false,
       });
     });
 
     it('resets settings & emits params if giverType/recipientType changed', () => {
-      component.model.giverType = FeedbackParticipantType.TEAMS;
-      component.model.recipientType = FeedbackParticipantType.STUDENTS;
-      component.changeGiverRecipientType(FeedbackParticipantType.TEAMS, FeedbackParticipantType.OWN_TEAM_MEMBERS);
+      component.model.giverType = QuestionGiverType.TEAMS;
+      component.model.recipientType = QuestionRecipientType.STUDENTS;
+      component.changeGiverRecipientType(QuestionGiverType.TEAMS, QuestionRecipientType.OWN_TEAM_MEMBERS);
       expect(emitSpy).toHaveBeenCalledWith({
-        giverType: FeedbackParticipantType.TEAMS,
-        recipientType: FeedbackParticipantType.OWN_TEAM_MEMBERS,
+        giverType: QuestionGiverType.TEAMS,
+        recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
         commonVisibilitySettingName: 'Please select a visibility option',
         isUsingOtherFeedbackPath: false,
         isUsingOtherVisibilitySetting: false,
@@ -105,9 +110,9 @@ describe('FeedbackPathPanelComponent', () => {
     });
     it('checks if emitSpy is not called when isUsingOtherFeedbackPath is false', () => {
       component.model.isUsingOtherFeedbackPath = false;
-      component.model.giverType = FeedbackParticipantType.TEAMS;
-      component.model.recipientType = FeedbackParticipantType.STUDENTS;
-      component.changeGiverRecipientType(FeedbackParticipantType.TEAMS, FeedbackParticipantType.STUDENTS);
+      component.model.giverType = QuestionGiverType.TEAMS;
+      component.model.recipientType = QuestionRecipientType.STUDENTS;
+      component.changeGiverRecipientType(QuestionGiverType.TEAMS, QuestionRecipientType.STUDENTS);
       expect(emitSpy).not.toHaveBeenCalled();
     });
   });

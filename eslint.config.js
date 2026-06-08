@@ -3,7 +3,7 @@ const eslint = require('@eslint/js');
 const { defineConfig } = require('eslint/config');
 const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
-const jest = require('eslint-plugin-jest');
+const vitest = require('@vitest/eslint-plugin');
 const eslintConfigPrettier = require('eslint-config-prettier/flat');
 
 module.exports = defineConfig(
@@ -44,6 +44,7 @@ module.exports = defineConfig(
           ignoreRestSiblings: true,
         },
       ],
+      '@typescript-eslint/consistent-type-definitions': 'off',
       '@angular-eslint/component-selector': [
         'error',
         {
@@ -63,14 +64,11 @@ module.exports = defineConfig(
       '@typescript-eslint/no-deprecated': 'warn',
       // The rules below are mostly stylistic rules that are deemed reasonable to be disabled.
       // They can be re-enabled in the future if desired.
-      '@typescript-eslint/prefer-for-of': 'off',
       '@typescript-eslint/no-empty-function': 'off',
-      '@typescript-eslint/consistent-type-definitions': 'off',
       '@typescript-eslint/consistent-indexed-object-style': 'off',
       '@typescript-eslint/consistent-generic-constructors': 'off',
       // The rules below are temporarily disabled to allow gradual migration to the recommended ruleset.
       // They should be re-enabled in the future.
-      '@angular-eslint/prefer-inject': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
@@ -87,7 +85,7 @@ module.exports = defineConfig(
   },
   {
     files: ['**/*.spec.ts'],
-    extends: [jest.configs['flat/recommended']],
+    extends: [vitest.configs['recommended']],
     rules: {
       // Add test file specific rules here if needed.
     },

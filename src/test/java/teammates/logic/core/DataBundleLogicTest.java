@@ -1,5 +1,9 @@
 package teammates.logic.core;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -331,7 +335,7 @@ public class DataBundleLogicTest extends BaseTestCase {
 
         dataBundleLogic.removeDataBundle(dataBundle);
 
-        verify(coursesLogic, times(1)).deleteCourseCascade(course.getId());
+        verify(coursesLogic, times(1)).deleteCourse(course.getId());
     }
 
     @Test
@@ -350,7 +354,7 @@ public class DataBundleLogicTest extends BaseTestCase {
 
         dataBundleLogic.removeDataBundle(dataBundle);
 
-        verify(coursesLogic, times(1)).deleteCourseCascade(course.getId());
+        verify(coursesLogic, times(1)).deleteCourse(course.getId());
         verify(notificationsLogic, times(1)).deleteNotification(notification.getId());
         verify(accountsLogic, times(1)).deleteAccount(account.getGoogleId());
         verify(accountRequestsLogic, times(1)).deleteAccountRequest(accountRequest.getId());
@@ -404,7 +408,7 @@ public class DataBundleLogicTest extends BaseTestCase {
                 + "\"feedbackSessionLogs\": {},"
                 + "\"feedbackQuestions\": {},"
                 + "\"feedbackResponses\": {},"
-                + "\"feedbackResponseComments\": {},"
+                + "\"responseInstructorComments\": {},"
                 + "\"deadlineExtensions\": {},"
                 + "\"notifications\": {},"
                 + "\"readNotifications\": {}"
@@ -424,7 +428,7 @@ public class DataBundleLogicTest extends BaseTestCase {
         assertTrue(result.feedbackSessionLogs.isEmpty());
         assertTrue(result.feedbackQuestions.isEmpty());
         assertTrue(result.feedbackResponses.isEmpty());
-        assertTrue(result.feedbackResponseComments.isEmpty());
+        assertTrue(result.responseInstructorComments.isEmpty());
         assertTrue(result.deadlineExtensions.isEmpty());
         assertTrue(result.notifications.isEmpty());
         assertTrue(result.readNotifications.isEmpty());
@@ -446,7 +450,7 @@ public class DataBundleLogicTest extends BaseTestCase {
                 + "\"feedbackSessionLogs\": {},"
                 + "\"feedbackQuestions\": {},"
                 + "\"feedbackResponses\": {},"
-                + "\"feedbackResponseComments\": {},"
+                + "\"responseInstructorComments\": {},"
                 + "\"deadlineExtensions\": {},"
                 + "\"notifications\": {},"
                 + "\"readNotifications\": {}"

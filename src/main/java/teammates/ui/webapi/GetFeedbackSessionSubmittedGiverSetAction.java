@@ -1,12 +1,11 @@
 package teammates.ui.webapi;
 
-import java.util.Set;
 import java.util.UUID;
 
+import teammates.common.datatransfer.SubmittedGiverSetBundle;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.util.Const;
 import teammates.storage.entity.FeedbackSession;
-import teammates.storage.entity.Instructor;
 import teammates.ui.exception.EntityNotFoundException;
 import teammates.ui.exception.UnauthorizedAccessException;
 import teammates.ui.output.FeedbackSessionSubmittedGiverSet;
@@ -30,23 +29,21 @@ public class GetFeedbackSessionSubmittedGiverSetAction extends Action {
             throw new EntityNotFoundException("Feedback session not found");
         }
 
-        Instructor instructor = logic.getInstructorByGoogleId(feedbackSession.getCourseId(), userInfo.getId());
-
-        gateKeeper.verifyAccessible(instructor, feedbackSession);
+        gateKeeper.verifyInstructorInCourse(requestContext, feedbackSession.getCourseId());
     }
 
     @Override
     public JsonResult execute() {
         UUID feedbackSessionId = getUuidRequestParamValue(Const.ParamsNames.FEEDBACK_SESSION_ID);
 
-        Set<String> giverSet;
+        SubmittedGiverSetBundle submittedGiverSetBundle;
         try {
-            giverSet = logic.getGiverSetThatAnsweredFeedbackSession(feedbackSessionId);
+            submittedGiverSetBundle = logic.getSubmittedGiverSet(feedbackSessionId);
         } catch (EntityDoesNotExistException e) {
             throw new EntityNotFoundException(e);
         }
 
-        FeedbackSessionSubmittedGiverSet output = new FeedbackSessionSubmittedGiverSet(giverSet);
+        FeedbackSessionSubmittedGiverSet output = new FeedbackSessionSubmittedGiverSet(submittedGiverSetBundle);
         return new JsonResult(output);
     }
 }

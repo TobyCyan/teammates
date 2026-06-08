@@ -1,16 +1,17 @@
-import { NgClass } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
-import { NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdown, NgbDropdownToggle, NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap/dropdown';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { CommonVisibilitySetting } from '../../../services/feedback-questions.service';
 import { VisibilityStateMachine } from '../../../services/visibility-state-machine';
 import {
-  FeedbackParticipantType,
   FeedbackQuestionType,
+  FeedbackSessionSubmissionStatus,
   FeedbackVisibilityType,
   NumberOfEntitiesToGiveFeedbackToSetting,
+  QuestionGiverType,
+  QuestionRecipientType,
 } from '../../../types/api-output';
-import { castAsInputElement } from '../../../types/event-target-caster';
 import { VisibilityControl } from '../../../types/visibility-control';
 import { QuestionEditFormModel } from '../question-edit-form/question-edit-form-model';
 import { EnumToArrayPipe } from '../teammates-common/enum-to-array.pipe';
@@ -30,7 +31,6 @@ import { VisibilityEntityNamePipe } from '../visibility-messages/visibility-enti
   templateUrl: './visibility-panel.component.html',
   styleUrls: ['./visibility-panel.component.scss'],
   imports: [
-    NgClass,
     NgbDropdown,
     NgbDropdownToggle,
     NgbDropdownMenu,
@@ -44,15 +44,12 @@ import { VisibilityEntityNamePipe } from '../visibility-messages/visibility-enti
   ],
 })
 export class VisibilityPanelComponent {
-  readonly castAsInputElement = castAsInputElement;
-
   // enum
-  FeedbackParticipantType: typeof FeedbackParticipantType = FeedbackParticipantType;
-  FeedbackQuestionType: typeof FeedbackQuestionType = FeedbackQuestionType;
-  NumberOfEntitiesToGiveFeedbackToSetting: typeof NumberOfEntitiesToGiveFeedbackToSetting =
-    NumberOfEntitiesToGiveFeedbackToSetting;
-  VisibilityControl: typeof VisibilityControl = VisibilityControl;
-  FeedbackVisibilityType: typeof FeedbackVisibilityType = FeedbackVisibilityType;
+  QuestionRecipientType!: typeof QuestionRecipientType;
+  FeedbackQuestionType!: typeof FeedbackQuestionType;
+  NumberOfEntitiesToGiveFeedbackToSetting!: typeof NumberOfEntitiesToGiveFeedbackToSetting;
+  VisibilityControl!: typeof VisibilityControl;
+  FeedbackVisibilityType!: typeof FeedbackVisibilityType;
 
   @Input()
   model: QuestionEditFormModel = {
@@ -62,16 +59,14 @@ export class VisibilityPanelComponent {
     questionBrief: '',
     questionDescription: '',
 
-    isQuestionHasResponses: false,
-
     questionType: FeedbackQuestionType.TEXT,
     questionDetails: {
       questionType: FeedbackQuestionType.TEXT,
       questionText: '',
     },
 
-    giverType: FeedbackParticipantType.STUDENTS,
-    recipientType: FeedbackParticipantType.STUDENTS_EXCLUDING_SELF,
+    giverType: QuestionGiverType.STUDENTS,
+    recipientType: QuestionRecipientType.OWN_TEAM_MEMBERS,
 
     numberOfEntitiesToGiveFeedbackToSetting: NumberOfEntitiesToGiveFeedbackToSetting.CUSTOM,
     customNumberOfEntitiesToGiveFeedbackTo: 1,
@@ -93,6 +88,9 @@ export class VisibilityPanelComponent {
     isFeedbackPathChanged: false,
     isQuestionDetailsChanged: false,
   };
+
+  @Input()
+  questionSubmissionStatus = FeedbackSessionSubmissionStatus.NOT_VISIBLE;
 
   @Input()
   isCustomFeedbackVisibilitySettingAllowed = false;
@@ -130,6 +128,28 @@ export class VisibilityPanelComponent {
     [VisibilityControl.SHOW_GIVER_NAME, "Giver's Name"],
     [VisibilityControl.SHOW_RECIPIENT_NAME, "Recipient's Name"],
   ]);
+
+  get mayHaveBeenViewed(): boolean {
+    // A question may have been viewed if it was visible at any point in time.
+    // Note that a question can be visible but not open yet.
+    switch (this.questionSubmissionStatus) {
+      case FeedbackSessionSubmissionStatus.OPEN:
+      case FeedbackSessionSubmissionStatus.GRACE_PERIOD:
+      case FeedbackSessionSubmissionStatus.CLOSED:
+      case FeedbackSessionSubmissionStatus.VISIBLE_NOT_OPEN:
+        return true;
+      case FeedbackSessionSubmissionStatus.NOT_VISIBLE:
+        return false;
+    }
+  }
+
+  constructor() {
+    this.QuestionRecipientType = QuestionRecipientType;
+    this.FeedbackQuestionType = FeedbackQuestionType;
+    this.NumberOfEntitiesToGiveFeedbackToSetting = NumberOfEntitiesToGiveFeedbackToSetting;
+    this.VisibilityControl = VisibilityControl;
+    this.FeedbackVisibilityType = FeedbackVisibilityType;
+  }
 
   triggerCustomVisibilitySetting(): void {
     this.customVisibilitySetting.emit(true);

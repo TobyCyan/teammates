@@ -9,6 +9,7 @@ import teammates.common.exception.InvalidParametersException;
 import teammates.common.util.Const;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Student;
+import teammates.storage.entity.User;
 import teammates.ui.exception.EntityNotFoundException;
 import teammates.ui.exception.InvalidHttpParameterException;
 import teammates.ui.exception.UnauthorizedAccessException;
@@ -32,13 +33,13 @@ public class CreateFeedbackSessionLogAction extends Action {
             throw new EntityNotFoundException("The feedback session does not exist.");
         }
 
-        Student authenticatedStudent = getPossiblyUnregisteredStudent(feedbackSession.getCourseId());
+        Student authenticatedStudent = getStudentFromRequest(feedbackSession.getCourseId());
         if (authenticatedStudent == null) {
             throw new UnauthorizedAccessException("No authenticated student found for the course.");
         }
 
         if (authenticatedStudent.getAccount() != null
-                && (userInfo == null || !userInfo.getId().equals(authenticatedStudent.getAccount().getGoogleId()))) {
+                && !authenticatedStudent.getAccount().getGoogleId().equals(getCurrentUserGoogleId())) {
             throw new UnauthorizedAccessException(
                     "Login is required to create a feedback session log for a student with an associated account.");
         }
@@ -66,10 +67,10 @@ public class CreateFeedbackSessionLogAction extends Action {
         }
 
         Instant now = Instant.now(clock);
-        Student student = getPossiblyUnregisteredStudent(feedbackSession.getCourseId());
+        User user = getStudentFromRequest(feedbackSession.getCourseId());
 
         try {
-            logic.createFeedbackSessionLog(feedbackSession, student, convertedFslType, now);
+            logic.createFeedbackSessionLog(feedbackSession, user, convertedFslType, now);
         } catch (InvalidParametersException ipe) {
             throw new InvalidHttpParameterException(ipe);
         }

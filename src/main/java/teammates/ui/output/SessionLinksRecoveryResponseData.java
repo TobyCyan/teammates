@@ -3,17 +3,11 @@ package teammates.ui.output;
 /**
  * The output format for session links recovery request.
  */
-public class SessionLinksRecoveryResponseData extends ApiOutput {
-    private final boolean isEmailSent;
+public class SessionLinksRecoveryResponseData implements ApiOutput {
     private final String message;
 
-    public SessionLinksRecoveryResponseData(boolean isEmailSent, String message) {
-        this.isEmailSent = isEmailSent;
+    public SessionLinksRecoveryResponseData(String message) {
         this.message = message;
-    }
-
-    public boolean isEmailSent() {
-        return this.isEmailSent;
     }
 
     public String getMessage() {

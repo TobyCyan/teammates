@@ -3,14 +3,17 @@ package teammates.logic.core;
 import static teammates.common.util.Const.ERROR_CREATE_ENTITY_ALREADY_EXISTS;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
+import jakarta.annotation.Nullable;
+
+import teammates.common.datatransfer.Provider;
 import teammates.common.exception.EntityAlreadyExistsException;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
 import teammates.storage.api.AccountsDb;
 import teammates.storage.entity.Account;
-import teammates.storage.entity.Course;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Student;
 import teammates.storage.entity.User;
@@ -29,17 +32,14 @@ public final class AccountsLogic {
 
     private UsersLogic usersLogic;
 
-    private CoursesLogic coursesLogic;
-
     private AccountsLogic() {
         // prevent initialization
     }
 
     void initLogicDependencies(AccountsDb accountsDb,
-            UsersLogic usersLogic, CoursesLogic coursesLogic) {
+            UsersLogic usersLogic) {
         this.accountsDb = accountsDb;
         this.usersLogic = usersLogic;
-        this.coursesLogic = coursesLogic;
     }
 
     public static AccountsLogic inst() {
@@ -64,12 +64,35 @@ public final class AccountsLogic {
     }
 
     /**
-     * Gets accounts associated with email.
+     * Creates and returns an account for the given email if it does not exist,
+     * otherwise just return the existing account.
+     *
+     * @param provider the provider of the account
+     * @param subject the subject of the account
+     * @param tenantId the tenant ID of the account
+     * @param email the email of the account
+     * @return the created or existing account
      */
-    public List<Account> getAccountsForEmail(String email) {
-        assert email != null;
+    public Account createOrGetAccount(Provider provider, String subject, @Nullable String tenantId, String email) {
+        Objects.requireNonNull(provider);
+        Objects.requireNonNull(subject);
+        Objects.requireNonNull(email);
 
-        return accountsDb.getAccountsByEmail(email);
+        String googleId = email;
+        // TODO: Fetch account by provider, subject and tenantId.
+        Account account = getAccountForGoogleId(googleId);
+        if (account != null) {
+            return account;
+        }
+
+        try {
+            return createAccount(provider, subject, tenantId, email, googleId);
+        } catch (EntityAlreadyExistsException e) {
+            // This should not happen.
+            throw new IllegalStateException("Failed to create existing account for email: " + email, e);
+        } catch (InvalidParametersException e) {
+            throw new IllegalStateException("Failed to create account with invalid parameters: " + email, e);
+        }
     }
 
     /**
@@ -80,7 +103,19 @@ public final class AccountsLogic {
      * @throws EntityAlreadyExistsException if the account already exists in the
      *                                      database.
      */
-    public Account createAccount(Account account)
+    public Account createAccount(Provider provider, String subject, @Nullable String tenantId, String email, String googleId)
+            throws InvalidParametersException, EntityAlreadyExistsException {
+        Objects.requireNonNull(provider);
+        Objects.requireNonNull(subject);
+        Objects.requireNonNull(email);
+        Objects.requireNonNull(googleId);
+        // TODO: Account name will be removed, use a generic "User" for now.
+        // googleId will be removed as well.
+        Account account = new Account(googleId, provider, subject, tenantId, "User", email);
+        return validateThenPersistAccount(account);
+    }
+
+    private Account validateThenPersistAccount(Account account)
             throws InvalidParametersException, EntityAlreadyExistsException {
         assert account != null;
 
@@ -90,7 +125,7 @@ public final class AccountsLogic {
             throw new EntityAlreadyExistsException(String.format(ERROR_CREATE_ENTITY_ALREADY_EXISTS, account.toString()));
         }
 
-        return accountsDb.createAccount(account);
+        return accountsDb.persistAccount(account);
     }
 
     /**
@@ -104,11 +139,7 @@ public final class AccountsLogic {
             return;
         }
 
-        List<User> users = usersLogic.getAllUsersByGoogleId(googleId);
-        for (User user : users) {
-            user.setAccount(null);
-        }
-        accountsDb.deleteAccount(account);
+        accountsDb.removeAccount(account);
     }
 
     /**
@@ -128,135 +159,61 @@ public final class AccountsLogic {
             usersLogic.deleteUser(user);
         }
 
-        accountsDb.deleteAccount(account);
+        accountsDb.removeAccount(account);
     }
 
     /**
-     * Joins the user as a student.
+     * Makes the user join the course, i.e. associate the account to the user.
      */
-    public Student joinCourseForStudent(String registrationKey, String googleId)
-            throws InvalidParametersException, EntityDoesNotExistException, EntityAlreadyExistsException {
-        Student student = validateStudentJoinRequest(registrationKey, googleId);
-
-        Account account = accountsDb.getAccountByGoogleId(googleId);
-        // Create an account if it doesn't exist
-        if (account == null) {
-            account = new Account(googleId, student.getName(), student.getEmail());
-            createAccount(account);
-        }
-
-        if (student.getAccount() == null) {
-            student.setAccount(account);
-        }
-
-        return student;
-    }
-
-    /**
-     * Joins the user as an instructor.
-     */
-    public Instructor joinCourseForInstructor(String key, String googleId)
-            throws InvalidParametersException, EntityDoesNotExistException, EntityAlreadyExistsException {
-        Instructor instructor = validateInstructorJoinRequest(key, googleId);
-
-        Account account = accountsDb.getAccountByGoogleId(googleId);
-        if (account == null) {
-            try {
-                account = new Account(googleId, instructor.getName(), instructor.getEmail());
-                createAccount(account);
-            } catch (EntityAlreadyExistsException e) {
-                assert false : "Account already exists.";
-            }
-        }
-
-        instructor.setAccount(account);
-
-        // Update the googleId of the student entity for the instructor which was created from sample data.
-        Student student = usersLogic.getStudentForEmail(instructor.getCourseId(), instructor.getEmail());
-        if (student != null) {
-            student.setAccount(account);
-        }
-
-        return instructor;
-    }
-
-    private Instructor validateInstructorJoinRequest(String registrationKey, String googleId)
+    public User joinCourse(String registrationKey, Account account)
             throws EntityDoesNotExistException, EntityAlreadyExistsException {
-        Instructor instructorForKey = usersLogic.getInstructorByRegistrationKey(registrationKey);
+        Objects.requireNonNull(account);
+        Objects.requireNonNull(registrationKey);
 
-        if (instructorForKey == null) {
-            throw new EntityDoesNotExistException("No instructor with given registration key: " + registrationKey);
-        }
-
-        Course course = coursesLogic.getCourse(instructorForKey.getCourseId());
-
-        if (course == null) {
-            throw new EntityDoesNotExistException("Course with id " + instructorForKey.getCourseId() + " does not exist");
-        }
-
-        if (course.isCourseDeleted()) {
-            throw new EntityDoesNotExistException("The course you are trying to join has been deleted by an instructor");
-        }
-
-        if (instructorForKey.isRegistered()) {
-            if (instructorForKey.getGoogleId().equals(googleId)) {
-                Account existingAccount = accountsDb.getAccountByGoogleId(googleId);
-                if (existingAccount != null) {
-                    throw new EntityAlreadyExistsException("Instructor has already joined course");
-                }
-            } else {
-                throw new EntityAlreadyExistsException("Instructor has already joined course");
-            }
-        } else {
-            // Check if this Google ID has already joined this course
-            Instructor existingInstructor =
-                    usersLogic.getInstructorByGoogleId(instructorForKey.getCourseId(), googleId);
-
-            if (existingInstructor != null) {
-                throw new EntityAlreadyExistsException("Instructor has already joined course");
-            }
-        }
-
-        return instructorForKey;
+        User user = validateJoinRequest(registrationKey, account.getGoogleId());
+        assert user.getAccount() == null;
+        user.setAccount(account);
+        return user;
     }
 
-    private Student validateStudentJoinRequest(String registrationKey, String googleId)
+    private User validateJoinRequest(String registrationKey, String googleId)
             throws EntityDoesNotExistException, EntityAlreadyExistsException {
+        User user = usersLogic.getUserByRegistrationKey(registrationKey);
 
-        Student studentRole = usersLogic.getStudentByRegistrationKey(registrationKey);
-
-        if (studentRole == null) {
-            throw new EntityDoesNotExistException("No student with given registration key: " + registrationKey);
+        if (user == null) {
+            throw new EntityDoesNotExistException("No user with given registration key: " + registrationKey);
         }
 
-        Course course = coursesLogic.getCourse(studentRole.getCourseId());
-
-        if (course == null) {
-            throw new EntityDoesNotExistException("Course with id " + studentRole.getCourseId() + " does not exist");
+        if (user.isRegistered()) {
+            throw new EntityAlreadyExistsException(
+                    "User has already joined course");
         }
 
-        if (course.isCourseDeleted()) {
-            throw new EntityDoesNotExistException("The course you are trying to join has been deleted by an instructor");
-        }
+        validateNonExistingLinkedUserInCourse(user, googleId);
 
-        if (studentRole.isRegistered()) {
-            throw new EntityAlreadyExistsException("Student has already joined course");
-        }
-
-        // Check if this Google ID has already joined this course
-        Student existingStudent =
-                usersLogic.getStudentByGoogleId(studentRole.getCourseId(), googleId);
-
-        if (existingStudent != null) {
-            throw new EntityAlreadyExistsException("Student has already joined course");
-        }
-
-        return studentRole;
+        return user;
     }
 
     private void validateAccount(Account account) throws InvalidParametersException {
         if (!account.isValid()) {
             throw new InvalidParametersException(account.getInvalidityInfo());
+        }
+    }
+
+    private void validateNonExistingLinkedUserInCourse(User user, String googleId)
+            throws EntityAlreadyExistsException {
+        User existingLinkedUser;
+        if (user instanceof Student) {
+            existingLinkedUser = usersLogic.getStudentByGoogleId(user.getCourseId(), googleId);
+        } else if (user instanceof Instructor) {
+            existingLinkedUser = usersLogic.getInstructorByGoogleId(user.getCourseId(), googleId);
+        } else {
+            throw new IllegalStateException("Unknown user type: " + user.getClass().getName());
+        }
+
+        if (existingLinkedUser != null) {
+            throw new EntityAlreadyExistsException(
+                    "This account is already associated with another " + user.getClass().getSimpleName().toLowerCase());
         }
     }
 }

@@ -1,6 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -23,39 +23,59 @@ describe('InstructorSearchPageComponent', () => {
       {
         email: 'alice@example.com',
         courseId: 'CS3281',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'student-1',
         name: 'Alice',
         joinState: JoinState.JOINED,
         teamName: 'Team 1',
+        teamId: 'team-1',
         sectionName: 'Section 1',
+        sectionId: 'section-1',
       },
       {
         email: 'bob@example.com',
         courseId: 'CS3281',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'student-2',
         name: 'Bob',
         joinState: JoinState.JOINED,
         teamName: 'Team 1',
+        teamId: 'team-1',
         sectionName: 'Section 1',
+        sectionId: 'section-1',
       },
       {
         email: 'chloe@example.com',
         courseId: 'CS3281',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'student-3',
         name: 'Chloe',
         joinState: JoinState.JOINED,
         teamName: 'Team 1',
+        teamId: 'team-1',
         sectionName: 'Section 2',
+        sectionId: 'section-2',
       },
       {
         email: 'david@example.com',
         courseId: 'CS3282',
+        courseName: 'Test Course',
+        institute: 'Test Institute',
+        userId: 'student-4',
         name: 'David',
         joinState: JoinState.JOINED,
         teamName: 'Team 1',
+        teamId: 'team-1',
         sectionName: 'Section 2',
+        sectionId: 'section-2',
       },
     ],
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     spyHttpRequestService = createSpyFromClass(HttpRequestService);
     TestBed.configureTestingModule({
       providers: [
@@ -64,21 +84,15 @@ describe('InstructorSearchPageComponent', () => {
         provideHttpClientTesting(),
       ],
     });
-  });
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(InstructorSearchPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
 
-  beforeEach(() => {
     const { students }: { students: Student[] } = mockStudents;
     coursesWithStudents = component.getCoursesWithStudents(students);
   });
@@ -106,10 +120,15 @@ describe('InstructorSearchPageComponent', () => {
             student: {
               name: 'tester',
               teamName: 'Team 1',
+              teamId: 'team-1',
               email: 'tester@tester.com',
               joinState: JoinState.JOINED,
               sectionName: 'Tutorial Group 1',
+              sectionId: 'tutorial-group-1',
               courseId: 'test-exa.demo',
+              courseName: 'Test Course',
+              institute: 'Test Institute',
+              userId: 'student-5',
             },
             isAllowedToViewStudentInSection: true,
             isAllowedToModifyStudent: true,
@@ -118,10 +137,15 @@ describe('InstructorSearchPageComponent', () => {
             student: {
               name: 'Benny Charles',
               teamName: 'Team 1',
+              teamId: 'team-1',
               email: 'benny.c.tmms@gmail.tmt',
               joinState: JoinState.JOINED,
               sectionName: 'Tutorial Group 1',
+              sectionId: 'tutorial-group-1',
               courseId: 'test-exa.demo',
+              courseName: 'Test Course',
+              institute: 'Test Institute',
+              userId: 'student-6',
             },
             isAllowedToViewStudentInSection: true,
             isAllowedToModifyStudent: true,
@@ -130,10 +154,15 @@ describe('InstructorSearchPageComponent', () => {
             student: {
               name: 'Alice Betsy',
               teamName: 'Team 1',
+              teamId: 'team-1',
               email: 'alice.b.tmms@gmail.tmt',
               joinState: JoinState.JOINED,
               sectionName: 'Tutorial Group 1',
+              sectionId: 'section-1',
               courseId: 'test-exa.demo',
+              courseName: 'Test Course',
+              institute: 'Test Institute',
+              userId: 'student-7',
             },
             isAllowedToViewStudentInSection: true,
             isAllowedToModifyStudent: true,
@@ -142,10 +171,15 @@ describe('InstructorSearchPageComponent', () => {
             student: {
               name: 'Danny Engrid',
               teamName: 'Team 1',
+              teamId: 'team-1',
               email: 'danny.e.tmms@gmail.tmt',
               joinState: JoinState.JOINED,
               sectionName: 'Tutorial Group 1',
+              sectionId: 'tutorial-group-1',
               courseId: 'test-exa.demo',
+              courseName: 'Test Course',
+              institute: 'Test Institute',
+              userId: 'student-8',
             },
             isAllowedToViewStudentInSection: true,
             isAllowedToModifyStudent: true,

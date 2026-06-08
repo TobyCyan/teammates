@@ -10,6 +10,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import teammates.common.datatransfer.UserType;
 import teammates.common.util.Config;
 import teammates.common.util.Const;
@@ -29,11 +32,17 @@ public class Student extends User {
     private UUID teamId;
 
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "teamId", nullable = false)
     private Team team;
 
     protected Student() {
         // required by Hibernate
+    }
+
+    public Student(String name, String email, String comments) {
+        super(name, email);
+        this.setComments(comments);
     }
 
     public Student(Course course, String name, String email, String comments) {
@@ -78,6 +87,10 @@ public class Student extends User {
 
     public String getTeamName() {
         return getTeam().getName();
+    }
+
+    public UUID getSectionId() {
+        return getSection().getId();
     }
 
     public String getSectionName() {
@@ -125,6 +138,7 @@ public class Student extends User {
         return errors;
     }
 
+    @Override
     public String getRegistrationUrl() {
         return Config.getFrontEndAppUrl(Const.WebPageURIs.JOIN_PAGE)
                 .withRegistrationKey(getRegKey())

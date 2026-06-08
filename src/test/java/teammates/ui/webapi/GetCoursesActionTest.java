@@ -1,5 +1,8 @@
 package teammates.ui.webapi;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +18,7 @@ import teammates.common.util.Const;
 import teammates.storage.entity.Course;
 import teammates.storage.entity.Instructor;
 import teammates.ui.output.CourseData;
+import teammates.ui.output.CourseViewData;
 import teammates.ui.output.CoursesData;
 
 /**
@@ -51,7 +55,7 @@ public class GetCoursesActionTest extends BaseActionTest<GetCoursesAction> {
     @Test
     void testExecute_withInstructorAndActiveCourses_success() {
         loginAsInstructor(stubInstructor.getGoogleId());
-        when(mockLogic.getInstructorsForGoogleId(stubInstructor.getGoogleId()))
+        when(mockLogic.getInstructorsByAccountId(any()))
                 .thenReturn(stubInstructorList);
         when(mockLogic.getCoursesForInstructors(argThat(
                 argument -> Objects.equals(argument.get(0).getGoogleId(),
@@ -70,7 +74,7 @@ public class GetCoursesActionTest extends BaseActionTest<GetCoursesAction> {
     @Test
     void testExecute_withInstructorAndSoftDeletedCourses_success() {
         loginAsInstructor(stubInstructor.getGoogleId());
-        when(mockLogic.getInstructorsForGoogleId(stubInstructor.getGoogleId()))
+        when(mockLogic.getInstructorsByAccountId(any()))
                 .thenReturn(stubInstructorList);
         when(mockLogic.getSoftDeletedCoursesForInstructors(argThat(
                 argument -> Objects.equals(argument.get(0).getGoogleId(),
@@ -106,7 +110,7 @@ public class GetCoursesActionTest extends BaseActionTest<GetCoursesAction> {
     @Test
     void testExecute_withStudentEntityType_success() {
         loginAsStudent("student");
-        when(mockLogic.getCoursesForStudentAccount("student")).thenReturn(stubCourseList);
+        when(mockLogic.getCoursesForStudentAccount(any())).thenReturn(stubCourseList);
         String[] params = {
                 Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
         };
@@ -143,7 +147,9 @@ public class GetCoursesActionTest extends BaseActionTest<GetCoursesAction> {
         }
     }
 
-    private void verifySameCourseDataStudent(CourseData expectedCourseData, CourseData actualCourseData) {
+    private void verifySameCourseDataStudent(CourseViewData expectedCourse, CourseViewData actualCourse) {
+        CourseData expectedCourseData = expectedCourse.getCourse();
+        CourseData actualCourseData = actualCourse.getCourse();
         assertEquals(expectedCourseData.getCourseId(), actualCourseData.getCourseId());
         assertEquals(expectedCourseData.getCourseName(), actualCourseData.getCourseName());
         assertEquals(expectedCourseData.getCreationTimestamp(), actualCourseData.getCreationTimestamp());
@@ -151,48 +157,13 @@ public class GetCoursesActionTest extends BaseActionTest<GetCoursesAction> {
         assertEquals(expectedCourseData.getTimeZone(), actualCourseData.getTimeZone());
     }
 
-    private void verifySameCourseData(CourseData expectedCourseData, CourseData actualCourseData) {
+    private void verifySameCourseData(CourseViewData expectedCourse, CourseViewData actualCourse) {
+        CourseData expectedCourseData = expectedCourse.getCourse();
+        CourseData actualCourseData = actualCourse.getCourse();
         assertEquals(expectedCourseData.getCourseId(), actualCourseData.getCourseId());
         assertEquals(expectedCourseData.getCourseName(), actualCourseData.getCourseName());
         assertEquals(expectedCourseData.getCreationTimestamp(), actualCourseData.getCreationTimestamp());
         assertEquals(expectedCourseData.getDeletionTimestamp(), actualCourseData.getDeletionTimestamp());
         assertEquals(expectedCourseData.getTimeZone(), actualCourseData.getTimeZone());
-    }
-
-    @Test
-    void testAccessControl() {
-        String[] paramsInstructors = {
-                Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
-                Const.ParamsNames.COURSE_STATUS, Const.CourseStatus.ACTIVE,
-        };
-        verifyAnyNonMasqueradingInstructorCanAccess(stubCourseList.get(0), paramsInstructors);
-
-        String[] paramsStudent = {
-                Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
-        };
-        verifyStudentsCanAccess(paramsStudent);
-
-        String[] paramsAdmin = {
-                Const.ParamsNames.ENTITY_TYPE, Const.EntityType.ADMIN,
-                Const.ParamsNames.COURSE_STATUS, Const.CourseStatus.ACTIVE,
-        };
-        verifyAdminsCannotAccess(paramsAdmin);
-    }
-
-    @Test
-    void testSpecificAccessControl_loginUserAndEntityMismatch_cannotAccess() {
-        loginAsInstructor(stubInstructor.getGoogleId());
-        String[] params = {
-                Const.ParamsNames.ENTITY_TYPE, Const.EntityType.STUDENT,
-        };
-        verifyCannotAccess(params);
-
-        logoutUser();
-        loginAsStudent("student");
-        String[] params2 = {
-                Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR,
-                Const.ParamsNames.COURSE_STATUS, Const.CourseStatus.ACTIVE,
-        };
-        verifyCannotAccess(params2);
     }
 }

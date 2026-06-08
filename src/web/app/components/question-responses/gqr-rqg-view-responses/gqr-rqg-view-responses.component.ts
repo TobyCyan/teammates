@@ -2,24 +2,25 @@ import { NgTemplateOutlet, KeyValuePipe } from '@angular/common';
 import { Component, Input, OnChanges, OnInit, inject } from '@angular/core';
 import { FeedbackResponsesService } from '../../../../services/feedback-responses.service';
 import {
-  FeedbackParticipantType,
   FeedbackQuestionType,
   FeedbackSession,
   FeedbackSessionPublishStatus,
   FeedbackSessionSubmissionStatus,
+  QuestionGiverType,
   QuestionOutput,
   ResponseOutput,
   ResponseVisibleSetting,
   SessionVisibleSetting,
 } from '../../../../types/api-output';
 import { InstructorSessionResultSectionType } from '../../../pages-instructor/instructor-session-result-page/instructor-session-result-section-type.enum';
+import { DEFAULT_SECTION_ID } from '../../../pages-instructor/instructor-session-result-page/instructor-session-tab.model';
 import { ResponseModerationButtonComponent } from '../../../pages-instructor/instructor-session-result-page/response-moderation-button/response-moderation-button.component';
 import { PanelChevronComponent } from '../../panel-chevron/panel-chevron.component';
 import { QuestionTextWithInfoComponent } from '../../question-text-with-info/question-text-with-info.component';
-import { collapseAnim } from '../../teammates-common/collapse-anim';
 import { InstructorResponsesViewBase } from '../instructor-responses-view-base';
 import { PerQuestionViewResponsesComponent } from '../per-question-view-responses/per-question-view-responses.component';
 import { SingleStatisticsComponent } from '../single-statistics/single-statistics.component';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
 
 interface QuestionTab {
   questionOutput: QuestionOutput;
@@ -34,8 +35,8 @@ interface QuestionTab {
   selector: 'tm-gqr-rqg-view-responses',
   templateUrl: './gqr-rqg-view-responses.component.html',
   styleUrls: ['./gqr-rqg-view-responses.component.scss'],
-  animations: [collapseAnim],
   imports: [
+    NgbCollapse,
     PanelChevronComponent,
     QuestionTextWithInfoComponent,
     SingleStatisticsComponent,
@@ -77,7 +78,7 @@ export class GqrRqgViewResponsesComponent extends InstructorResponsesViewBase im
 
   teamsToUsers: Record<string, string[]> = {};
   userToEmail: Record<string, string> = {};
-  userToRelatedEmail: Record<string, string> = {};
+  userToUserIdForModeration: Record<string, string> = {};
 
   teamExpanded: Record<string, boolean> = {};
   userExpanded: Record<string, boolean> = {};
@@ -100,7 +101,7 @@ export class GqrRqgViewResponsesComponent extends InstructorResponsesViewBase im
     this.teamsToUsers = {};
     this.teamExpanded = {};
     this.userToEmail = {};
-    this.userToRelatedEmail = {};
+    this.userToUserIdForModeration = {};
     this.userExpanded = {};
     this.userIsInstructor = {};
     for (const question of this.responses) {
@@ -112,8 +113,8 @@ export class GqrRqgViewResponsesComponent extends InstructorResponsesViewBase im
 
         if (this.sectionOfView) {
           if (
-            (this.isGqr && response.giverSection !== this.sectionOfView) ||
-            (!this.isGqr && response.recipientSection !== this.sectionOfView)
+            (this.isGqr && !this.isResponseSection(response.giverSectionId, this.sectionOfView)) ||
+            (!this.isGqr && !this.isResponseSection(response.recipientSectionId, this.sectionOfView))
           ) {
             continue;
           }
@@ -137,13 +138,12 @@ export class GqrRqgViewResponsesComponent extends InstructorResponsesViewBase im
             this.teamsToUsers[response.giverTeam].push(response.giver);
             this.teamExpanded[response.giverTeam] = this.isExpandAll;
           }
-          if (response.relatedGiverEmail) {
-            this.userToRelatedEmail[response.giver] = response.relatedGiverEmail;
+          if (response.userIdForModeration) {
+            this.userToUserIdForModeration[response.giver] = response.userIdForModeration;
           }
 
           this.userExpanded[response.giver] = this.isExpandAll;
-          this.userIsInstructor[response.giver] =
-            question.feedbackQuestion.giverType === FeedbackParticipantType.INSTRUCTORS;
+          this.userIsInstructor[response.giver] = question.feedbackQuestion.giverType === QuestionGiverType.INSTRUCTORS;
         } else {
           if (!response.recipientTeam) {
             // Recipient is team
@@ -167,7 +167,7 @@ export class GqrRqgViewResponsesComponent extends InstructorResponsesViewBase im
 
     for (const user of Object.keys(this.userExpanded)) {
       for (const question of this.responses) {
-        const questionCopy: QuestionOutput = JSON.parse(JSON.stringify(question));
+        const questionCopy: QuestionOutput = structuredClone(question);
         questionCopy.allResponses = questionCopy.allResponses.filter((response: ResponseOutput) => {
           if (!this.indicateMissingResponses && response.isMissingResponse) {
             // filter out missing responses
@@ -213,7 +213,7 @@ export class GqrRqgViewResponsesComponent extends InstructorResponsesViewBase im
           // Should not display anything for contribution and text questions
           continue;
         }
-        const questionCopy: QuestionOutput = JSON.parse(JSON.stringify(question));
+        const questionCopy: QuestionOutput = structuredClone(question);
         questionCopy.allResponses = questionCopy.allResponses.filter((response: ResponseOutput) => {
           if (response.isMissingResponse) {
             // Missing response is meaningless for team statistics
@@ -246,5 +246,9 @@ export class GqrRqgViewResponsesComponent extends InstructorResponsesViewBase im
         }
       }
     }
+  }
+
+  private isResponseSection(responseSectionId: string | null | undefined, sectionId: string): boolean {
+    return sectionId === DEFAULT_SECTION_ID ? !responseSectionId : responseSectionId === sectionId;
   }
 }

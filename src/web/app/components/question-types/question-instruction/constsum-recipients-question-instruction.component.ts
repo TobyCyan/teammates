@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import {
   FeedbackConstantSumDistributePointsType,
-  FeedbackConstantSumQuestionDetails,
+  FeedbackConstantSumRecipientsQuestionDetails,
 } from '../../../../types/api-output';
 import { DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 
@@ -16,14 +16,17 @@ import { DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS } from '../../../../types/
 })
 export class ConstsumRecipientsQuestionInstructionComponent {
   @Input()
-  questionDetails: FeedbackConstantSumQuestionDetails = DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS();
+  questionDetails: FeedbackConstantSumRecipientsQuestionDetails = DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS();
 
   @Input()
   numOfRecipients = 0;
 
   // enum
-  FeedbackConstantSumDistributePointsType: typeof FeedbackConstantSumDistributePointsType =
-    FeedbackConstantSumDistributePointsType;
+  FeedbackConstantSumDistributePointsType!: typeof FeedbackConstantSumDistributePointsType;
+
+  constructor() {
+    this.FeedbackConstantSumDistributePointsType = FeedbackConstantSumDistributePointsType;
+  }
 
   /**
    * Gets the total points of the constant sum question.

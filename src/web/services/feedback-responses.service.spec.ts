@@ -4,10 +4,12 @@ import { TestBed } from '@angular/core/testing';
 import { FeedbackResponsesService } from './feedback-responses.service';
 import { HttpRequestService } from './http-request.service';
 import { InstructorSessionResultSectionType } from '../app/pages-instructor/instructor-session-result-page/instructor-session-result-section-type.enum';
+import { DEFAULT_SECTION_ID } from '../app/pages-instructor/instructor-session-result-page/instructor-session-tab.model';
 import createSpyFromClass from '../test-helpers/create-spy-from-class';
 import { ResourceEndpoints } from '../types/api-const';
 import {
-  FeedbackConstantSumResponseDetails,
+  FeedbackConstantSumOptionsResponseDetails,
+  FeedbackConstantSumRecipientsResponseDetails,
   FeedbackContributionResponseDetails,
   FeedbackMcqResponseDetails,
   FeedbackMsqResponseDetails,
@@ -22,7 +24,8 @@ import {
 } from '../types/api-output';
 import { FeedbackResponsesRequest, Intent } from '../types/api-request';
 import {
-  DEFAULT_CONSTSUM_RESPONSE_DETAILS,
+  DEFAULT_CONSTSUM_OPTIONS_RESPONSE_DETAILS,
+  DEFAULT_CONSTSUM_RECIPIENTS_RESPONSE_DETAILS,
   DEFAULT_CONTRIBUTION_RESPONSE_DETAILS,
   DEFAULT_MCQ_RESPONSE_DETAILS,
   DEFAULT_MSQ_RESPONSE_DETAILS,
@@ -56,8 +59,8 @@ describe('FeedbackResponsesService', () => {
     [FeedbackQuestionType.MCQ, DEFAULT_MCQ_RESPONSE_DETAILS()],
     [FeedbackQuestionType.MSQ, DEFAULT_MSQ_RESPONSE_DETAILS()],
     [FeedbackQuestionType.RUBRIC, DEFAULT_RUBRIC_RESPONSE_DETAILS()],
-    [FeedbackQuestionType.CONSTSUM_OPTIONS, DEFAULT_CONSTSUM_RESPONSE_DETAILS()],
-    [FeedbackQuestionType.CONSTSUM_RECIPIENTS, DEFAULT_CONSTSUM_RESPONSE_DETAILS()],
+    [FeedbackQuestionType.CONSTSUM_OPTIONS, DEFAULT_CONSTSUM_OPTIONS_RESPONSE_DETAILS()],
+    [FeedbackQuestionType.CONSTSUM_RECIPIENTS, DEFAULT_CONSTSUM_RECIPIENTS_RESPONSE_DETAILS()],
   ]);
 
   beforeEach(() => {
@@ -80,13 +83,6 @@ describe('FeedbackResponsesService', () => {
     for (const [questionType, responseDetails] of questionTypeToResponseDetails) {
       expect(service.getDefaultFeedbackResponseDetails(questionType)).toStrictEqual(responseDetails);
     }
-  });
-
-  it("should throw an error when trying to retrieve an unknown question type's response details", () => {
-    const unknownFeedbackQuestionType: FeedbackQuestionType = 'UNKNOWN' as FeedbackQuestionType;
-    expect(() => service.getDefaultFeedbackResponseDetails(unknownFeedbackQuestionType)).toThrow(
-      `Unknown question type ${unknownFeedbackQuestionType}`,
-    );
   });
 
   it('should correctly indicate whether any text response details are empty or not', () => {
@@ -221,7 +217,7 @@ describe('FeedbackResponsesService', () => {
       ' are empty or not',
     () => {
       const feedbackQuestionType: FeedbackQuestionType = FeedbackQuestionType.CONSTSUM_OPTIONS;
-      const feedbackResponseDetails: FeedbackConstantSumResponseDetails = {
+      const feedbackResponseDetails: FeedbackConstantSumOptionsResponseDetails = {
         questionType: feedbackQuestionType,
         answers: [],
       };
@@ -237,7 +233,7 @@ describe('FeedbackResponsesService', () => {
       ' are empty or not',
     () => {
       const feedbackQuestionType: FeedbackQuestionType = FeedbackQuestionType.CONSTSUM_RECIPIENTS;
-      const feedbackResponseDetails: FeedbackConstantSumResponseDetails = {
+      const feedbackResponseDetails: FeedbackConstantSumRecipientsResponseDetails = {
         questionType: feedbackQuestionType,
         answers: [],
       };
@@ -256,69 +252,69 @@ describe('FeedbackResponsesService', () => {
 
   it('should correctly display responses or not for an "either" section type', () => {
     const response: ResponseOutput = {
-      giverSection: 'giver section',
-      recipientSection: 'recipient section',
+      giverSectionId: 'giver-section-id',
+      recipientSectionId: 'recipient-section-id',
     } as ResponseOutput;
-    let section = 'giver section';
+    let section = 'giver-section-id';
     const sectionType: InstructorSessionResultSectionType = InstructorSessionResultSectionType.EITHER;
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeTruthy();
 
-    section = 'recipient section';
+    section = 'recipient-section-id';
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeTruthy();
 
-    section = 'wrong section';
+    section = 'wrong-section-id';
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeFalsy();
   });
 
   it('should correctly display responses or not for a "giver" section type', () => {
     const response: ResponseOutput = {
-      giverSection: 'giver section',
-      recipientSection: 'recipient section',
+      giverSectionId: 'giver-section-id',
+      recipientSectionId: 'recipient-section-id',
     } as ResponseOutput;
-    let section = 'giver section';
+    let section = 'giver-section-id';
     const sectionType: InstructorSessionResultSectionType = InstructorSessionResultSectionType.GIVER;
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeTruthy();
 
-    section = 'recipient section';
+    section = 'recipient-section-id';
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeFalsy();
 
-    section = 'wrong section';
+    section = 'wrong-section-id';
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeFalsy();
   });
 
   it('should correctly display responses or not for an "evaluee" section type', () => {
     const response: ResponseOutput = {
-      giverSection: 'giver section',
-      recipientSection: 'recipient section',
+      giverSectionId: 'giver-section-id',
+      recipientSectionId: 'recipient-section-id',
     } as ResponseOutput;
-    let section = 'giver section';
+    let section = 'giver-section-id';
     const sectionType: InstructorSessionResultSectionType = InstructorSessionResultSectionType.EVALUEE;
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeFalsy();
 
-    section = 'recipient section';
+    section = 'recipient-section-id';
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeTruthy();
 
-    section = 'wrong section';
+    section = 'wrong-section-id';
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeFalsy();
   });
 
   it('should correctly display responses or not for a "both" section type', () => {
     const response: ResponseOutput = {
-      giverSection: 'section',
-      recipientSection: 'section',
+      giverSectionId: 'section-id',
+      recipientSectionId: 'section-id',
     } as ResponseOutput;
-    let section = 'section';
+    let section = 'section-id';
     const sectionType: InstructorSessionResultSectionType = InstructorSessionResultSectionType.BOTH;
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeTruthy();
 
-    section = 'wrong section';
+    section = 'wrong-section-id';
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeFalsy();
   });
 
   it('should display responses when no section is specified', () => {
     const response: ResponseOutput = {
-      giverSection: 'giver section',
-      recipientSection: 'recipient section',
+      giverSectionId: 'giver-section-id',
+      recipientSectionId: 'recipient-section-id',
     } as ResponseOutput;
     let section = '';
     const sectionType: InstructorSessionResultSectionType = InstructorSessionResultSectionType.EITHER;
@@ -333,12 +329,41 @@ describe('FeedbackResponsesService', () => {
 
   it('should display responses for an unknown section type', () => {
     const response: ResponseOutput = {
-      giverSection: 'giver section',
-      recipientSection: 'recipient section',
+      giverSectionId: 'giver-section-id',
+      recipientSectionId: 'recipient-section-id',
     } as ResponseOutput;
-    const section = 'giver section';
+    const section = 'giver-section-id';
     const sectionType: InstructorSessionResultSectionType = 'UNKNOWN' as InstructorSessionResultSectionType;
     expect(service.isFeedbackResponsesDisplayedOnSection(response, section, sectionType)).toBeTruthy();
+  });
+
+  it('should display responses for the fake no-specific section when section IDs are absent', () => {
+    const response: ResponseOutput = {
+      giverSectionId: undefined,
+      recipientSectionId: 'recipient-section-id',
+    } as ResponseOutput;
+
+    expect(
+      service.isFeedbackResponsesDisplayedOnSection(
+        response,
+        DEFAULT_SECTION_ID,
+        InstructorSessionResultSectionType.EITHER,
+      ),
+    ).toBeTruthy();
+    expect(
+      service.isFeedbackResponsesDisplayedOnSection(
+        response,
+        DEFAULT_SECTION_ID,
+        InstructorSessionResultSectionType.GIVER,
+      ),
+    ).toBeTruthy();
+    expect(
+      service.isFeedbackResponsesDisplayedOnSection(
+        response,
+        DEFAULT_SECTION_ID,
+        InstructorSessionResultSectionType.EVALUEE,
+      ),
+    ).toBeFalsy();
   });
 
   it('should call get when retrieving a feedback response', () => {
@@ -359,30 +384,38 @@ describe('FeedbackResponsesService', () => {
   });
 
   it('should call put when submitting a feedback response', () => {
-    const paramMap: Record<string, string> = {
-      questionid: '[dummy question ID]',
-    };
-    const dummyRequest: FeedbackResponsesRequest = { responses: [] };
-    const dummyAdditionalParams: { [key: string]: string } = {};
-    service.submitFeedbackResponses(paramMap['questionid'], dummyRequest, dummyAdditionalParams);
-    expect(spyHttpRequestService.put).toHaveBeenCalledWith(ResourceEndpoints.RESPONSES, paramMap, dummyRequest);
-  });
-
-  it('should include additional parameters when submitting a feedback response', () => {
     const dummyIntent: Intent = Intent.STUDENT_SUBMISSION;
     const paramMap: Record<string, string> = {
-      questionid: '[dummy question ID]',
+      fsid: '[dummy session ID]',
       intent: dummyIntent,
       key: '[dummy registration key]',
       moderatedperson: '',
     };
-    const dummyRequest: FeedbackResponsesRequest = { responses: [] };
-    const dummyAdditionalParams: { [key: string]: string } = {
+    const dummyRequest: FeedbackResponsesRequest = { questionResponses: {} };
+    const dummyParams = {
       intent: dummyIntent,
       key: paramMap['key'],
       moderatedperson: paramMap['moderatedperson'],
     };
-    service.submitFeedbackResponses(paramMap['questionid'], dummyRequest, dummyAdditionalParams);
+    service.submitFeedbackResponses(paramMap['fsid'], dummyRequest, dummyParams);
     expect(spyHttpRequestService.put).toHaveBeenCalledWith(ResourceEndpoints.RESPONSES, paramMap, dummyRequest);
+  });
+
+  it('should call delete when deleting a giver comment', () => {
+    const dummyIntent: Intent = Intent.STUDENT_SUBMISSION;
+    const paramMap: Record<string, string> = {
+      responseid: '[dummy response ID]',
+      intent: dummyIntent,
+      key: '[dummy registration key]',
+      moderatedperson: '',
+    };
+    service.deleteGiverComment({
+      responseId: paramMap['responseid'],
+      intent: dummyIntent,
+      key: paramMap['key'],
+      moderatedPerson: paramMap['moderatedperson'],
+    });
+
+    expect(spyHttpRequestService.delete).toHaveBeenCalledWith(ResourceEndpoints.RESPONSE_GIVER_COMMENT, paramMap);
   });
 });

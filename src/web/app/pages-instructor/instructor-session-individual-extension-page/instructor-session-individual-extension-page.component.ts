@@ -2,9 +2,9 @@ import { NgClass } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal';
 import { forkJoin } from 'rxjs';
-import { finalize, map } from 'rxjs/operators';
+import { finalize, map, switchMap } from 'rxjs/operators';
 import { InstructorExtensionTableColumnModel, StudentExtensionTableColumnModel } from './extension-table-column-model';
 import { IndividualExtensionDateModalComponent } from './individual-extension-date-modal/individual-extension-date-modal.component';
 import { CourseService } from '../../../services/course.service';
@@ -15,9 +15,10 @@ import { StatusMessageService } from '../../../services/status-message.service';
 import { StudentService } from '../../../services/student.service';
 import { TableComparatorService } from '../../../services/table-comparator.service';
 import {
-  Course,
+  CourseView,
   DeadlineExtensions,
   FeedbackSession,
+  FeedbackSessionView,
   FeedbackSessionSubmittedGiverSet,
   Instructors,
   Students,
@@ -90,8 +91,8 @@ export class InstructorSessionIndividualExtensionPageComponent implements OnInit
   instructorsOfCourse: InstructorExtensionTableColumnModel[] = [];
   userDeadlines: Record<string, number> = {};
 
-  SortBy: typeof SortBy = SortBy;
-  SortOrder: typeof SortOrder = SortOrder;
+  SortBy!: typeof SortBy;
+  SortOrder!: typeof SortOrder;
   sortStudentsBy: SortBy = SortBy.SESSION_END_DATE;
   sortStudentOrder: SortOrder = SortOrder.DESC;
   sortInstructorsBy: SortBy = SortBy.SESSION_END_DATE;
@@ -111,10 +112,13 @@ export class InstructorSessionIndividualExtensionPageComponent implements OnInit
   hasLoadingFeedbackSessionFailed = false;
   isSubmittingDeadlines = false;
 
+  constructor() {
+    this.SortBy = SortBy;
+    this.SortOrder = SortOrder;
+  }
+
   ngOnInit(): void {
     this.route.queryParams.subscribe((queryParams: any) => {
-      this.courseId = queryParams.courseid;
-      this.feedbackSessionName = queryParams.fsname;
       this.feedbackSessionId = queryParams.fsid;
       this.isAllYetToSubmitInstructorsSelected = queryParams.preselectnonsubmitters === 'true';
       this.isAllYetToSubmitStudentsSelected = queryParams.preselectnonsubmitters === 'true';
@@ -133,15 +137,23 @@ export class InstructorSessionIndividualExtensionPageComponent implements OnInit
     this.hasLoadingFeedbackSessionFailed = false;
     this.isLoadingAllInstructors = true;
     this.hasLoadedAllInstructorsFailed = false;
-    forkJoin([
-      this.courseService.getCourseAsInstructor(this.courseId),
-      this.feedbackSessionsService.getFeedbackSession({
+    this.feedbackSessionsService
+      .getFeedbackSession({
         feedbackSessionId: this.feedbackSessionId,
         intent: Intent.FULL_DETAIL,
-      }),
-      this.feedbackSessionsService.getFeedbackSessionDeadlineExtensions(this.feedbackSessionId),
-    ])
+      })
       .pipe(
+        switchMap((feedbackSessionView: FeedbackSessionView) => {
+          const feedbackSession = feedbackSessionView.feedbackSession;
+          this.feedbackSessionName = feedbackSession.feedbackSessionName;
+          this.courseId = feedbackSession.courseId;
+          this.setFeedbackSessionDetails(feedbackSession);
+
+          return forkJoin([
+            this.courseService.getCourseAsInstructor(this.courseId),
+            this.feedbackSessionsService.getFeedbackSessionDeadlineExtensions(this.feedbackSessionId),
+          ]);
+        }),
         finalize(() => {
           this.isLoadingFeedbackSession = false;
           this.isLoadingAllStudents = false;
@@ -149,9 +161,8 @@ export class InstructorSessionIndividualExtensionPageComponent implements OnInit
         }),
       )
       .subscribe({
-        next: ([course, feedbackSession, deadlineExtensions]: [Course, FeedbackSession, DeadlineExtensions]) => {
-          this.courseName = course.courseName;
-          this.setFeedbackSessionDetails(feedbackSession);
+        next: ([courseView, deadlineExtensions]: [CourseView, DeadlineExtensions]) => {
+          this.courseName = courseView.course.courseName;
           this.userDeadlines = deadlineExtensions.userDeadlines;
           this.getAllStudentsOfCourse(); // Both students and instructors need feedback ending time.
           this.getAllInstructorsOfCourse();
@@ -228,8 +239,8 @@ export class InstructorSessionIndividualExtensionPageComponent implements OnInit
       .subscribe({
         next: (feedbackSessionSubmittedGiverSet: FeedbackSessionSubmittedGiverSet) => {
           this.studentsOfCourse.forEach((studentColumnModel: StudentExtensionTableColumnModel) => {
-            studentColumnModel.hasSubmittedSession = feedbackSessionSubmittedGiverSet.giverIdentifiers.includes(
-              studentColumnModel.email,
+            studentColumnModel.hasSubmittedSession = !feedbackSessionSubmittedGiverSet.studentNonGivers.includes(
+              studentColumnModel.userId,
             );
           });
         },
@@ -301,8 +312,8 @@ export class InstructorSessionIndividualExtensionPageComponent implements OnInit
       .subscribe({
         next: (feedbackSessionSubmittedGiverSet: FeedbackSessionSubmittedGiverSet) => {
           this.instructorsOfCourse.forEach((instructorColumnModel: InstructorExtensionTableColumnModel) => {
-            instructorColumnModel.hasSubmittedSession = feedbackSessionSubmittedGiverSet.giverIdentifiers.includes(
-              instructorColumnModel.email,
+            instructorColumnModel.hasSubmittedSession = !feedbackSessionSubmittedGiverSet.instructorNonGivers.includes(
+              instructorColumnModel.userId,
             );
           });
         },

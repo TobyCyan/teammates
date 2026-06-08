@@ -8,15 +8,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import teammates.common.datatransfer.InstructorPermissionSet;
 import teammates.common.util.Const;
-import teammates.storage.entity.Course;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.Student;
 import teammates.ui.exception.UnauthorizedAccessException;
-import teammates.ui.output.FeedbackSessionData;
+import teammates.ui.output.FeedbackSessionViewData;
 import teammates.ui.output.FeedbackSessionsData;
+import teammates.ui.output.InstructorFeedbackSessionPermissionsData;
 
 /**
  * Get a list of feedback sessions.
@@ -30,7 +29,7 @@ public class GetFeedbackSessionsAction extends Action {
 
     @Override
     void checkSpecificAccessControl() throws UnauthorizedAccessException {
-        if (userInfo.isAdmin) {
+        if (requestContext.isAdmin()) {
             return;
         }
 
@@ -43,24 +42,12 @@ public class GetFeedbackSessionsAction extends Action {
         String courseId = getRequestParamValue(Const.ParamsNames.COURSE_ID);
 
         if (Const.EntityType.STUDENT.equals(entityType)) {
-            if (!userInfo.isStudent) {
-                throw new UnauthorizedAccessException("User " + userInfo.getId()
-                        + " does not have student privileges");
-            }
-
             if (courseId != null) {
-                Course course = logic.getCourse(courseId);
-                gateKeeper.verifyAccessible(logic.getStudentByGoogleId(courseId, userInfo.getId()), course);
+                gateKeeper.verifyStudentInCourse(requestContext, courseId);
             }
         } else {
-            if (!userInfo.isInstructor) {
-                throw new UnauthorizedAccessException("User " + userInfo.getId()
-                        + " does not have instructor privileges");
-            }
-
             if (courseId != null) {
-                Course course = logic.getCourse(courseId);
-                gateKeeper.verifyAccessible(logic.getInstructorByGoogleId(courseId, userInfo.getId()), course);
+                gateKeeper.verifyInstructorInCourse(requestContext, courseId);
             }
         }
     }
@@ -76,7 +63,7 @@ public class GetFeedbackSessionsAction extends Action {
 
         if (courseId == null) {
             if (Const.EntityType.STUDENT.equals(entityType)) {
-                List<Student> students = logic.getStudentsByGoogleId(userInfo.getId());
+                List<Student> students = logic.getStudentsByAccountId(requestContext.getAccount().getId());
                 for (Student student : students) {
                     String studentCourseId = student.getCourseId();
                     List<FeedbackSession> sessions = logic.getFeedbackSessionsForCourse(studentCourseId);
@@ -87,7 +74,7 @@ public class GetFeedbackSessionsAction extends Action {
             } else if (Const.EntityType.INSTRUCTOR.equals(entityType)) {
                 boolean isInRecycleBin = getBooleanRequestParamValue(Const.ParamsNames.IS_IN_RECYCLE_BIN);
 
-                instructors = logic.getInstructorsForGoogleId(userInfo.getId());
+                instructors = logic.getInstructorsByAccountId(requestContext.getAccount().getId());
 
                 if (isInRecycleBin) {
                     feedbackSessions = logic.getSoftDeletedFeedbackSessionsForInstructors(instructors);
@@ -98,14 +85,14 @@ public class GetFeedbackSessionsAction extends Action {
         } else {
             feedbackSessions = logic.getFeedbackSessionsForCourse(courseId);
             if (Const.EntityType.STUDENT.equals(entityType) && !feedbackSessions.isEmpty()) {
-                Student student = logic.getStudentByGoogleId(courseId, userInfo.getId());
+                Student student = getStudentFromRequest(courseId);
                 assert student != null;
                 for (FeedbackSession session : feedbackSessions) {
                     sessionToDeadline.put(session, logic.getDeadlineForUser(session, student));
                 }
             } else if (Const.EntityType.INSTRUCTOR.equals(entityType)) {
                 instructors = Collections.singletonList(
-                        logic.getInstructorByGoogleId(courseId, userInfo.getId()));
+                        getInstructorFromRequest(courseId));
             }
         }
 
@@ -120,24 +107,39 @@ public class GetFeedbackSessionsAction extends Action {
             }
             responseData = new FeedbackSessionsData(sessionToDeadline);
             responseData.getFeedbackSessions().forEach(session -> {
-                Instructor instructor = courseIdToInstructor.get(session.getCourseId());
-                if (instructor == null) {
-                    return;
-                }
-
-                InstructorPermissionSet privilege =
-                        constructInstructorPrivileges(instructor, session.getFeedbackSessionName());
-                session.setPrivileges(privilege);
+                var permissionsData = getPermissionsData(courseIdToInstructor, session);
+                session.setInstructorPermissions(permissionsData);
             });
         } else if (Const.EntityType.STUDENT.equals(entityType)) {
             // hide sessions not visible to student
             sessionToDeadline.keySet().removeIf(session -> !session.isVisible());
             responseData = new FeedbackSessionsData(sessionToDeadline);
-            responseData.getFeedbackSessions().forEach(FeedbackSessionData::hideInformation);
+            responseData.getFeedbackSessions().forEach(session -> session.getFeedbackSession().hideInformation());
         } else {
             responseData = new FeedbackSessionsData(feedbackSessions);
         }
 
         return new JsonResult(responseData);
+    }
+
+    private InstructorFeedbackSessionPermissionsData getPermissionsData(Map<String, Instructor> courseIdToInstructor,
+            FeedbackSessionViewData session) {
+        Instructor instructor = courseIdToInstructor.get(session.getFeedbackSession().getCourseId());
+        if (instructor == null) {
+            return new InstructorFeedbackSessionPermissionsData(false, false, false);
+        }
+        String sessionName = session.getFeedbackSession().getFeedbackSessionName();
+        boolean canModifySession = logic.hasInstructorPermissions(instructor,
+                Const.InstructorPermissions.CAN_MODIFY_SESSION);
+        boolean canSubmitSessionInSections = logic.hasInstructorPermissions(instructor,
+                Const.InstructorPermissions.CAN_SUBMIT_SESSION_IN_SECTIONS)
+                || logic.hasInstructorPermissionsForSectionInAnySection(instructor, sessionName,
+                Const.InstructorPermissions.CAN_SUBMIT_SESSION_IN_SECTIONS);
+        boolean canViewSessionInSections = logic.hasInstructorPermissions(instructor,
+                Const.InstructorPermissions.CAN_VIEW_SESSION_IN_SECTIONS)
+                || logic.hasInstructorPermissionsForSectionInAnySection(instructor, sessionName,
+                Const.InstructorPermissions.CAN_VIEW_SESSION_IN_SECTIONS);
+        return new InstructorFeedbackSessionPermissionsData(canModifySession,
+                canSubmitSessionInSections, canViewSessionInSections);
     }
 }

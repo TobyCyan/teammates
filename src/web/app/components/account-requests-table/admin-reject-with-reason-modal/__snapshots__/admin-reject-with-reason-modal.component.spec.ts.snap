@@ -1,16 +1,15 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RejectWithReasonModal should show empty title and body 1`] = `
+exports[`RejectWithReasonModal > should show empty title and body 1`] = `
 <tm-reject-with-reason-modal
   accountRequestEmail=""
   accountRequestName=""
   activeModal={[Function NgbActiveModal]}
-  castAsInputElement={[Function Function]}
   existingAccount={[Function Object]}
   rejectionReasonBody={[Function String]}
   rejectionReasonTitle={[Function String]}
-  searchService={[Function SearchService]}
-  statusMessageService={[Function StatusMessageService]}
+  searchService={[Function _SearchService]}
+  statusMessageService={[Function _StatusMessageService]}
 >
   <div
     class="modal-header bg-warning"
@@ -63,9 +62,16 @@ exports[`RejectWithReasonModal should show empty title and body 1`] = `
         <tm-rich-text-editor
           id="rejection-reason-body"
         >
-          <div
-            inviewport=""
-          >
+          <div>
+            <editor
+              class="editor ng-untouched ng-pristine ng-valid"
+              placeholder=""
+            >
+              <textarea
+                id="tinymce-editor-id-1"
+                style="visibility: hidden;"
+              />
+            </editor>
           </div>
         </tm-rich-text-editor>
       </div>

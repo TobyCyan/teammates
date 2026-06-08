@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { QuestionConstraintComponent } from './question-constraint.component';
 import {
   FeedbackConstantSumDistributePointsType,
-  FeedbackConstantSumQuestionDetails,
-  FeedbackConstantSumResponseDetails,
+  FeedbackConstantSumRecipientsQuestionDetails,
+  FeedbackConstantSumRecipientsResponseDetails,
 } from '../../../../types/api-output';
 import { DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 import { FeedbackResponseRecipientSubmissionFormModel } from '../../question-submission-form/question-submission-form-model';
@@ -16,21 +16,21 @@ import { FeedbackResponseRecipientSubmissionFormModel } from '../../question-sub
   templateUrl: './constsum-recipients-question-constraint.component.html',
   imports: [],
 })
-export class ConstsumRecipientsQuestionConstraintComponent extends QuestionConstraintComponent<FeedbackConstantSumQuestionDetails> {
+export class ConstsumRecipientsQuestionConstraintComponent extends QuestionConstraintComponent {
   // enum
   FeedbackConstantSumDistributePointsType: typeof FeedbackConstantSumDistributePointsType =
     FeedbackConstantSumDistributePointsType;
 
-  constructor() {
-    super(DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS());
-  }
+  @Input()
+  questionDetails: FeedbackConstantSumRecipientsQuestionDetails = DEFAULT_CONSTSUM_RECIPIENTS_QUESTION_DETAILS();
 
   /**
    * Checks if all forms are not answered.
    */
   get isAllFormsNotAnswered(): boolean {
     return this.recipientSubmissionForms.every((form: FeedbackResponseRecipientSubmissionFormModel) => {
-      const details: FeedbackConstantSumResponseDetails = form.responseDetails as FeedbackConstantSumResponseDetails;
+      const details: FeedbackConstantSumRecipientsResponseDetails =
+        form.responseDetails as FeedbackConstantSumRecipientsResponseDetails;
       return details.answers.length === 0;
     });
   }
@@ -50,7 +50,8 @@ export class ConstsumRecipientsQuestionConstraintComponent extends QuestionConst
    */
   get allAnswers(): number[] {
     return this.recipientSubmissionForms.map((form: FeedbackResponseRecipientSubmissionFormModel) => {
-      const details: FeedbackConstantSumResponseDetails = form.responseDetails as FeedbackConstantSumResponseDetails;
+      const details: FeedbackConstantSumRecipientsResponseDetails =
+        form.responseDetails as FeedbackConstantSumRecipientsResponseDetails;
       if (details.answers.length === 0) {
         return 0;
       }

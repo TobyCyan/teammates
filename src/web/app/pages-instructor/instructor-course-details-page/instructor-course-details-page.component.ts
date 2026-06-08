@@ -1,18 +1,17 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { generate } from 'rxjs';
-import { concatMap, finalize, takeWhile } from 'rxjs/operators';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap/modal';
+import { finalize } from 'rxjs/operators';
 import { CourseService, CourseStatistics } from '../../../services/course.service';
 import { FileSaveService } from '../../../services/file-save.service';
 import { InstructorService } from '../../../services/instructor.service';
-import { ProgressBarService } from '../../../services/progress-bar.service';
 import { SimpleModalService } from '../../../services/simple-modal.service';
 import { StatusMessageService } from '../../../services/status-message.service';
 import { StudentService } from '../../../services/student.service';
 import { TableComparatorService } from '../../../services/table-comparator.service';
 import {
   Course,
+  CourseView,
   Instructor,
   InstructorPermissionSet,
   InstructorPrivilege,
@@ -27,11 +26,11 @@ import { AjaxLoadingComponent } from '../../components/ajax-loading/ajax-loading
 import { LoadingRetryComponent } from '../../components/loading-retry/loading-retry.component';
 import { LoadingSpinnerDirective } from '../../components/loading-spinner/loading-spinner.directive';
 import { SimpleModalType } from '../../components/simple-modal/simple-modal-type';
-import { JoinStatePipe } from '../../components/student-list/join-state.pipe';
 import { StudentListRowModel, StudentListComponent } from '../../components/student-list/student-list.component';
 import { InstructorRoleNamePipe } from '../../components/teammates-common/instructor-role-name.pipe';
 import { TeammatesRouterDirective } from '../../components/teammates-router/teammates-router.directive';
 import { ErrorMessageOutput } from '../../error-message-output';
+import { joinStateToString } from '../../utils/join-state.util';
 
 interface CourseDetailsBundle {
   course: Course;
@@ -61,7 +60,6 @@ interface StudentIndexedData {
 export class InstructorCourseDetailsPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private statusMessageService = inject(StatusMessageService);
-  private progressBarService = inject(ProgressBarService);
   private courseService = inject(CourseService);
   private fileSaveService = inject(FileSaveService);
   private ngbModal = inject(NgbModal);
@@ -117,8 +115,8 @@ export class InstructorCourseDetailsPageComponent implements OnInit {
    */
   private loadCourseName(courseid: string): void {
     this.courseService.getCourseAsInstructor(courseid).subscribe({
-      next: (course: Course) => {
-        this.courseDetails.course = course;
+      next: (courseView: CourseView) => {
+        this.courseDetails.course = courseView.course;
       },
       error: (resp: ErrorMessageOutput) => {
         this.statusMessageService.showErrorToast(resp.error.message);
@@ -248,79 +246,25 @@ export class InstructorCourseDetailsPageComponent implements OnInit {
   deleteAllStudentsFromCourse(courseId: string): void {
     this.isDeleting = true;
 
-    const totalNumberOfStudents = this.courseDetails.stats.numOfStudents;
-    const numOfStudentsToDeletePerRequest = 100;
-    const totalNumOfRequests = Math.ceil(totalNumberOfStudents / numOfStudentsToDeletePerRequest);
-    let numOfRequestsCompleted = 0;
-
-    let deleteAborted = false;
-    let hasFailedToDelete = false;
-    const modalContent = `Deleting all students from the course ${this.courseDetails.course.courseId}, 
-        this may take a while...`;
-    const loadingModal: NgbModalRef = this.simpleModalService.openLoadingModal(
-      'Delete Progress',
-      SimpleModalType.LOAD,
-      modalContent,
-    );
-
-    loadingModal.result.then(
-      () => {
-        // Modal is closed
-        this.isDeleting = false;
-
-        if (numOfRequestsCompleted === totalNumOfRequests) {
-          this.statusMessageService.showSuccessToast('All the students have been removed from the course');
-        }
-
-        if (!hasFailedToDelete && numOfRequestsCompleted < totalNumOfRequests) {
-          deleteAborted = true;
-          this.statusMessageService.showWarningToast(
-            'Delete aborted. ' + 'Note that some students may not have been deleted.',
-          );
-        }
-      },
-      () => {},
-    );
-
-    generate({
-      initialState: 0,
-      condition: (x) => x < totalNumOfRequests,
-      iterate: (x) => x + 1,
-    })
+    this.studentService
+      .deleteStudentsFromCourse({ courseId })
       .pipe(
-        concatMap(() =>
-          this.studentService.batchDeleteStudentsFromCourse({ courseId, limit: numOfStudentsToDeletePerRequest }),
-        ),
-        takeWhile(() => !deleteAborted),
         finalize(() => {
-          loadingModal.close();
+          this.isDeleting = false;
         }),
       )
       .subscribe({
         next: () => {
-          numOfRequestsCompleted += 1;
-          const percentageProgress = Math.round((100 * numOfRequestsCompleted) / totalNumOfRequests);
-          this.progressBarService.updateProgress(percentageProgress);
-        },
-        complete: () => {
-          if (deleteAborted) {
-            this.loadStudents(courseId);
-            return;
-          }
-
-          // Reset list of students and course stats
           this.students = [];
           this.courseDetails.stats = {
             numOfStudents: 0,
             numOfSections: 0,
             numOfTeams: 0,
           };
+          this.statusMessageService.showSuccessToast('All the students have been removed from the course');
         },
         error: (resp: ErrorMessageOutput) => {
-          hasFailedToDelete = true;
-          if (!deleteAborted) {
-            this.statusMessageService.showErrorToast(resp.error.message);
-          }
+          this.statusMessageService.showErrorToast(resp.error.message);
         },
       });
   }
@@ -403,11 +347,11 @@ export class InstructorCourseDetailsPageComponent implements OnInit {
   /**
    * Removes the student from course and update the course statistics
    */
-  removeStudentFromCourse(studentEmail: string): void {
-    this.courseService.removeStudentFromCourse(this.courseDetails.course.courseId, studentEmail).subscribe({
+  removeStudentFromCourse(studentRow: StudentListRowModel): void {
+    this.studentService.deleteStudent({ userId: studentRow.student.userId }).subscribe({
       next: () => {
         this.students = this.students.filter(
-          (studentModel: StudentListRowModel) => studentModel.student.email !== studentEmail,
+          (studentModel: StudentListRowModel) => studentModel.student.userId !== studentRow.student.userId,
         );
 
         const students: Student[] = this.students.map((studentModel: StudentListRowModel) => studentModel.student);
@@ -436,7 +380,6 @@ export class InstructorCourseDetailsPageComponent implements OnInit {
    * Returns a function to determine the order of sort for students.
    */
   sortStudentBy(by: SortBy, order: SortOrder): (a: StudentListRowModel, b: StudentListRowModel) => number {
-    const joinStatePipe: JoinStatePipe = new JoinStatePipe();
     if (by === SortBy.NONE) {
       // Default order: section name > team name > student name
       return (a: StudentListRowModel, b: StudentListRowModel): number => {
@@ -473,8 +416,8 @@ export class InstructorCourseDetailsPageComponent implements OnInit {
           strB = b.student.email;
           break;
         case SortBy.JOIN_STATUS:
-          strA = joinStatePipe.transform(a.student.joinState);
-          strB = joinStatePipe.transform(b.student.joinState);
+          strA = joinStateToString(a.student.joinState);
+          strB = joinStateToString(b.student.joinState);
           break;
         default:
           strA = '';

@@ -3,10 +3,10 @@ import { CsvHelper } from './csv-helper';
 import { FeedbackResponsesService } from './feedback-responses.service';
 import { StringHelper } from './string-helper';
 import { InstructorSessionResultSectionType } from '../app/pages-instructor/instructor-session-result-page/instructor-session-result-section-type.enum';
-import { SectionTypeDescriptionPipe } from '../app/pages-instructor/instructor-session-result-page/section-type-description.pipe';
 import { FeedbackQuestion, QuestionOutput, ResponseOutput, SessionResults, Student } from '../types/api-output';
 import { FeedbackQuestionDetailsFactory } from '../types/question-details-impl/feedback-question-details-factory';
 import { FeedbackResponseDetailsFactory } from '../types/response-details-impl/feedback-response-details-factory';
+import { instructorSessionResultToDescription } from '../app/utils/section-type-description.util';
 
 /**
  * Service to generate CSV for a feedback session result.
@@ -45,6 +45,7 @@ export class SessionResultCsvService {
     isShownStats: boolean,
     sectionName?: string,
     sectionDetail?: InstructorSessionResultSectionType,
+    sectionId?: string,
   ): string {
     const csvRows: string[][] = [];
 
@@ -52,8 +53,7 @@ export class SessionResultCsvService {
       csvRows.push(['Section Name', sectionName]);
     }
     if (sectionDetail) {
-      const descriptionPipe: SectionTypeDescriptionPipe = new SectionTypeDescriptionPipe();
-      csvRows.push(['Section View Detail', descriptionPipe.transform(sectionDetail)]);
+      csvRows.push(['Section View Detail', instructorSessionResultToDescription(sectionDetail)]);
     }
 
     this.generateEmptyRow(csvRows);
@@ -65,12 +65,12 @@ export class SessionResultCsvService {
     );
     // filter responses based on settings
     for (const question of result.questions) {
-      const currQuestion: QuestionOutput = JSON.parse(JSON.stringify(question));
+      const currQuestion: QuestionOutput = structuredClone(question);
       currQuestion.allResponses = currQuestion.allResponses.filter((response: ResponseOutput) => {
-        if (sectionName && sectionDetail) {
+        if (sectionId && sectionDetail) {
           return this.feedbackResponsesService.isFeedbackResponsesDisplayedOnSection(
             response,
-            sectionName,
+            sectionId,
             sectionDetail,
           );
         }
@@ -152,7 +152,7 @@ export class SessionResultCsvService {
         ? StringHelper.removeExtraSpace(response.recipientEmail)
         : '';
 
-      let responseAnswers: string[][] = [];
+      let responseAnswers: string[][];
       if (response.isMissingResponse) {
         responseAnswers = this.getMissingResponseAnswers(question.feedbackQuestion);
       } else {
@@ -161,9 +161,9 @@ export class SessionResultCsvService {
 
       // Pad responseAnswers so that responseAnswers and questionSpecificHeaders
       // are always the same length.
-      const responseAnswersPadding: string[] = Array(questionSpecificHeaders.length - responseAnswers[0].length).fill(
-        '',
-      );
+      const responseAnswersPadding: string[] = new Array(
+        questionSpecificHeaders.length - responseAnswers[0].length,
+      ).fill('');
       responseAnswers[0] = responseAnswers[0].concat(responseAnswersPadding);
 
       for (const responseAnswer of responseAnswers) {
@@ -177,9 +177,7 @@ export class SessionResultCsvService {
           ...responseAnswer,
         ];
 
-        const participantCommentHtml: string = response.participantComment
-          ? response.participantComment.commentText
-          : '';
+        const participantCommentHtml: string = response.participantComment ?? '';
         const participantComment: string = StringHelper.getTextFromHtml(participantCommentHtml);
         const participantImgLinks: string = StringHelper.convertImageToLinkInHtml(participantCommentHtml);
         currRow.push(participantComment + participantImgLinks);

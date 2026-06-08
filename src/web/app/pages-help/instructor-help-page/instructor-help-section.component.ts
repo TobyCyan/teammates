@@ -2,7 +2,6 @@ import {
   AfterViewInit,
   Directive,
   EventEmitter,
-  Inject,
   Input,
   OnChanges,
   OnInit,
@@ -10,11 +9,11 @@ import {
   QueryList,
   SimpleChanges,
   ViewChildren,
-  DOCUMENT,
+  inject,
 } from '@angular/core';
-import { PageScrollService } from 'ngx-page-scroll-core';
 import { InstructorHelpPanelComponent } from './instructor-help-panel/instructor-help-panel.component';
 import { Sections } from './sections';
+import { PageScrollService } from '../../../services/page-scroll.service';
 import { NavigationService } from '../../../services/navigation.service';
 import { SimpleModalService } from '../../../services/simple-modal.service';
 
@@ -29,24 +28,17 @@ interface QuestionDetail {
  */
 @Directive()
 export abstract class InstructorHelpSectionComponent implements OnInit, OnChanges, AfterViewInit {
-  @Input() key: string;
+  protected simpleModalService = inject(SimpleModalService);
+  private readonly pageScrollService = inject(PageScrollService);
+  private readonly navigationService = inject(NavigationService);
+
+  @Input() key = '';
   @Output() matchFound: EventEmitter<number> = new EventEmitter<number>();
   @ViewChildren('question') questionHtml!: QueryList<InstructorHelpPanelComponent>;
 
-  showQuestion: string[];
-  questionDetails: QuestionDetail[];
+  showQuestion: string[] = [];
+  questionDetails: QuestionDetail[] = [];
   questionsToCollapsed: Record<string, boolean> = {};
-
-  constructor(
-    protected simpleModalService: SimpleModalService,
-    private pageScrollService: PageScrollService,
-    private navigationService: NavigationService,
-    @Inject(DOCUMENT) private document: any,
-  ) {
-    this.key = '';
-    this.showQuestion = [];
-    this.questionDetails = [];
-  }
 
   ngOnInit(): void {
     for (const question of this.getQuestionsOrder()) {
@@ -155,11 +147,7 @@ export abstract class InstructorHelpSectionComponent implements OnInit, OnChange
    * Scrolls to an HTML element with a given target id.
    */
   jumpTo(target: string): boolean {
-    this.pageScrollService.scroll({
-      document: this.document,
-      scrollTarget: `#${target}`,
-      scrollOffset: 70,
-    });
+    this.pageScrollService.scrollToAnchor(target);
     return false;
   }
 

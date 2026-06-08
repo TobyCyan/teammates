@@ -26,7 +26,6 @@ buildscript {
         classpath("cz.habarta.typescript-generator:typescript-generator-gradle-plugin:4.0.0") {
             exclude group: "org.gradle"
         }
-        classpath "com.google.guava:guava:33.5.0-jre"
         classpath "org.liquibase:liquibase-gradle-plugin:3.1.0"
         classpath "org.liquibase:liquibase-core:4.27.0"
     }
@@ -38,12 +37,6 @@ configurations {
     liquibaseRuntime.extendsFrom testImplementation
 }
 
-// See https://github.com/checkstyle/checkstyle/issues/14211#issuecomment-1884129948
-configurations.all {
-    resolutionStrategy.capabilitiesResolution.withCapability("com.google.collections:google-collections") {
-        select("com.google.guava:guava:0")
-    }
-}
 
 repositories {
     mavenCentral()
@@ -62,15 +55,11 @@ dependencies {
     implementation("com.google.cloud:google-cloud-tasks")
     implementation("com.google.cloud:google-cloud-logging")
     implementation("tools.jackson.core:jackson-databind:3.1.1")
-    implementation("com.google.guava:guava:33.5.0-jre")
     implementation("commons-lang:commons-lang:2.6")
     implementation("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260102.1")
     implementation("com.helger:ph-commons:9.5.5") // necessary to add SpotBugs suppression
     implementation("com.mailjet:mailjet-client:5.2.5")
     implementation("com.sendgrid:sendgrid-java:4.10.3")
-    implementation("com.sun.jersey:jersey-client:1.19.4")
-    implementation("com.sun.jersey:jersey-core:1.19.4")
-    implementation("com.sun.jersey.contribs:jersey-multipart:1.19.4")
     implementation(platform("org.eclipse.jetty:jetty-bom:11.0.20"))
     implementation("org.eclipse.jetty:jetty-slf4j-impl")
     implementation("org.eclipse.jetty:jetty-server")
@@ -91,7 +80,7 @@ dependencies {
     testImplementation("org.seleniumhq.selenium:selenium-java:4.43.0")
     testImplementation("com.deque.html.axe-core:selenium:4.11.2")
     testImplementation(testng)
-    testImplementation("org.testcontainers:postgresql:1.21.4")
+    testImplementation("org.testcontainers:testcontainers-postgresql:2.0.5")
     testImplementation("org.liquibase:liquibase-core:4.27.0")
     testImplementation("org.mockito:mockito-core:5.21.0")
     // For supporting authorization code flow locally
@@ -134,6 +123,18 @@ sourceSets {
             srcDir "src/client/resources"
             exclude "**/*.java"
         }
+    }
+}
+
+test {
+    useTestNG()
+    options.suites "src/test/resources/testng-component.xml"
+    testLogging {
+        events "failed", "skipped"
+        exceptionFormat "full"
+        showExceptions true
+        showCauses true
+        showStackTraces true
     }
 }
 
@@ -212,6 +213,7 @@ task generateApiOutputFormat(type: cz.habarta.typescript.generator.gradle.Genera
         "teammates.ui.output.**",
         "teammates.common.datatransfer.questions.**",
         "teammates.common.datatransfer.logs.**",
+        "teammates.common.datatransfer.participanttypes.**",
     ]
     removeTypeNameSuffix = "Data"
     outputFile = "src/web/types/api-output.ts"
@@ -227,9 +229,6 @@ task generateApiRequestFormat(type: cz.habarta.typescript.generator.gradle.Gener
     classPatterns = [
         "teammates.ui.request.**",
         "teammates.common.util.EmailType"
-    ]
-    excludeClasses = [
-        "teammates.ui.request.InvalidHttpRequestBodyException"
     ]
     outputFile = "src/web/types/api-request.ts"
 }
@@ -567,12 +566,13 @@ task lint {
 def numOfTestRetries = 4
 
 task unitTests(type: Test) {
-    description = "Runs the full unit test suite."
+    description = "Runs the unit test suite."
     group = "Test"
     testClassesDirs = testing.suites.test.sources.output.classesDirs
     classpath = testing.suites.test.sources.runtimeClasspath
     useTestNG()
     options.suites "src/test/resources/testng-component.xml"
+    options.excludeGroups "integration", "db-test", "logic-test"
     options.useDefaultListeners = true
     ignoreFailures = false
     maxHeapSize = "1g"
@@ -587,12 +587,13 @@ task unitTests(type: Test) {
 }
 
 task integrationTests(type: Test) {
-    description = "Runs the full integration test suite."
+    description = "Runs the integration test suite."
     group = "Test"
     testClassesDirs = testing.suites.test.sources.output.classesDirs
     classpath = testing.suites.test.sources.runtimeClasspath
     useTestNG()
-    options.suites "src/it/resources/testng-it.xml"
+    options.suites "src/test/resources/testng-component.xml"
+    options.includeGroups "integration", "db-test", "logic-test"
     options.useDefaultListeners = true
     ignoreFailures = false
     maxHeapSize = "1g"
@@ -609,7 +610,21 @@ task integrationTests(type: Test) {
 task componentTests(type: Test) {
     description = "Runs the full unit and integration test suite."
     group = "Test"
-    dependsOn unitTests, integrationTests
+    testClassesDirs = testing.suites.test.sources.output.classesDirs
+    classpath = testing.suites.test.sources.runtimeClasspath
+    useTestNG()
+    options.suites "src/test/resources/testng-component.xml"
+    options.useDefaultListeners = true
+    ignoreFailures = false
+    maxHeapSize = "1g"
+    reports.html.required = false
+    reports.junitXml.required = false
+    jvmArgs "-ea", "-Xss2m", "-Dfile.encoding=UTF-8"
+    afterTest afterTestClosure
+    afterSuite checkTestNgFailureClosure
+    testLogging {
+        events "passed"
+    }
 }
 
 task e2eTests {

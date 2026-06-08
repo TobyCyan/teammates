@@ -1,5 +1,10 @@
 package teammates.common.datatransfer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,11 +14,15 @@ import java.util.UUID;
 
 import org.testng.annotations.Test;
 
+import teammates.common.datatransfer.participanttypes.ResponseRecipientType;
 import teammates.common.util.Const;
 import teammates.storage.entity.FeedbackQuestion;
 import teammates.storage.entity.FeedbackResponse;
-import teammates.storage.entity.FeedbackResponseComment;
 import teammates.storage.entity.FeedbackSession;
+import teammates.storage.entity.ResponseGiver;
+import teammates.storage.entity.ResponseInstructorComment;
+import teammates.storage.entity.ResponseRecipient;
+import teammates.storage.entity.Student;
 import teammates.test.BaseTestCase;
 
 /**
@@ -145,14 +154,13 @@ public class SessionResultsBundleTest extends BaseTestCase {
 
         for (Map.Entry<UUID, Boolean> visibilityEntry : responseGiverVisibilityTable.entrySet()) {
             UUID responseId = visibilityEntry.getKey();
-            FeedbackParticipantType giverType = responses.get(responseId).getFeedbackQuestion().getGiverType();
             assertEquals(visibilityEntry.getValue(),
-                    bundle.isResponseGiverVisible(responseId, giverType));
+                    bundle.isResponseGiverVisible(responseId));
         }
 
         for (Map.Entry<UUID, Boolean> visibilityEntry : responseRecipientVisibilityTable.entrySet()) {
             UUID responseId = visibilityEntry.getKey();
-            FeedbackParticipantType recipientType = responses.get(responseId).getFeedbackQuestion().getRecipientType();
+            ResponseRecipientType recipientType = responses.get(responseId).getRecipient().getRecipientType();
             assertEquals(visibilityEntry.getValue(),
                     bundle.isResponseRecipientVisible(responseId, recipientType));
         }
@@ -184,8 +192,8 @@ public class SessionResultsBundleTest extends BaseTestCase {
                 );
 
         // Manually add comment IDs as loadDataBundle does not add comment IDs
-        FeedbackResponseComment comment1 = responseBundle.feedbackResponseComments.get("comment1ToResponse1ForQ1");
-        FeedbackResponseComment comment2 = responseBundle.feedbackResponseComments.get("comment2ToResponse1ForQ1");
+        ResponseInstructorComment comment1 = responseBundle.responseInstructorComments.get("comment1ToResponse1ForQ1");
+        ResponseInstructorComment comment2 = responseBundle.responseInstructorComments.get("comment2ToResponse2ForQ1");
         comment1.setId(commentId1);
         comment2.setId(commentId2);
 
@@ -194,14 +202,47 @@ public class SessionResultsBundleTest extends BaseTestCase {
     }
 
     @Test
-    public void testGetAnonName_typicalCase_shouldGenerateCorrectly() {
-        String anonName = SessionResultsBundle.getAnonName(FeedbackParticipantType.STUDENTS, "");
+    public void testGetAnonGiverName_typicalCase_shouldGenerateCorrectly() {
+        String anonName = SessionResultsBundle.getAnonGiverName(new ResponseGiver(getTypicalStudent()));
         assertTrue(anonName.startsWith(Const.DISPLAYED_NAME_FOR_ANONYMOUS_PARTICIPANT));
 
-        String anonName1 = SessionResultsBundle.getAnonName(FeedbackParticipantType.STUDENTS, "test@gmail.com");
-        String anonName2 = SessionResultsBundle.getAnonName(FeedbackParticipantType.STUDENTS, "test@gmail.com");
-        String anotherAnonName = SessionResultsBundle.getAnonName(
-                        FeedbackParticipantType.STUDENTS, "different@gmail.com");
+        Student student1 = getTypicalStudent();
+        student1.setName("Test Student");
+        student1.setEmail("test@gmail.com");
+        Student student2 = getTypicalStudent();
+        student2.setName("Test Student");
+        student2.setEmail("test@gmail.com");
+        Student anotherStudent = getTypicalStudent();
+        anotherStudent.setName("Different Student");
+        anotherStudent.setEmail("different@gmail.com");
+
+        String anonName1 = SessionResultsBundle.getAnonGiverName(new ResponseGiver(student1));
+        String anonName2 = SessionResultsBundle.getAnonGiverName(new ResponseGiver(student2));
+        String anotherAnonName = SessionResultsBundle.getAnonGiverName(new ResponseGiver(anotherStudent));
+
+        assertTrue(anonName1.startsWith(Const.DISPLAYED_NAME_FOR_ANONYMOUS_PARTICIPANT));
+        assertEquals(anonName1, anonName2);
+        assertNotEquals(anonName1, anotherAnonName);
+    }
+
+    @Test
+    public void testGetAnonRecipientName_typicalCase_shouldGenerateCorrectly() {
+        String anonName = SessionResultsBundle.getAnonRecipientName(new ResponseRecipient(getTypicalStudent()));
+        assertTrue(anonName.startsWith(Const.DISPLAYED_NAME_FOR_ANONYMOUS_PARTICIPANT));
+
+        Student student1 = getTypicalStudent();
+        student1.setName("Test Recipient");
+        student1.setEmail("test@gmail.com");
+        Student student2 = getTypicalStudent();
+        student2.setName("Test Recipient");
+        student2.setEmail("test@gmail.com");
+        Student anotherStudent = getTypicalStudent();
+        anotherStudent.setName("Different Recipient");
+        anotherStudent.setEmail("different@gmail.com");
+
+        String anonName1 = SessionResultsBundle.getAnonRecipientName(new ResponseRecipient(student1));
+        String anonName2 = SessionResultsBundle.getAnonRecipientName(new ResponseRecipient(student2));
+        String anotherAnonName = SessionResultsBundle.getAnonRecipientName(new ResponseRecipient(anotherStudent));
 
         assertTrue(anonName1.startsWith(Const.DISPLAYED_NAME_FOR_ANONYMOUS_PARTICIPANT));
         assertEquals(anonName1, anonName2);
@@ -212,9 +253,7 @@ public class SessionResultsBundleTest extends BaseTestCase {
         return new FeedbackMissingResponse(
                 response.getFeedbackQuestion(),
                 response.getGiver(),
-                response.getGiverSectionName(),
-                response.getRecipient(),
-                response.getRecipientSectionName()
+                response.getRecipient()
         );
     }
 }

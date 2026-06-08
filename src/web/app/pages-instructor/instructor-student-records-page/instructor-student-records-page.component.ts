@@ -1,24 +1,22 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap/collapse';
 import { combineLatest, Observable } from 'rxjs';
 import { finalize, map, mergeMap, tap } from 'rxjs/operators';
 import { FeedbackSessionsService } from '../../../services/feedback-sessions.service';
 import { InstructorCommentEventData, InstructorCommentService } from '../../../services/instructor-comment.service';
-import { InstructorService } from '../../../services/instructor.service';
 import { StatusMessageService } from '../../../services/status-message.service';
 import { StudentService } from '../../../services/student.service';
 import { TableComparatorService } from '../../../services/table-comparator.service';
 import {
   FeedbackSession,
   FeedbackSessions,
-  Instructor,
+  FeedbackVisibilityType,
   QuestionOutput,
   ResponseOutput,
   SessionResults,
   Student,
 } from '../../../types/api-output';
-import { Intent } from '../../../types/api-request';
 import { SortBy, SortOrder } from '../../../types/sort-properties';
 import { CommentTableModel } from '../../components/comment-box/comment-table/comment-table.model';
 import { CommentsToCommentTableModelPipe } from '../../components/comment-box/comments-to-comment-table-model.pipe';
@@ -28,6 +26,7 @@ import { PanelChevronComponent } from '../../components/panel-chevron/panel-chev
 import { GrqRgqViewResponsesComponent } from '../../components/question-responses/grq-rgq-view-responses/grq-rgq-view-responses.component';
 import { areEmailsEqual } from '../../components/teammates-common/email-utils';
 import { ErrorMessageOutput } from '../../error-message-output';
+import { commentToReadOnlyComment } from '../../utils/comment-to-comment-table.util';
 
 interface SessionTab {
   isCollapsed: boolean;
@@ -55,8 +54,6 @@ export class InstructorStudentRecordsPageComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private feedbackSessionsService = inject(FeedbackSessionsService);
   private studentService = inject(StudentService);
-  private instructorService = inject(InstructorService);
-  private commentsToCommentTableModel = inject(CommentsToCommentTableModelPipe);
   private tableComparatorService = inject(TableComparatorService);
   private statusMessageService = inject(StatusMessageService);
   private commentService = inject(InstructorCommentService);
@@ -64,23 +61,22 @@ export class InstructorStudentRecordsPageComponent implements OnInit {
   courseId = '';
   studentName = '';
   studentEmail = '';
+  studentId = '';
   studentTeam = '';
 
   sessionTabs: SessionTab[] = [];
   isStudentResultsLoading = false;
   hasStudentResultsLoadingFailed = false;
 
-  currInstructorName?: string;
   instructorCommentTableModel: Record<string, CommentTableModel> = {};
 
   ngOnInit(): void {
     this.route.queryParams.subscribe({
       next: (queryParams: any) => {
         this.courseId = queryParams.courseid;
-        this.studentEmail = queryParams.studentemail;
+        this.studentId = queryParams.userid;
 
-        this.loadInstructorRecords(this.courseId);
-        this.loadStudentResults(this.courseId, this.studentEmail);
+        this.loadStudentResults(this.courseId, this.studentId);
       },
       error: (resp: ErrorMessageOutput) => {
         this.statusMessageService.showErrorToast(resp.error.message);
@@ -89,35 +85,21 @@ export class InstructorStudentRecordsPageComponent implements OnInit {
   }
 
   /**
-   * Loads the instructor's records based on the given course ID.
-   */
-  loadInstructorRecords(courseId: string): void {
-    this.instructorService
-      .getInstructor({
-        courseId,
-        intent: Intent.FULL_DETAIL,
-      })
-      .subscribe((instructor: Instructor) => {
-        this.currInstructorName = instructor.name;
-      });
-  }
-
-  /**
-   * Loads the student's feedback session results based on the given course ID and student email.
+   * Loads the student's feedback session results based on the given course ID and student user ID.
    * Fetches student records and feedback sessions in parallel, then loads results for each session.
    */
-  loadStudentResults(courseId: string, studentEmail: string): void {
+  loadStudentResults(courseId: string, studentId: string): void {
     this.sessionTabs = [];
     this.hasStudentResultsLoadingFailed = false;
     this.isStudentResultsLoading = true;
 
     combineLatest({
       feedbackSession: this.getFeedbackSessions(this.courseId),
-      student: this.loadStudentRecords(courseId, studentEmail),
+      student: this.loadStudentRecords(courseId, studentId),
     })
       .pipe(
         mergeMap(({ feedbackSession, student }: { feedbackSession: FeedbackSession; student: Student }) => {
-          return this.getFeedbackSessionResults(feedbackSession, student.sectionName);
+          return this.getFeedbackSessionResults(feedbackSession, student.sectionId);
         }),
         finalize(() => {
           this.isStudentResultsLoading = false;
@@ -127,7 +109,11 @@ export class InstructorStudentRecordsPageComponent implements OnInit {
         next: ({ feedbackSession, results }: { results: SessionResults; feedbackSession: FeedbackSession }) => {
           this.sessionTabs.push(this.createSessionTab(feedbackSession, results));
           results.questions.forEach((questions: QuestionOutput) => {
-            return this.preprocessComments(questions.allResponses, feedbackSession.timeZone);
+            return this.preprocessComments(
+              questions.allResponses,
+              feedbackSession.timeZone,
+              questions.feedbackQuestion.showResponsesTo,
+            );
           });
         },
         error: (errorMessageOutput: ErrorMessageOutput) => {
@@ -139,12 +125,13 @@ export class InstructorStudentRecordsPageComponent implements OnInit {
   }
 
   /**
-   * Loads the student's records based on the given course ID and email.
+   * Loads the student's records based on the given course ID and user ID.
    */
-  private loadStudentRecords(courseId: string, studentEmail: string): Observable<Student> {
-    return this.studentService.getStudent(courseId, studentEmail).pipe(
+  private loadStudentRecords(courseId: string, studentId: string): Observable<Student> {
+    return this.studentService.getStudent({ courseId, userId: studentId }).pipe(
       tap((resp: Student) => {
         this.studentName = resp.name;
+        this.studentEmail = resp.email;
         this.studentTeam = resp.teamName;
       }),
     );
@@ -156,22 +143,25 @@ export class InstructorStudentRecordsPageComponent implements OnInit {
   private getFeedbackSessions(courseId: string): Observable<FeedbackSession> {
     return this.feedbackSessionsService
       .getFeedbackSessionsForInstructor(courseId)
-      .pipe(mergeMap((feedbackSessions: FeedbackSessions) => feedbackSessions.feedbackSessions));
+      .pipe(
+        mergeMap((feedbackSessions: FeedbackSessions) =>
+          feedbackSessions.feedbackSessions.map((fs) => fs.feedbackSession),
+        ),
+      );
   }
 
   /**
    * Fetches the full detail result of the given feedback session in the current course
-   * grouped by the student's section.
+   * grouped by the student's section ID.
    */
   private getFeedbackSessionResults(
     feedbackSession: FeedbackSession,
-    groupBySection: string,
+    groupBySectionId: string,
   ): Observable<{ results: SessionResults; feedbackSession: FeedbackSession }> {
     return this.feedbackSessionsService
-      .getFeedbackSessionResults({
+      .getCourseSessionResults({
         feedbackSessionId: feedbackSession.feedbackSessionId,
-        groupBySection,
-        intent: Intent.FULL_DETAIL,
+        groupBySection: groupBySectionId,
       })
       .pipe(
         map((results: SessionResults) => {
@@ -224,12 +214,17 @@ export class InstructorStudentRecordsPageComponent implements OnInit {
    * <p>The instructor comment will be moved to map {@code instructorCommentTableModel}. The original
    * instructor comments associated with the response will be deleted.
    */
-  preprocessComments(responses: ResponseOutput[], timezone: string): void {
+  preprocessComments(
+    responses: ResponseOutput[],
+    timezone: string,
+    questionShowResponsesTo: FeedbackVisibilityType[],
+  ): void {
     responses.forEach((response: ResponseOutput) => {
-      this.instructorCommentTableModel[response.responseId] = this.commentsToCommentTableModel.transform(
+      this.instructorCommentTableModel[response.responseId] = commentToReadOnlyComment(
         response.instructorComments,
         false,
         timezone,
+        questionShowResponsesTo,
       );
       this.commentService.sortComments(this.instructorCommentTableModel[response.responseId]);
       // clear the original comments for safe as instructorCommentTableModel will become the single point of truth
@@ -245,7 +240,6 @@ export class InstructorStudentRecordsPageComponent implements OnInit {
       responseId,
       timezone,
       instructorCommentTableModel: this.instructorCommentTableModel,
-      currInstructorName: this.currInstructorName,
     });
   }
 
@@ -267,7 +261,6 @@ export class InstructorStudentRecordsPageComponent implements OnInit {
       data,
       timezone,
       instructorCommentTableModel: this.instructorCommentTableModel,
-      currInstructorName: this.currInstructorName,
     });
   }
 

@@ -1,5 +1,7 @@
 package teammates.ui.webapi;
 
+import java.util.UUID;
+
 import teammates.common.util.Const;
 import teammates.storage.entity.Instructor;
 import teammates.ui.exception.EntityNotFoundException;
@@ -18,13 +20,20 @@ public class GetInstructorPrivilegeAction extends Action {
 
     @Override
     void checkSpecificAccessControl() throws UnauthorizedAccessException {
-        if (userInfo.isAdmin) {
+        if (requestContext.isAdmin()) {
             return;
         }
 
-        String courseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
+        String courseId;
+        UUID userId = getNullableUuidRequestParamValue(Const.ParamsNames.USER_ID);
+        if (userId == null) {
+            courseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
+        } else {
+            Instructor instructor = getInstructor(userId);
+            courseId = instructor.getCourseId();
+        }
 
-        Instructor instructor = logic.getInstructorByGoogleId(courseId, userInfo.getId());
+        Instructor instructor = getInstructorFromRequest(courseId);
 
         if (instructor == null) {
             throw new UnauthorizedAccessException("Not instructor of the course");
@@ -33,33 +42,32 @@ public class GetInstructorPrivilegeAction extends Action {
 
     @Override
     public JsonResult execute() {
-        String courseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
-        String instructorId = getRequestParamValue(Const.ParamsNames.INSTRUCTOR_ID);
-        String instructorEmail = getRequestParamValue(Const.ParamsNames.INSTRUCTOR_EMAIL);
+        UUID userId = getNullableUuidRequestParamValue(Const.ParamsNames.USER_ID);
 
         Instructor instructor;
 
-        if (instructorId == null) {
-            if (instructorEmail == null) {
-                instructor = logic.getInstructorByGoogleId(courseId, userInfo.getId());
-            } else {
-                instructor = logic.getInstructorForEmail(courseId, instructorEmail);
-
-                if (instructor == null) {
-                    throw new EntityNotFoundException("Instructor does not exist.");
-                }
-            }
+        if (userId == null) {
+            // Fetch privilege of logged in instructor
+            String courseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
+            instructor = getInstructorFromRequest(courseId);
         } else {
-            instructor = logic.getInstructorByGoogleId(courseId, instructorId);
-
-            if (instructor == null) {
-                throw new EntityNotFoundException("Instructor does not exist.");
-            }
+            // Fetch privilege of instructor with given userId
+            instructor = getInstructor(userId);
         }
 
         InstructorPrivilegeData response = new InstructorPrivilegeData(instructor.getPrivileges());
 
         return new JsonResult(response);
+    }
+
+    private Instructor getInstructor(UUID userId) {
+        Instructor instructor = logic.getInstructor(userId);
+
+        if (instructor == null) {
+            throw new EntityNotFoundException("Instructor does not exist.");
+        }
+
+        return instructor;
     }
 
 }

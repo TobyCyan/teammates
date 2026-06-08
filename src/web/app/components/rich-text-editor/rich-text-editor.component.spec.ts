@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RichTextEditorComponent } from './rich-text-editor.component';
+import { Editor } from 'tinymce';
 
 describe('RichTextEditorComponent', () => {
   let component: RichTextEditorComponent;
@@ -46,21 +47,9 @@ describe('RichTextEditorComponent', () => {
           },
         },
       },
-    };
+    } as unknown as Editor;
 
     expect(component.getCurrentCharacterCount(mockEditor)).toBe(123);
-  });
-
-  it('should render editor when visible', () => {
-    component.render = false;
-    component.renderEditor({ visible: true });
-    expect(component.render).toBe(true);
-  });
-
-  it('should not render editor when not visible', () => {
-    component.render = false;
-    component.renderEditor({ visible: false });
-    expect(component.render).toBe(false);
   });
 
   it('should define setup function when character limit is enabled', () => {
@@ -69,9 +58,7 @@ describe('RichTextEditorComponent', () => {
     expect(component.init.setup).toBeDefined();
   });
 
-  it('should update character count on GetContent when character limit is enabled', () => {
-    jest.useFakeTimers();
-
+  it('should update character count on GetContent when character limit is enabled', async () => {
     component.hasCharacterLimit = true;
     component.ngOnInit();
 
@@ -88,14 +75,14 @@ describe('RichTextEditorComponent', () => {
           },
         },
       },
-    };
+    } as unknown as Editor;
 
-    component.init.setup(mockEditor);
+    component.init.setup!(mockEditor);
     handler();
 
-    jest.runAllTimers();
+    await Promise.resolve();
 
-    expect(component.characterCount).toBe(50);
+    expect(component.characterCount()).toBe(50);
   });
 
   it('should prevent keypress when character limit is reached', () => {
@@ -117,13 +104,13 @@ describe('RichTextEditorComponent', () => {
           },
         },
       },
-    };
+    } as unknown as Editor;
 
     const mockEvent = {
-      preventDefault: jest.fn(),
+      preventDefault: vi.fn(),
     };
 
-    component.init.setup(mockEditor);
+    component.init.setup!(mockEditor);
     keypressHandler!(mockEvent);
 
     expect(mockEvent.preventDefault).toHaveBeenCalled();
@@ -148,13 +135,13 @@ describe('RichTextEditorComponent', () => {
           },
         },
       },
-    };
+    } as unknown as Editor;
 
     const mockEvent = {
-      preventDefault: jest.fn(),
+      preventDefault: vi.fn(),
     };
 
-    component.init.setup(mockEditor);
+    component.init.setup!(mockEditor);
     keypressHandler!(mockEvent);
 
     expect(mockEvent.preventDefault).not.toHaveBeenCalled();

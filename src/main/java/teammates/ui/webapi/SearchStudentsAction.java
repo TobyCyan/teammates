@@ -24,8 +24,14 @@ public class SearchStudentsAction extends Action {
     @Override
     void checkSpecificAccessControl() throws UnauthorizedAccessException {
         // Only instructors and admins can search for student
-        if (!userInfo.isInstructor && !userInfo.isAdmin) {
-            throw new UnauthorizedAccessException("Instructor or Admin privilege is required to access this resource.");
+        String entity = getNonNullRequestParamValue(Const.ParamsNames.ENTITY_TYPE);
+
+        if (Const.EntityType.INSTRUCTOR.equals(entity)) {
+            gateKeeper.verifyInstructorInAnyCourse(requestContext);
+        }
+
+        if (Const.EntityType.ADMIN.equals(entity)) {
+            gateKeeper.verifyAdminPrivileges(requestContext);
         }
     }
 
@@ -36,10 +42,10 @@ public class SearchStudentsAction extends Action {
 
         List<Student> students;
 
-        if (userInfo.isInstructor && Const.EntityType.INSTRUCTOR.equals(entity)) {
-            List<Instructor> instructors = logic.getInstructorsForGoogleId(userInfo.id);
+        if (Const.EntityType.INSTRUCTOR.equals(entity)) {
+            List<Instructor> instructors = logic.getInstructorsByAccountId(requestContext.getAccount().getId());
             students = logic.searchStudents(searchKey, instructors);
-        } else if (userInfo.isAdmin && Const.EntityType.ADMIN.equals(entity)) {
+        } else if (Const.EntityType.ADMIN.equals(entity)) {
             students = logic.searchStudentsInWholeSystem(searchKey);
         } else {
             throw new InvalidHttpParameterException("Invalid entity type for search");
@@ -49,10 +55,11 @@ public class SearchStudentsAction extends Action {
         for (Student s : students) {
             StudentData studentData = new StudentData(s);
 
-            if (userInfo.isAdmin && Const.EntityType.ADMIN.equals(entity)) {
+            if (requestContext.isAdmin() && Const.EntityType.ADMIN.equals(entity)) {
                 studentData.addAdditionalInformationForAdminSearch(
                         s.getRegKey(),
-                        s.getGoogleId()
+                        s.getGoogleId(),
+                        s.getAccountId()
                 );
             }
 

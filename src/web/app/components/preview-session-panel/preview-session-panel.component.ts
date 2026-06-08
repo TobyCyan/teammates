@@ -1,7 +1,7 @@
 import { NgClass, NgTemplateOutlet } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { Instructor, Student } from '../../../types/api-output';
 import { TeammatesRouterDirective } from '../teammates-router/teammates-router.directive';
 
@@ -25,7 +25,7 @@ export class PreviewSessionPanelComponent {
   feedbackSessionId = '';
 
   @Input()
-  emailOfStudentToPreview = '';
+  userIdOfStudentToPreview = '';
 
   @Input()
   studentsOfCourse: Student[] = [];
@@ -34,7 +34,7 @@ export class PreviewSessionPanelComponent {
   instructorsCanBePreviewedAs: Instructor[] = [];
 
   @Input()
-  emailOfInstructorToPreview = '';
+  userIdOfInstructorToPreview = '';
 
   @Input()
   forDisplayOnly = false;

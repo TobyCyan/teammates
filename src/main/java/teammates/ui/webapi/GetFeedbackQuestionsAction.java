@@ -42,25 +42,16 @@ public class GetFeedbackQuestionsAction extends BasicFeedbackSubmissionAction {
 
         switch (intent) {
         case STUDENT_SUBMISSION:
-            Student student = getStudentOfCourseFromRequest(courseId);
+            Student student = getStudentOfCourseForSubmission(courseId, true);
             checkAccessControlForStudentFeedbackSubmission(student, feedbackSession);
             break;
         case FULL_DETAIL:
-            gateKeeper.verifyLoggedInUserPrivileges(userInfo);
-            gateKeeper.verifyAccessible(logic.getInstructorByGoogleId(courseId, userInfo.getId()),
-                    feedbackSession);
+            gateKeeper.verifyLoggedInUserPrivileges(requestContext);
+            gateKeeper.verifyInstructorInCourse(requestContext, courseId);
             break;
         case INSTRUCTOR_SUBMISSION:
-            Instructor instructor = getInstructorOfCourseFromRequest(courseId);
+            Instructor instructor = getInstructorOfCourseForSubmission(courseId, true);
             checkAccessControlForInstructorFeedbackSubmission(instructor, feedbackSession);
-            break;
-        case INSTRUCTOR_RESULT:
-            instructor = getInstructorOfCourseFromRequest(courseId);
-            checkAccessControlForInstructorFeedbackResult(instructor, feedbackSession);
-            break;
-        case STUDENT_RESULT:
-            student = getStudentOfCourseFromRequest(courseId);
-            checkAccessControlForStudentFeedbackResult(student, feedbackSession);
             break;
         default:
             throw new InvalidHttpParameterException("Unknown intent " + intent);
@@ -82,21 +73,21 @@ public class GetFeedbackQuestionsAction extends BasicFeedbackSubmissionAction {
         switch (intent) {
         case STUDENT_SUBMISSION:
             questions = logic.getFeedbackQuestionsForStudents(feedbackSession);
-            Student student = getStudentOfCourseFromRequest(feedbackSession.getCourseId());
+            Student student = getStudentOfCourseForSubmission(feedbackSession.getCourseId(), true);
             for (FeedbackQuestion question : questions) {
                 Optional<List<String>> options = logic.getDynamicallyGeneratedOptions(question, student);
                 dynamicallyGeneratedOptions.put(question.getId(), options);
             }
             break;
         case INSTRUCTOR_SUBMISSION:
-            Instructor instructor = getInstructorOfCourseFromRequest(feedbackSession.getCourseId());
-            questions = logic.getFeedbackQuestionsForInstructors(feedbackSession, instructor.getEmail());
+            Instructor instructor = getInstructorOfCourseForSubmission(feedbackSession.getCourseId(), true);
+            questions = logic.getFeedbackQuestionsForInstructors(feedbackSession, instructor);
             for (FeedbackQuestion question : questions) {
                 Optional<List<String>> options = logic.getDynamicallyGeneratedOptions(question, null);
                 dynamicallyGeneratedOptions.put(question.getId(), options);
             }
             break;
-        case FULL_DETAIL, INSTRUCTOR_RESULT, STUDENT_RESULT:
+        case FULL_DETAIL:
             questions = logic.getFeedbackQuestionsForSession(feedbackSession);
             break;
         default:
@@ -117,7 +108,7 @@ public class GetFeedbackQuestionsAction extends BasicFeedbackSubmissionAction {
                 })
                 .toList();
 
-        if (intent == Intent.STUDENT_SUBMISSION || intent == Intent.STUDENT_RESULT) {
+        if (intent == Intent.STUDENT_SUBMISSION) {
             for (FeedbackQuestionData questionData : questionDatas) {
                 questionData.hideInformationForStudent();
             }

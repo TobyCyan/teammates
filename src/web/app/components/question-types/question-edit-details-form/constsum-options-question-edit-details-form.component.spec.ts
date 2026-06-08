@@ -1,6 +1,7 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ConstsumOptionsQuestionEditDetailsFormComponent } from './constsum-options-question-edit-details-form.component';
+import { DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 
 describe('ConstsumOptionsQuestionEditDetailsFormComponent', () => {
   let component: ConstsumOptionsQuestionEditDetailsFormComponent;
@@ -9,6 +10,7 @@ describe('ConstsumOptionsQuestionEditDetailsFormComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(ConstsumOptionsQuestionEditDetailsFormComponent);
     component = fixture.componentInstance;
+    component.model = DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS();
     fixture.detectChanges();
   });
 
@@ -21,7 +23,7 @@ describe('ConstsumOptionsQuestionEditDetailsFormComponent', () => {
       key: 'b',
     });
 
-    const eventSpy = jest.spyOn(event, 'preventDefault');
+    const eventSpy = vi.spyOn(event, 'preventDefault');
     component.onIntegerInput(event);
     expect(eventSpy).toHaveBeenCalled();
   });
@@ -31,7 +33,7 @@ describe('ConstsumOptionsQuestionEditDetailsFormComponent', () => {
       key: '.',
     });
 
-    const eventSpy = jest.spyOn(event, 'preventDefault');
+    const eventSpy = vi.spyOn(event, 'preventDefault');
     component.onIntegerInput(event);
     expect(eventSpy).toHaveBeenCalled();
   });
@@ -41,27 +43,23 @@ describe('ConstsumOptionsQuestionEditDetailsFormComponent', () => {
       key: '7',
     });
 
-    const eventSpy = jest.spyOn(event, 'preventDefault');
+    const eventSpy = vi.spyOn(event, 'preventDefault');
     component.onIntegerInput(event);
     expect(eventSpy).not.toHaveBeenCalled();
   });
 
   it('should allow number input with less than or equal to 9 digits', () => {
     const inputElement = fixture.debugElement.query(By.css('#max-point')).nativeElement as HTMLInputElement;
-    const inputEvent = new InputEvent('input');
-    inputElement.dispatchEvent(inputEvent);
-    (inputEvent.target as HTMLInputElement).value = '12345';
-    component.restrictIntegerInputLength(inputEvent, 'points');
-    expect((inputEvent.target as HTMLInputElement).value).toEqual('12345');
+    inputElement.value = '12345';
+    component.restrictIntegerInputLength(inputElement, 'points');
+    expect(inputElement.value).toEqual('12345');
   });
 
   it('should restrict number input with more than 9 digits to 9 digits', () => {
     const inputElement = fixture.debugElement.query(By.css('#max-point')).nativeElement as HTMLInputElement;
-    const inputEvent = new InputEvent('input');
-    inputElement.dispatchEvent(inputEvent);
-    (inputEvent.target as HTMLInputElement).value = '123456789012345';
-    component.restrictIntegerInputLength(inputEvent, 'points');
-    expect((inputEvent.target as HTMLInputElement).value).toEqual('123456789');
+    inputElement.value = '123456789012345';
+    component.restrictIntegerInputLength(inputElement, 'points');
+    expect(inputElement.value).toEqual('123456789');
   });
 
   it('should have default questionNumber value of 0', () => {
@@ -90,9 +88,10 @@ describe('ConstsumOptionsQuestionEditDetailsFormComponent', () => {
     expect(component.pointsRadioGroupName).toBe('constsum-options-2');
   });
 
-  it('should maintain independent radio selection across components', waitForAsync(async () => {
+  it('should maintain independent radio selection across components', async () => {
     const fixtureA = TestBed.createComponent(ConstsumOptionsQuestionEditDetailsFormComponent);
     const compA = fixtureA.componentInstance;
+    compA.model = DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS();
     compA.questionNumber = 1;
     compA.ngOnChanges();
     fixtureA.detectChanges();
@@ -100,6 +99,7 @@ describe('ConstsumOptionsQuestionEditDetailsFormComponent', () => {
 
     const fixtureB = TestBed.createComponent(ConstsumOptionsQuestionEditDetailsFormComponent);
     const compB = fixtureB.componentInstance;
+    compB.model = DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS();
     compB.questionNumber = 2;
     compB.ngOnChanges();
     fixtureB.detectChanges();
@@ -117,5 +117,5 @@ describe('ConstsumOptionsQuestionEditDetailsFormComponent', () => {
 
     expect(radioA.checked).toBe(true);
     expect(radioB.checked).toBe(true);
-  }));
+  });
 });

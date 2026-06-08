@@ -1,15 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { QuestionEditAnswerFormComponent } from './question-edit-answer-form';
 import {
   FeedbackConstantSumDistributePointsType,
-  FeedbackConstantSumQuestionDetails,
-  FeedbackConstantSumResponseDetails,
+  FeedbackConstantSumOptionsQuestionDetails,
+  FeedbackConstantSumOptionsResponseDetails,
 } from '../../../../types/api-output';
-import {
-  DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS,
-  DEFAULT_CONSTSUM_RESPONSE_DETAILS,
-} from '../../../../types/default-question-structs';
+import { DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 import { WheelDisablerDirective } from '../../wheel-disabler/wheel-disabler.directive';
 
 /**
@@ -20,16 +17,15 @@ import { WheelDisablerDirective } from '../../wheel-disabler/wheel-disabler.dire
   templateUrl: './constsum-options-question-edit-answer-form.component.html',
   imports: [FormsModule, WheelDisablerDirective],
 })
-export class ConstsumOptionsQuestionEditAnswerFormComponent extends QuestionEditAnswerFormComponent<
-  FeedbackConstantSumQuestionDetails,
-  FeedbackConstantSumResponseDetails
-> {
+export class ConstsumOptionsQuestionEditAnswerFormComponent extends QuestionEditAnswerFormComponent<FeedbackConstantSumOptionsResponseDetails> {
+  @Input() questionDetails: FeedbackConstantSumOptionsQuestionDetails = DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS();
+
   // enum
-  FeedbackConstantSumDistributePointsType: typeof FeedbackConstantSumDistributePointsType =
-    FeedbackConstantSumDistributePointsType;
+  FeedbackConstantSumDistributePointsType: typeof FeedbackConstantSumDistributePointsType;
 
   constructor() {
-    super(DEFAULT_CONSTSUM_OPTIONS_QUESTION_DETAILS(), DEFAULT_CONSTSUM_RESPONSE_DETAILS());
+    super();
+    this.FeedbackConstantSumDistributePointsType = FeedbackConstantSumDistributePointsType;
   }
 
   getAriaLabelForOption(option: string): string {

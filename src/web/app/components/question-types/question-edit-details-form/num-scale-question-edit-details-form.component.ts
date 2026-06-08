@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap/tooltip';
 import { QuestionEditDetailsFormComponent } from './question-edit-details-form.component';
 import { FeedbackNumericalScaleQuestionDetails } from '../../../../types/api-output';
-import { DEFAULT_NUMSCALE_QUESTION_DETAILS } from '../../../../types/default-question-structs';
 
 /**
  * Question details edit form component for numerical scale question.
@@ -14,10 +13,11 @@ import { DEFAULT_NUMSCALE_QUESTION_DETAILS } from '../../../../types/default-que
   imports: [NgbTooltip, FormsModule],
 })
 export class NumScaleQuestionEditDetailsFormComponent extends QuestionEditDetailsFormComponent<FeedbackNumericalScaleQuestionDetails> {
-  Math: typeof Math = Math;
+  Math!: typeof Math;
 
   constructor() {
-    super(DEFAULT_NUMSCALE_QUESTION_DETAILS());
+    super();
+    this.Math = Math;
   }
 
   /**
