@@ -7,7 +7,11 @@ import java.util.Objects;
 
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
+import teammates.common.util.Config;
+import teammates.common.util.Const;
 import teammates.common.util.StringHelper;
+import teammates.logic.email.MagicLinkEmailsLogic;
+import teammates.logic.email.model.MagicLinkEmailContext;
 import teammates.storage.api.MagicLinksDb;
 import teammates.storage.entity.MagicLink;
 
@@ -24,6 +28,7 @@ public final class MagicLinksLogic {
     private static final int TOKEN_BYTE_LENGTH = 32;
 
     private MagicLinksDb magicLinksDb;
+    private MagicLinkEmailsLogic magicLinkEmailsLogic;
 
     private MagicLinksLogic() {
         // prevent initialization
@@ -33,8 +38,9 @@ public final class MagicLinksLogic {
         return instance;
     }
 
-    void initLogicDependencies(MagicLinksDb magicLinksDb) {
+    void initLogicDependencies(MagicLinksDb magicLinksDb, MagicLinkEmailsLogic magicLinkEmailsLogic) {
         this.magicLinksDb = magicLinksDb;
+        this.magicLinkEmailsLogic = magicLinkEmailsLogic;
     }
 
     /**
@@ -44,7 +50,6 @@ public final class MagicLinksLogic {
      * @throws InvalidParametersException if the magic link is not valid.
      */
     public String createMagicLink(String email) throws InvalidParametersException {
-        // TODO: Add a method to send the magic link to the user via email.
         Objects.requireNonNull(email);
 
         String token = generateToken();
@@ -53,6 +58,23 @@ public final class MagicLinksLogic {
 
         magicLinksDb.persistMagicLink(magicLink);
         return token;
+    }
+
+    /**
+     * Creates a magic link and enqueues the sign-in email for the given email address.
+     *
+     * @throws InvalidParametersException if the magic link is not valid.
+     */
+    public void requestMagicLinkEmail(String email, String encryptedState) throws InvalidParametersException {
+        Objects.requireNonNull(encryptedState);
+
+        String token = createMagicLink(email);
+        String magicLinkUrl = Config.getFrontEndAppUrl(Const.WebPageURIs.EMAIL_LOGIN_CONFIRMATION_PAGE)
+                .withParam(Const.ParamsNames.AUTH_STATE, encryptedState)
+                .withParam(Const.ParamsNames.TOKEN, token)
+                .toAbsoluteString();
+
+        magicLinkEmailsLogic.enqueueMagicLinkEmail(new MagicLinkEmailContext(email, magicLinkUrl));
     }
 
     /**

@@ -2,6 +2,7 @@ package teammates.logic.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -17,6 +18,8 @@ import org.testng.annotations.Test;
 
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
+import teammates.logic.email.MagicLinkEmailsLogic;
+import teammates.logic.email.model.MagicLinkEmailContext;
 import teammates.storage.api.MagicLinksDb;
 import teammates.storage.entity.MagicLink;
 import teammates.test.BaseTestCase;
@@ -29,11 +32,13 @@ public class MagicLinksLogicTest extends BaseTestCase {
     private MagicLinksLogic magicLinksLogic = MagicLinksLogic.inst();
 
     private MagicLinksDb magicLinksDb;
+    private MagicLinkEmailsLogic magicLinkEmailsLogic;
 
     @BeforeMethod
     public void setUpMethod() {
         magicLinksDb = mock(MagicLinksDb.class);
-        magicLinksLogic.initLogicDependencies(magicLinksDb);
+        magicLinkEmailsLogic = mock(MagicLinkEmailsLogic.class);
+        magicLinksLogic.initLogicDependencies(magicLinksDb, magicLinkEmailsLogic);
     }
 
     @Test
@@ -51,10 +56,42 @@ public class MagicLinksLogicTest extends BaseTestCase {
     }
 
     @Test
+    public void requestMagicLinkEmail_validEmail_generatesTokenAndEnqueuesEmail() throws InvalidParametersException {
+        when(magicLinksDb.upsertMagicLink(any(MagicLink.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        magicLinksLogic.requestMagicLinkEmail("user@example.com", "encrypted-state");
+
+        ArgumentCaptor<MagicLink> magicLinkCaptor = ArgumentCaptor.forClass(MagicLink.class);
+        verify(magicLinksDb, times(1)).upsertMagicLink(magicLinkCaptor.capture());
+        MagicLink persistedMagicLink = magicLinkCaptor.getValue();
+
+        ArgumentCaptor<MagicLinkEmailContext> emailContextCaptor =
+                ArgumentCaptor.forClass(MagicLinkEmailContext.class);
+        verify(magicLinkEmailsLogic, times(1)).enqueueMagicLinkEmail(emailContextCaptor.capture());
+        MagicLinkEmailContext emailContext = emailContextCaptor.getValue();
+
+        assertEquals("user@example.com", emailContext.recipientEmailAddress());
+        assertTrue(emailContext.magicLinkUrl().contains("/web/email-login/confirm"));
+        assertTrue(emailContext.magicLinkUrl().contains("state=encrypted-state"));
+        assertTrue(emailContext.magicLinkUrl().contains("token="));
+        String token = emailContext.magicLinkUrl().substring(emailContext.magicLinkUrl().indexOf("token=") + 6);
+        assertEquals(persistedMagicLink.getTokenHash(), MagicLinksLogic.hashToken(token));
+    }
+
+    @Test
     public void createMagicLink_invalidEmail_throwsInvalidParametersException() {
         assertThrows(InvalidParametersException.class, () -> magicLinksLogic.createMagicLink("invalid-email"));
 
         verify(magicLinksDb, never()).persistMagicLink(any(MagicLink.class));
+    }
+
+    @Test
+    public void requestMagicLinkEmail_invalidEmail_throwsInvalidParametersExceptionWithoutEnqueueing() {
+        assertThrows(InvalidParametersException.class,
+                () -> magicLinksLogic.requestMagicLinkEmail("invalid-email", "encrypted-state"));
+
+        verify(magicLinksDb, never()).upsertMagicLink(any(MagicLink.class));
+        verify(magicLinkEmailsLogic, never()).enqueueMagicLinkEmail(any(MagicLinkEmailContext.class));
     }
 
     @Test

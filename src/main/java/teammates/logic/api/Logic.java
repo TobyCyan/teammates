@@ -1168,6 +1168,13 @@ public class Logic {
     }
 
     /**
+     * Creates a magic link and enqueues the sign-in email for the given email address.
+     */
+    public void requestMagicLinkEmail(String email, String encryptedState) throws InvalidParametersException {
+        magicLinksLogic.requestMagicLinkEmail(email, encryptedState);
+    }
+
+    /**
      * Returns a magic link for the given raw token, or null if no matching link exists.
      */
     public MagicLink getMagicLinkByToken(String token) {
