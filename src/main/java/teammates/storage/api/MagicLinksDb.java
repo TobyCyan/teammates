@@ -24,25 +24,11 @@ public final class MagicLinksDb {
     }
 
     /**
-     * Atomically creates or updates a MagicLink by email and returns the persisted row.
+     * Persists a MagicLink.
      */
-    public MagicLink upsertMagicLink(MagicLink magicLink) {
-        String sql = """
-                INSERT INTO magic_links (id, created_at, email, token_hash, expires_at, updated_at)
-                VALUES (:id, CURRENT_TIMESTAMP, :email, :tokenHash, :expiresAt, CURRENT_TIMESTAMP)
-                ON CONFLICT (email)
-                DO UPDATE SET token_hash = :tokenHash,
-                              expires_at = :expiresAt,
-                              updated_at = CURRENT_TIMESTAMP
-                RETURNING *
-                """;
-
-        return HibernateUtil.createNativeQuery(sql, MagicLink.class)
-                .setParameter("id", magicLink.getId())
-                .setParameter("email", magicLink.getEmail())
-                .setParameter("tokenHash", magicLink.getTokenHash())
-                .setParameter("expiresAt", magicLink.getExpiresAt())
-                .getSingleResult();
+    public MagicLink persistMagicLink(MagicLink magicLink) {
+        HibernateUtil.persist(magicLink);
+        return magicLink;
     }
 
     /**
