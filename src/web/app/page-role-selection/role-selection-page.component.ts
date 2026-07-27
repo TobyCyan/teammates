@@ -6,6 +6,7 @@ import { AuthInfo } from '../../types/api-output';
 import { LoadingSpinnerDirective } from '../components/loading-spinner/loading-spinner.directive';
 import { ConfigService } from '../../services/config.service';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { StatusMessageService } from '../../services/status-message.service';
 
 interface RolePage {
   role: string;
@@ -21,6 +22,7 @@ interface RolePage {
 export class RoleSelectionPageComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly configService = inject(ConfigService);
+  private readonly statusMessageService = inject(StatusMessageService);
 
   readonly isLoadingRoles = signal(true);
   readonly rolePages = signal<RolePage[]>([]);
@@ -74,7 +76,7 @@ export class RoleSelectionPageComponent implements OnInit {
           this.rolePages.set(rolePages);
         },
         error: () => {
-          this.rolePages.set([]);
+          this.statusMessageService.showErrorToast('Something went wrong. Please try again later.');
         },
       });
   }

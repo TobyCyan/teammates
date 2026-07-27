@@ -6,7 +6,7 @@
     <div class="card-body">
       @if (hasRolePages()) {
         <p>Choose a page to continue.</p>
-        <div style="margin-top: 20px">
+        <div class="mt-3">
           @for (rolePage of rolePages(); track rolePage.url) {
             <div class="d-sm-flex align-items-center justify-content-between border-top py-3">
               <div class="mb-2 mb-sm-0">
@@ -22,7 +22,7 @@
           If you believe you should have access, contact your instructor or
           <a href="mailto:{{ supportEmail() }}">contact TEAMMATES support</a>.
         </p>
-        <div class="text-center" style="margin-top: 20px">
+        <div class="text-center mt-3">
           <a class="btn btn-primary" routerLink="/web/front/">Return to main page</a>
         </div>
       }
