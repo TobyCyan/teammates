@@ -16,35 +16,17 @@ public class MagicLinksDbTest extends BaseDbTestcase {
     private final MagicLinksDb magicLinksDb = MagicLinksDb.inst();
 
     @Test(groups = GroupNames.DB)
-    public void upsertMagicLink_magicLinkDoesNotExist_magicLinkIsInserted() {
+    public void persistMagicLink_magicLinkDoesNotExist_magicLinkIsInserted() {
         var magicLinkRef = given.magicLink("magic-link",
                 ml -> ml.email("insert@example.com").tokenHash("insert-token-hash"));
         MagicLink magicLink = given.getDataBundle().magicLinks.get(magicLinkRef.alias());
 
-        MagicLink actual = inTransaction(() -> magicLinksDb.upsertMagicLink(magicLink));
+        MagicLink actual = inTransaction(() -> magicLinksDb.persistMagicLink(magicLink));
 
         assertEquals(magicLinkRef.id(), actual.getId());
         assertEquals("insert@example.com", actual.getEmail());
         assertEquals("insert-token-hash", actual.getTokenHash());
         verifyPresentInDatabase(MagicLink.class, magicLinkRef.id());
-    }
-
-    @Test(groups = GroupNames.DB)
-    public void upsertMagicLink_emailExists_updatesExistingMagicLink() {
-        var existingMagicLink = given.magicLink("existing-magic-link",
-                ml -> ml.email("upsert@example.com").tokenHash("old-upsert-token-hash"));
-        var updatedMagicLink = given.magicLink("updated-magic-link",
-                ml -> ml.email("upsert@example.com").tokenHash("new-upsert-token-hash"));
-        inTransaction(() -> magicLinksDb.upsertMagicLink(
-                given.getDataBundle().magicLinks.get(existingMagicLink.alias())));
-
-        MagicLink actual = inTransaction(
-                () -> magicLinksDb.upsertMagicLink(given.getDataBundle().magicLinks.get(updatedMagicLink.alias())));
-
-        assertEquals(existingMagicLink.id(), actual.getId());
-        assertEquals("upsert@example.com", actual.getEmail());
-        assertEquals("new-upsert-token-hash", actual.getTokenHash());
-        assertNull(inTransaction(() -> magicLinksDb.getMagicLinkByTokenHash("old-upsert-token-hash")));
     }
 
     @Test(groups = GroupNames.DB)
