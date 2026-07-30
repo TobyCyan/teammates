@@ -57,12 +57,12 @@ public class MagicLinksLogicTest extends BaseTestCase {
 
     @Test
     public void requestMagicLinkEmail_validEmail_generatesTokenAndEnqueuesEmail() throws InvalidParametersException {
-        when(magicLinksDb.upsertMagicLink(any(MagicLink.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(magicLinksDb.persistMagicLink(any(MagicLink.class))).thenAnswer(inv -> inv.getArgument(0));
 
         magicLinksLogic.requestMagicLinkEmail("user@example.com", "encrypted-state");
 
         ArgumentCaptor<MagicLink> magicLinkCaptor = ArgumentCaptor.forClass(MagicLink.class);
-        verify(magicLinksDb, times(1)).upsertMagicLink(magicLinkCaptor.capture());
+        verify(magicLinksDb, times(1)).persistMagicLink(magicLinkCaptor.capture());
         MagicLink persistedMagicLink = magicLinkCaptor.getValue();
 
         ArgumentCaptor<MagicLinkEmailContext> emailContextCaptor =
@@ -90,7 +90,7 @@ public class MagicLinksLogicTest extends BaseTestCase {
         assertThrows(InvalidParametersException.class,
                 () -> magicLinksLogic.requestMagicLinkEmail("invalid-email", "encrypted-state"));
 
-        verify(magicLinksDb, never()).upsertMagicLink(any(MagicLink.class));
+        verify(magicLinksDb, never()).persistMagicLink(any(MagicLink.class));
         verify(magicLinkEmailsLogic, never()).enqueueMagicLinkEmail(any(MagicLinkEmailContext.class));
     }
 

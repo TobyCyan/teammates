@@ -62,8 +62,6 @@ public final class MagicLinksLogic {
 
     /**
      * Creates a magic link and enqueues the sign-in email for the given email address.
-     *
-     * @throws InvalidParametersException if the magic link is not valid.
      */
     public void requestMagicLinkEmail(String email, String encryptedState) throws InvalidParametersException {
         Objects.requireNonNull(encryptedState);
