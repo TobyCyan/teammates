@@ -38,12 +38,12 @@ public class MagicLinksLogicTest extends BaseTestCase {
 
     @Test
     public void createMagicLink_validEmail_generatesTokenAndStoresHash() throws InvalidParametersException {
-        when(magicLinksDb.upsertMagicLink(any(MagicLink.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(magicLinksDb.persistMagicLink(any(MagicLink.class))).thenAnswer(inv -> inv.getArgument(0));
 
         String token = magicLinksLogic.createMagicLink("user@example.com");
 
         ArgumentCaptor<MagicLink> captor = ArgumentCaptor.forClass(MagicLink.class);
-        verify(magicLinksDb, times(1)).upsertMagicLink(captor.capture());
+        verify(magicLinksDb, times(1)).persistMagicLink(captor.capture());
         MagicLink persistedMagicLink = captor.getValue();
 
         assertEquals("user@example.com", persistedMagicLink.getEmail());
@@ -54,7 +54,7 @@ public class MagicLinksLogicTest extends BaseTestCase {
     public void createMagicLink_invalidEmail_throwsInvalidParametersException() {
         assertThrows(InvalidParametersException.class, () -> magicLinksLogic.createMagicLink("invalid-email"));
 
-        verify(magicLinksDb, never()).upsertMagicLink(any(MagicLink.class));
+        verify(magicLinksDb, never()).persistMagicLink(any(MagicLink.class));
     }
 
     @Test

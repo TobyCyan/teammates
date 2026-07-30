@@ -51,7 +51,7 @@ public final class MagicLinksLogic {
         MagicLink magicLink = new MagicLink(email, hashToken(token), Instant.now());
         validateMagicLink(magicLink);
 
-        magicLinksDb.upsertMagicLink(magicLink);
+        magicLinksDb.persistMagicLink(magicLink);
         return token;
     }
 
